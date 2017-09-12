@@ -3,6 +3,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.*;
+import javax.swing.JFileChooser;
 
 /**
  * A very simple search engine. Uses an inverted index over a folder of TXT
@@ -11,10 +12,16 @@ import java.util.*;
 public class SimpleEngine {
 
     public static void main(String[] args) throws IOException {
-        final Path currentWorkingPath = Paths.get("").toAbsolutePath();
+        
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select Folder");
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.showSaveDialog(chooser);
+        
+        final Path currentWorkingPath = chooser.getSelectedFile().toPath();
 
         // the inverted index
-        final NaiveInvertedIndex index = new NaiveInvertedIndex();
+        final PositionalInvertedIndex index = new PositionalInvertedIndex();
 
         // the list of file names that were processed
         final List<String> fileNames = new ArrayList<String>();
@@ -55,9 +62,11 @@ public class SimpleEngine {
             }
 
         });
-
+        
+        System.out.println(index.getTermCount());
         printResults(index, fileNames);
-
+            
+        /*
         // Implement the same program as in Homework 1: ask the user for a term,
         // retrieve the postings list for that term, and print the names of the 
         // documents which contain the term.
@@ -89,7 +98,7 @@ public class SimpleEngine {
         }
         input.close();
         System.out.println("Bye!");
-        
+        */
         
     }
 
@@ -104,35 +113,23 @@ public class SimpleEngine {
      * @param docID the integer ID of the current document, needed when indexing
      * each term from the document.
      */
-    private static void indexFile(File file, NaiveInvertedIndex index,
+    private static void indexFile(File file, PositionalInvertedIndex index,
             int docID) throws FileNotFoundException {
         // TO-DO: finish this method for indexing a particular file.
         // Construct a SimpleTokenStream for the given File.
         // Read each token from the stream and add it to the index.
         SimpleTokenStream s = new SimpleTokenStream(file);
+        int positionNumber = 0;
         while(s.hasNextToken()){
-            index.addTerm(s.nextToken(), docID);
+            index.addTerm(s.nextToken(), docID, positionNumber);
+            positionNumber++;
         }
 
     }
-
-    private static void printResults(NaiveInvertedIndex index,
+    
+    private static void printResults(PositionalInvertedIndex index,
             List<String> fileNames) {
-
-        // TO-DO: print the inverted index.
-        // Retrieve the dictionary from the index. (It will already be sorted.)
-        // For each term in the dictionary, retrieve the postings list for the
-        // term. Use the postings list to print the list of document names that
-        // contain the term. (The document ID in a postings list corresponds to 
-        // an index in the fileNames list.)
-        // Print the postings list so they are all left-aligned starting at the
-        // same column, one space after the longest of the term lengths. Example:
-        // 
-        // as:      document0 document3 document4 document5
-        // engines: document1
-        // search:  document2 document4
         
-        // Get the longest term in the index
         int longestTerm = 0;
         for(String term : index.getDictionary()){
             longestTerm = Math.max(longestTerm, term.length());
@@ -141,8 +138,15 @@ public class SimpleEngine {
         for(String term : index.getDictionary()){
             System.out.printf("%s:", term);
             printSpaces(longestTerm - term.length() + 1);
-            for(Integer posting : index.getPostings(term)){
-                System.out.printf("%s ",fileNames.get(posting));
+            for(Integer docID : index.getDocumentPostingsList(term)){
+                System.out.printf("< %s ",fileNames.get(docID));
+                System.out.print("[");
+                for(Integer pos : index.getDocumentTermPositions(term, docID)){
+                    System.out.printf(" %d ",pos);
+                }
+                System.out.print("]");
+                System.out.print(" > ");
+                
             }
             System.out.println();            
         }
