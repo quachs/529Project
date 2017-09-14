@@ -51,4 +51,9 @@ public class PositionalInvertedIndex {
         return null;
     }
 
+    public List<PositionalPosting> getPositionalPostingsList(String term) {
+      // TO-DO: return the postings list for the given term from the index map.
+      List<PositionalPosting> postingsList = mIndex.get(term);
+      return postingsList;
+   }
 }
