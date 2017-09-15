@@ -2,8 +2,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
-public class PositionalPosting {
+/**
+ * Posting for a positional inverted index
+ * 
+ */
+public class PositionalPosting implements Comparable<PositionalPosting>{
     private int documentID;
     private List<Integer> termPositions;
     
@@ -33,5 +36,16 @@ public class PositionalPosting {
      */
     public void addPosition(int position){
         termPositions.add(position);
+    }
+    
+    @Override
+    public int compareTo(PositionalPosting p){
+        if(documentID == p.getDocumentID()){
+            return 0;
+        }
+        if(documentID > p.getDocumentID()){
+            return 1;
+        }
+        return -1;
     }
 }

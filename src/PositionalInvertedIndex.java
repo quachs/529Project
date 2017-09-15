@@ -50,5 +50,9 @@ public class PositionalInvertedIndex {
         }
         return null;
     }
+    
+    public List<PositionalPosting> getPostingsList(String term){
+        return mIndex.get(term);
+    }
 
 }

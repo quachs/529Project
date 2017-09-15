@@ -1,7 +1,6 @@
 
 import java.io.*;
 import java.util.*;
-import org.tartarus.snowball.*; // http://snowball.tartarus.org/download.html
 
 /**
  * Reads tokens one at a time from an input stream. Returns tokens with minimal
@@ -9,6 +8,7 @@ import org.tartarus.snowball.*; // http://snowball.tartarus.org/download.html
  * lowercase.
  */
 public class SimpleTokenStream implements TokenStream {
+
     private Scanner mReader;
     private Queue<String> tokenQueue;
 
@@ -44,52 +44,33 @@ public class SimpleTokenStream implements TokenStream {
         if (!hasNextToken()) {
             return null;
         }
-        
-        if(!tokenQueue.isEmpty()){
+
+        if (!tokenQueue.isEmpty()) {
             return tokenQueue.poll();
         }
-        
+
         String next = mReader.next();
-        
+
         // remove non-alphanumeric characters from beginning and end
         // https://stackoverflow.com/questions/24967089/java-remove-all-non-alphanumeric-character-from-beginning-and-end-of-string
-        next = next.replaceAll("^\\W+|\\W+$", ""); 
+        next = next.replaceAll("^\\W+|\\W+$", "");
         next = next.replaceAll("'", "");
-        if(next.contains("-")){ // split hyphenated token
+        if (next.contains("-")) { // split hyphenated token
             String[] tokens = next.split("-");
-            for(String t : tokens){
+            for (String t : tokens) {
                 t = t.toLowerCase();
-                t = getStem(t);
-                if(t.length() > 0){
+                t = PorterStemmer.getStem(t);
+                if (t.length() > 0) {
                     tokenQueue.add(t);
-                }    
+                }
             }
-            next = next.replaceAll("-",""); // modified token
+            next = next.replaceAll("-", ""); // modified token
         }
         next = next.toLowerCase();
-        next = getStem(next);
+        next = PorterStemmer.getStem(next);
         return next.length() > 0 ? next
                 : hasNextToken() ? nextToken() : null;
-        
-        
-        
-        /*
-        String next = mReader.next().replaceAll("\\W", "").toLowerCase();
-        return next.length() > 0 ? next
-                : hasNextToken() ? nextToken() : null; */
 
     }
-    
-    private String getStem(String token){
-        try {            
-            Class stemClass = Class.forName("org.tartarus.snowball.ext.englishStemmer");
-            SnowballStemmer stemmer = (SnowballStemmer) stemClass.newInstance();
-            stemmer.setCurrent(token);
-            stemmer.stem();
-            token = stemmer.getCurrent();            
-        } catch (ClassNotFoundException | 
-                InstantiationException | 
-                IllegalAccessException ex) {}
-        return token;       
-    }
+
 }
