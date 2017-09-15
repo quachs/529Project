@@ -1,14 +1,21 @@
 //Sources:
 //https://docs.oracle.com/javase/7/docs/api/java/util/ArrayList.html
 //https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split(java.lang.String)
+//https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
 //https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
 
 import java.io.*;
 import java.util.*;
 
-class QueryParser_KQV extends PositionalInvertedIndex{
+class QueryParser_KQV{
     
+    QueryParser_KQV(){}
+    QueryParser_KQV(PositionalInvertedIndex positionalIndex){
+        this.posIndex = positionalIndex;
+    }
+
     //Used in andQuery(), orQuery()
+    private PositionalInvertedIndex posIndex;
     private List<List<PositionalPosting>> AndCollection; 
    
     //Splits up an individual query Q_i into its query literals, 
@@ -76,7 +83,7 @@ class QueryParser_KQV extends PositionalInvertedIndex{
     private void addAndQuery(String[] andQueryLiterals){
         
         List<PositionalPosting> masterList = new ArrayList<PositionalPosting>();
-        masterList = getPositionalPostingsList(andQueryLiterals[0]);
+        masterList = posIndex.getPostingsList(andQueryLiterals[0]);
 
         //Merge all of the positional postings lists of each
         //query literal of a given AND query into one list.  
@@ -84,7 +91,7 @@ class QueryParser_KQV extends PositionalInvertedIndex{
         //for an entire AND query.
         for(int i = 1; i < andQueryLiterals.length - 1; i++){
             masterList = andIntersect(masterList, 
-                getPositionalPostingsList(andQueryLiterals[i]));
+                posIndex.getPostingsList(andQueryLiterals[i]));
         }
 
         //Add this AND positional postings list to the 
@@ -98,7 +105,7 @@ class QueryParser_KQV extends PositionalInvertedIndex{
     //
     //The argument here is the entire user query split into a collection.
     //See getDocumentList() below for more information.
-    private List<PositionalPosting> orQuery(List<String[]> allQueries){
+    private List<PositionalPosting> query(List<String[]> allQueries){
        
         //Add all Q_i positional postings lists to AndCollection
         for(int i = 0; i < allQueries.size(); i++){
@@ -114,10 +121,15 @@ class QueryParser_KQV extends PositionalInvertedIndex{
 
         return masterList;
     }
+    
+    private List<PositionalPosting> wildcardQuery(String query){
+        return null;}
    
     //Takes a string representing a query, returns list of relevant documents
     public List<Integer> getDocumentList(String query){            
-       
+    
+        if(query.contains("*")){wildcardQuery(query);}
+        
         List<Integer> documentList = new ArrayList<Integer>();
         
         //Parse query and store in a collection.
@@ -131,7 +143,7 @@ class QueryParser_KQV extends PositionalInvertedIndex{
         
         //Performs the query and returns a positional 
         //postings list that represents its results.
-        List<PositionalPosting> masterPostings = orQuery(allQueries);       
+        List<PositionalPosting> masterPostings = query(allQueries);       
 
         //Constuct a list of document IDs from this final postings list.
         for(int i = 0; i < masterPostings.size(); i++){
