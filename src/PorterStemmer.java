@@ -21,6 +21,6 @@ public final class PorterStemmer {
         if(STEMMER.stem()){
             return STEMMER.getCurrent();
         }
-        return null;
+        return "";
     }
 }
