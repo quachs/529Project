@@ -1,12 +1,13 @@
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 
 /**
  * Class that generates the 1-, 2-, and 3-grams for a type and
- * maps the grams to their types
+ * inserts them into an inverted index structure
  */
 public class KGramIndex {
     
@@ -18,7 +19,7 @@ public class KGramIndex {
     
     /**
      * Generate the k-grams of the given vocabulary type and call a
-     * helper method insert them to the index
+     * helper method to insert them to the index
      * @param type 
      */
     public void addType(String type) {
@@ -64,4 +65,14 @@ public class KGramIndex {
         return mIndex.get(kgram);
     }
     
+    /**
+     * Get an array of the k-grams
+     * @return 
+     */
+    public String[] getDictionary(){
+        String[] kgrams = new String[mIndex.size()];
+        kgrams = mIndex.keySet().toArray(kgrams);
+        Arrays.sort(kgrams);
+        return kgrams;
+    }
 }
