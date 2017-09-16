@@ -50,6 +50,10 @@ public class PositionalInvertedIndex {
         }
         return null;
     }
+    
+    public List<PositionalPosting> getPostingsList(String term){
+        return mIndex.get(term);
+    }
 
     public List<PositionalPosting> getPostingsList(String term) {
       List<PositionalPosting> postingsList = mIndex.get(term);
