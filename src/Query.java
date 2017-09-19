@@ -11,15 +11,15 @@ import java.util.List;
 public class Query {
 
     String query;
-    PositionalIndex index;
+    PositionalInvertedIndex index;
 
-    public Query(String query, PositionalIndex index) {
+    public Query(String query, PositionalInvertedIndex index) {
         this.query = query;
         this.index = index;
     }
 
     public static void main(String[] args) {
-        Query q = new Query("Test the \"query\" with this", new PositionalIndex());
+        Query q = new Query("Test the \"query\" with this", new PositionalInvertedIndex());
         String[] a = q.checkQuery();
         for (String b : a) {
             System.out.println(b);
@@ -99,9 +99,7 @@ public class Query {
         // check if the term exists in the index
         if (Arrays.binarySearch(index.getDictionary(), term) >= 0) {
             // iterate postings list and print file name
-            for (Integer posting : index.getPostings(term)) {
-
-            }
+            
         } else {
 
         }

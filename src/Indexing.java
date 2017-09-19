@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import javax.swing.SwingWorker;
 class Indexing extends SwingWorker<Void, Void> {
 
     // initialize the positional index
-    private PositionalIndex index = new PositionalIndex();
+    private PositionalInvertedIndex index = new PositionalInvertedIndex();
 
     // saving the path
     private Path path;
@@ -30,15 +31,21 @@ class Indexing extends SwingWorker<Void, Void> {
         path = Paths.get(".");
     }
 
-    public PositionalIndex getIndex() {
+    public PositionalInvertedIndex getIndex() {
         return index;
     }
+
     // this constructor with the path is important to find the directory the user likes
     public Indexing(Path path) {
         this.path = path;
     }
-    
-    public void setPath(Path p){
+
+    public Indexing(Path path, PositionalInvertedIndex index) {
+        this.index = index;
+        this.path = path;
+    }
+
+    public void setPath(Path p) {
         this.path = p;
     }
 
@@ -53,11 +60,10 @@ class Indexing extends SwingWorker<Void, Void> {
     public Void doInBackground() throws IOException {
         // 
         setProgress(0);
-        // the standard "walk through all .txt files" code.
+        // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
 
-            @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
                 // make sure we only process the current working directory
@@ -67,18 +73,16 @@ class Indexing extends SwingWorker<Void, Void> {
                 return FileVisitResult.SKIP_SUBTREE;
             }
 
-            @Override
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws FileNotFoundException {
-                // only process .json files -> .json because of the given corpus
-                if (file.toString().endsWith(".json")) {
-                    // we have found a .json file; add its name to the fileName list,
+                // only process .txt files
+                if (file.toString().endsWith(".txt") || file.toString().endsWith(".json")) {
+                    // we have found a .txt file; add its name to the fileName list,
                     // then index the file and increase the document ID counter.
-                    //System.out.println("Indexing file " + file.getFileName());
+                    // System.out.println("Indexing file " + file.getFileName());
 
                     fileNames.add(file.getFileName().toString());
                     indexFile(file.toFile(), index, mDocumentID);
-                    setProgress(mDocumentID);
                     mDocumentID++;
                 }
                 return FileVisitResult.CONTINUE;
@@ -92,6 +96,8 @@ class Indexing extends SwingWorker<Void, Void> {
             }
 
         });
+
+        System.out.println(index.getTermCount());
         return null;
     }
 
@@ -104,20 +110,23 @@ class Indexing extends SwingWorker<Void, Void> {
 
     /**
      * Indexing the file
+     *
      * @param file: file that should get indexed
      * @param index: the index itself
      * @param docID: the docID of the file
-     * @throws FileNotFoundException 
+     * @throws FileNotFoundException
      */
-    private static void indexFile(File file, PositionalIndex index,
+    private static void indexFile(File file, PositionalInvertedIndex index,
             int docID) throws FileNotFoundException {
-        // indexing a particular file.
+        // TO-DO: finish this method for indexing a particular file.
         // Construct a SimpleTokenStream for the given File.
         // Read each token from the stream and add it to the index.
-        // TO-DO: stemming and so on
         SimpleTokenStream s = new SimpleTokenStream(file);
+        int positionNumber = 0;
         while (s.hasNextToken()) {
-            index.addTerm(s.nextToken(), docID);
+            String next = s.nextToken();
+            index.addTerm(next, docID, positionNumber);
+            positionNumber++;
         }
     }
 }

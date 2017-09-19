@@ -26,16 +26,20 @@ import javax.swing.*;
  *
  * @author Sandra
  */
-public class UserInterface extends JFrame implements MouseListener {
+public class UserInterface implements MouseListener {
 
+    // The frame of the search engine
+    JFrame frame;
     // after the path is chosen it is saved here for calling the indexing method.
     private Path path;
+    
+    private String directory;
 
     // Task where you can find positionalindex
     private Indexing task = new Indexing();
 
     // Positional index is initialiezed in constructor
-    private PositionalIndex index;
+    private PositionalInvertedIndex index;
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
@@ -45,7 +49,7 @@ public class UserInterface extends JFrame implements MouseListener {
     private JPanel foundDocArea = new JPanel();
     JTextField tQuery = new JTextField();
     private JButton bSubmit = new JButton("Submit");
-        JPanel num = new JPanel(new FlowLayout());
+    JPanel num = new JPanel(new FlowLayout());
     private JLabel number = new JLabel("");
     private JLabel numberRes = new JLabel();
     private JButton stem = new JButton("Stem");
@@ -55,8 +59,10 @@ public class UserInterface extends JFrame implements MouseListener {
     // List of results that are shown in the foundDocArea
     private List<JLabel> labels = new ArrayList<>();
 
-    public UserInterface() {
+    public UserInterface() throws IOException {
         this.index = task.getIndex();
+        this.frame = new JFrame();
+        this.directory = "C:/Users/Sandra/Documents/NetBeansProjects/CECS429-Homework2/src/files";
         // Let the user choose his directory
         chooseDirectory();
     }
@@ -71,8 +77,8 @@ public class UserInterface extends JFrame implements MouseListener {
 
         bSubmit.addMouseListener(this);
 
-        this.add(lQuery);
-        this.add(tQuery);
+        this.frame.add(lQuery);
+        this.frame.add(tQuery);
 
         JPanel buttons = new JPanel(new FlowLayout());
         buttons.add(bSubmit);
@@ -86,10 +92,10 @@ public class UserInterface extends JFrame implements MouseListener {
         all.addMouseListener(this);
         buttons.add(all);
 
-        this.add(buttons);
+        this.frame.add(buttons);
 
-        this.add(foundDocArea);
-        this.setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        this.frame.add(foundDocArea);
+        this.frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
         foundDocArea = new JPanel(new GridLayout(0, 1));
         JScrollPane jsp = new JScrollPane(foundDocArea);
 
@@ -97,29 +103,29 @@ public class UserInterface extends JFrame implements MouseListener {
         jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        this.add(jsp);
+        this.frame.add(jsp);
 
         num.add(number);
         num.add(numberRes);
-        this.add(num);
+        this.frame.add(num);
 
-        this.setTitle("My search engine");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(500, HEIGHT));
-        this.pack();
-        this.setLocationRelativeTo(null);
-        this.setVisible(true);
+        this.frame.setTitle("My search engine");
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.frame.setMinimumSize(new Dimension(500, frame.HEIGHT));
+        this.frame.pack();
+        this.frame.setLocationRelativeTo(null);
+        this.frame.setVisible(true);
     }
 
     /**
      * this method opens a file chooser dialog that the user can choose the
      * directory where his corpus is saved
      */
-    public void chooseDirectory() {
+    public void chooseDirectory() throws IOException {
         // initialize file chooser
         JFileChooser chooser = new JFileChooser();
         // for easier testing I chose the start directory where my created json files from homework 2 are saved
-        chooser.setCurrentDirectory(new java.io.File("C:/Users/Sandra/Documents/NetBeansProjects/CECS429-Homework2/src/files"));
+        chooser.setCurrentDirectory(new java.io.File(directory));
         // set the title of the dialog
         chooser.setDialogTitle("Choose Directory for corpus");
         // tell the file chooser that it only shows the directory that the user only is able to choose a directory and not a file
@@ -139,9 +145,9 @@ public class UserInterface extends JFrame implements MouseListener {
     /**
      * While Indexing processes show a progress bar
      */
-    public void showProgressBar() {
+    public void showProgressBar() throws IOException {
         // initialize a new dialog, this is the frame and "Indexing..." is the title
-        JDialog progressDialog = new JDialog(this, "Indexing...");
+        JDialog progressDialog = new JDialog(this.frame, "Indexing...");
         // create a new panel
         JPanel contentPane = new JPanel();
         // set preferred size
@@ -158,13 +164,15 @@ public class UserInterface extends JFrame implements MouseListener {
         progressDialog.setLocationRelativeTo(null);
         // start the task idexing -> it is king of a thread
         task = new Indexing(path);
-        // start the task        
+        // start the task  
+        //task.doInBackground();
         task.execute();
         // show the dialog
         progressDialog.setVisible(true);
         // wait till the task is finished -> set true when done() is finished
         while (!task.isDone()) {
         }
+        this.index = task.getIndex();
         // close the dialog
         progressDialog.dispose();
         // creat the view
@@ -210,21 +218,55 @@ public class UserInterface extends JFrame implements MouseListener {
                 // show panel where buttons are in
                 this.foundDocArea.setVisible(true);
                 // reload the view again by packing the frame              
-                this.pack();
+                this.frame.pack();
             }
             if (e.getSource() == stem) {
                 // Stem the word that is input in the textfield
                 this.foundDocArea.removeAll();
                 this.foundDocArea.setVisible(false);
                 this.num.setVisible(false);
-                this.pack();
+                this.frame.pack();
                 // Save the result of stemming, call Simple Token Stream
-                String result="Result";
+                String result = "Result";
                 // Aufruf der statischen Methode showMessageDialog()
-                JOptionPane.showMessageDialog(this, "Stemmed \"" + this.tQuery.getText()+"\" : "+result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
             }
-            if (e.getSource() == newDic){
-                
+            if (e.getSource() == newDic) {
+                String res = JOptionPane.showInputDialog("Choosing index directory will start at the following path:", this.tQuery.getText());
+                if (res != null) {
+                    if(res.length() > 0){
+                        directory = res;
+                    }
+                    this.frame.setVisible(false);
+                    this.frame.dispose();
+                    this.frame = new JFrame();
+                    try {
+                        chooseDirectory();
+                    } catch (IOException ex) {
+                        Logger.getLogger(UserInterface.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+            if(e.getSource()== all){
+                this.foundDocArea.removeAll();
+                this.labels = new ArrayList<JLabel>();
+                this.num.setVisible(true);
+                for(String s: index.getDictionary()){
+                    JLabel lab = new JLabel(s);
+                    this.labels.add(lab);
+                    this.foundDocArea.add(lab);
+                }
+                this.number.setText(this.voc);
+                this.numberRes.setText(labels.size() + "");
+
+                // add a listener for mouseclicks for every single button saved in the list 
+                for (JLabel b : labels) {
+                    b.addMouseListener(this);
+                }
+                // show panel where buttons are in
+                this.foundDocArea.setVisible(true);
+                // reload the view again by packing the frame              
+                this.frame.pack();
             }
         }
 
@@ -241,7 +283,7 @@ public class UserInterface extends JFrame implements MouseListener {
 
         }
     }
-    
+
     /**
      * all the other mouse click events aren´t used because we don´t need them
      *
