@@ -112,6 +112,7 @@ class QueryParser_KQV{
         
         List<PositionalPosting> masterList = new ArrayList<PositionalPosting>();
         BooleanRetrieval intersector = new BooleanRetrieval();
+        QueryProcessor qProcessor = new QueryProcessor();
         SimpleTokenStream preStemmer = new SimpleTokenStream(andQueryLiterals.getLiterals().get(0));
                 
         //Stems the first token
@@ -125,6 +126,12 @@ class QueryParser_KQV{
             
             if(stemmer.hasNextToken()){
                 String normalizedLiteral = stemmer.nextToken();
+                
+                if(normalizedLiteral.contains("\"")){
+                    masterList = qProcessor.positionalIntersect(masterList,
+                        posIndex.getPostingsList(normalizedLiteral), 0);
+                }
+                
                 masterList = intersector.intersectList(masterList, 
                     posIndex.getPostingsList(normalizedLiteral));
             }
