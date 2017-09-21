@@ -12,8 +12,8 @@ public class PositionalPosting implements Comparable<PositionalPosting>{
     
     public PositionalPosting(int documentID, int position){
         this.documentID = documentID;
-        this.termPositions = new ArrayList<Integer>();
-        this.termPositions.add(position);
+        termPositions = new ArrayList<Integer>();
+        termPositions.add(position);
     }
 
     /**
@@ -40,12 +40,11 @@ public class PositionalPosting implements Comparable<PositionalPosting>{
     
     @Override
     public int compareTo(PositionalPosting p){
-        if(documentID == p.getDocumentID()){
-            return 0;
-        }
-        if(documentID > p.getDocumentID()){
-            return 1;
-        }
-        return -1;
+        return documentID - p.getDocumentID();
+    }
+    
+    @Override
+    public String toString(){
+        return "<"+documentID+":"+termPositions.toString()+">";
     }
 }
