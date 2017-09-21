@@ -63,16 +63,33 @@ class QueryParser_KQV{
              
         Subquery andQueries = new Subquery();
         SimpleTokenStream andReader = new SimpleTokenStream(queryString);
-        
+                
         while(andReader.hasNextToken()){
             String pBegCandidate = andReader.nextToken();
             
             if (pBegCandidate.startsWith("\"")){ //If starts with dbl quotes
                 String phrase = getPhrase(andReader, pBegCandidate);
                 andQueries.addLiteral(phrase);        
-            }      
+            }   
             else{
-                andQueries.addLiteral(pBegCandidate);   
+                if (andReader.hasNextToken()){
+                    String nearCandidate = andReader.nextToken();
+                    System.out.println("near candidate: " + nearCandidate);
+                    
+                    if(nearCandidate.contains("near")){
+                        String lNearOp  = pBegCandidate;
+
+                        //https://docs.oracle.com/javase/tutorial/java/data/converting.html
+                        int k = Integer.valueOf(nearCandidate.substring(4));
+                        String rNearOp = andReader.nextToken();
+                        String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;
+                        andQueries.addLiteral(nearLiteral);
+                    }
+                    else{
+                        andQueries.addLiteral(pBegCandidate);
+                        andQueries.addLiteral(nearCandidate);
+                    }
+                }
             }
         }   
         return andQueries;                
