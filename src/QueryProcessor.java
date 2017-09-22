@@ -53,7 +53,7 @@ public class QueryProcessor {
         // Merge the postings list of each k-gram
         List<String> candidates = kGramIndex.getTypes(wcKGrams.get(0));
         for (int i = 1; i < wcKGrams.size(); i++) {
-            candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(wcKGrams.get(i)));
+            candidates = BooleanRetrieval.intersectList2(candidates, kGramIndex.getTypes(wcKGrams.get(i)));
         }
 
         // Remove candidates that do not match the original query

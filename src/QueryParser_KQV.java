@@ -17,7 +17,7 @@ import java.util.*;
 class QueryParser_KQV{
     
     private PositionalInvertedIndex posIndex; //Used in andQuery(), orQuery()
-    private List<List<PositionalPosting>> AndCollection; 
+    private List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>(); 
     BooleanRetrieval intersector = new BooleanRetrieval();
     
     QueryParser_KQV(){}
@@ -89,8 +89,11 @@ class QueryParser_KQV{
                         andQueries.addLiteral(nearCandidate);
                     }
                 }
+                else{
+                    andQueries.addLiteral(pBegCandidate);
+                }
             }
-        }   
+        }
         return andQueries;                
     }
      
@@ -127,31 +130,56 @@ class QueryParser_KQV{
     private void addAndQuery(Subquery andQueryLiterals){
         
         List<PositionalPosting> masterList = new ArrayList<PositionalPosting>();
-        BooleanRetrieval intersector = new BooleanRetrieval();
-        QueryProcessor qProcessor = new QueryProcessor();
-        SimpleTokenStream preStemmer = new SimpleTokenStream(andQueryLiterals.getLiterals().get(0));
-                
-        //Stems the first token
-        String preMasterList = preStemmer.nextToken();
-        masterList = posIndex.getPostingsList(preMasterList);
+        String preLiteral = andQueryLiterals.getLiterals().get(0);
+        if(preLiteral.contains("\"")){
             
+            preLiteral = preLiteral.substring(1);
+            preLiteral = preLiteral.substring(0, preLiteral.length() - 1);
+            
+            String[] splitPhrase = preLiteral.split(" ");
+                List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
+
+                for(int j = 0; j < splitPhrase.length - 1; j++){
+                    phraseList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
+                    posIndex.getPostingsList(splitPhrase[j + 1]), 1);
+                }
+                masterList = phraseList;
+        }
+        else{
+            //Stems the first token
+            //String preMasterList = preStemmer.nextToken();
+            masterList = posIndex.getPostingsList(preLiteral);
+        }
+                        
         //Merge all of the postings lists of each. 
         //query literal of a given AND query into one master postings list. 
-        for(int i = 1; i < andQueryLiterals.getSize() - 1; i++){
-            SimpleTokenStream stemmer = new SimpleTokenStream(andQueryLiterals.getLiterals().get(i));
-            
-            if(stemmer.hasNextToken()){
-                String normalizedLiteral = stemmer.nextToken();
-                
-                if(normalizedLiteral.contains("\"")){
-                    masterList = qProcessor.positionalIntersect(masterList,
-                        posIndex.getPostingsList(normalizedLiteral), 0);
+        if (andQueryLiterals.getSize() > 1){
+                for(int i = 1; i < andQueryLiterals.getSize(); i++){
+
+                String currentLiteral = andQueryLiterals.getLiterals().get(i);
+
+                if(currentLiteral.contains("\"")){
+                    
+                currentLiteral = currentLiteral.substring(1);
+                currentLiteral = currentLiteral.substring(0, currentLiteral.length() - 1);
+                    
+                    String[] splitPhrase = currentLiteral.split(" ");
+                    List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
+                    
+                    for(int j = 0; j < splitPhrase.length - 1; j++){
+                        phraseList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
+                        posIndex.getPostingsList(splitPhrase[j + 1]), 1);
+                    }
+                    
+                    masterList = BooleanRetrieval.intersectList(masterList,
+                        phraseList);
                 }
-                
-                masterList = intersector.intersectList(masterList, 
-                    posIndex.getPostingsList(normalizedLiteral));
+
+                masterList = BooleanRetrieval.intersectList(masterList, 
+                    posIndex.getPostingsList(currentLiteral));
             }
         }
+        
         //Add this AND postings list to the collection of AND postings lists
         AndCollection.add(masterList);       
     }
@@ -168,8 +196,11 @@ class QueryParser_KQV{
         
         //Merge all Q_i postings list into Master List using OR intersection
         List<PositionalPosting> masterList = AndCollection.get(0);
-        for(int i = 1; i < AndCollection.size(); i++){
-            masterList = intersector.orList(masterList, AndCollection.get(i));
+        
+        if(AndCollection.size() > 1){
+            for(int i = 1; i < AndCollection.size(); i++){
+                masterList = BooleanRetrieval.orList(masterList, AndCollection.get(i));
+            }
         }
         return masterList;
     }
@@ -181,12 +212,12 @@ class QueryParser_KQV{
         
         //Parse query and store in a collection, then
         //performs the query and returns a master postings list.
-        List<Subquery> allQueries = collectOrQueries(query);          
+        List<Subquery> allQueries = collectOrQueries(query);      
         List<PositionalPosting> masterPostings = orQuery(allQueries);       
-
+        
         //Constuct a list of document IDs from this final postings list.
         for(int i = 0; i < masterPostings.size(); i++){
-           int currentDocID = masterPostings.get(i).getDocumentID();           
+           int currentDocID = masterPostings.get(i).getDocumentID();    
            documentList.add(currentDocID);
         }   
         return documentList;
