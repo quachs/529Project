@@ -74,7 +74,6 @@ class QueryParser_KQV{
             else{
                 if (andReader.hasNextToken()){
                     String nearCandidate = andReader.nextToken();
-                    System.out.println("near candidate: " + nearCandidate);
                     
                     if(nearCandidate.contains("near")){
                         String lNearOp  = pBegCandidate;
