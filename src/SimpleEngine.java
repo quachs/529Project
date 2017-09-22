@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
@@ -24,12 +23,19 @@ public class SimpleEngine {
         final PositionalInvertedIndex index = new PositionalInvertedIndex();
 
         // the list of file names that were processed
-        final List<String> fileNames = new ArrayList<String>();
+        final List<String> fileNames = new ArrayList<String>();      
+        
+        // the set of vocabulary types in the corpus
+        final SortedSet<String> vocabTree  = new TreeSet<String>();
+        
+        // the K-Gram Index
+        final KGramIndex kGramIndex = new KGramIndex();
 
         // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(currentWorkingPath, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
 
+            @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
                 // make sure we only process the current working directory
@@ -39,6 +45,7 @@ public class SimpleEngine {
                 return FileVisitResult.SKIP_SUBTREE;
             }
 
+            @Override
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws FileNotFoundException {
                 // only process .txt files
@@ -48,13 +55,14 @@ public class SimpleEngine {
                     System.out.println("Indexing file " + file.getFileName());
 
                     fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, mDocumentID);
+                    indexFile(file.toFile(), index, vocabTree, kGramIndex, mDocumentID);
                     mDocumentID++;
                 }
                 return FileVisitResult.CONTINUE;
             }
 
             // don't throw exceptions if files are locked/other errors occur
+            @Override
             public FileVisitResult visitFileFailed(Path file,
                     IOException e) {
 
@@ -63,45 +71,47 @@ public class SimpleEngine {
 
         });
         
-        System.out.println(index.getTermCount());
-        printResults(index, fileNames);
-            
-        /*
-        // Implement the same program as in Homework 1: ask the user for a term,
-        // retrieve the postings list for that term, and print the names of the 
-        // documents which contain the term.
-        
-        Scanner input = new Scanner(System.in);
-        String term;
-        
-        while(true){
-            
-            System.out.print("Enter a term to search for: ");
-            term = input.next();
-            
-            if(term.equals("quit")){
-                break;
-            }
-            
-            // check if the term exists in the index
-            if(Arrays.binarySearch(index.getDictionary(), term) >= 0){
-                // iterate postings list and print file name
-                System.out.println("These documents contain that term: ");
-                for(Integer posting : index.getPostings(term)){ 
-                    System.out.printf("%s ",fileNames.get(posting));
-                }
-                System.out.println();
-            }
-            else{
-                System.out.println("The term does not exist!");
-            }
+        // iterate the vocab tree to build the kgramindex
+        Iterator<String> iter = vocabTree.iterator();
+        while(iter.hasNext()){
+            kGramIndex.addType(iter.next());
         }
-        input.close();
-        System.out.println("Bye!");
-        */
+        
+        
+        
+        // print results of indices
+        System.out.println("index count: "+index.getTermCount());
+        System.out.println("type count: "+vocabTree.size());
+        printResults(index, fileNames);
+        Iterator<String> it = vocabTree.iterator();
+        while(it.hasNext()){
+            System.out.println(it.next());;
+        }
+        
+        
+        
+        
+        
+        // ===================== WILDCARD TEST =====================    
+        // + will get an empty list if no  matches
+        List<PositionalPosting> list = QueryProcessor.wildcardQuery("y*rk", index, kGramIndex);
+        for(PositionalPosting p : list){
+            System.out.println(p.toString());
+        }    
+        
+        // ===================== POSITIONAL MERGE TEST =====================    
+        // + need to check if the input postings list is null before using
+        // + if hardcoding inputs for testing, use a stemmed word
+        List<PositionalPosting> result = QueryProcessor.positionalIntersect
+            (index.getPostingsList("dodger"), index.getPostingsList("baseball"), 2);
+        for(PositionalPosting p : result){
+            System.out.println(p.toString());
+        }
         
     }
 
+    
+    
     /**
      * Indexes a file by reading a series of tokens from the file, treating each
      * token as a term, and then adding the given document's ID to the inverted
@@ -113,18 +123,23 @@ public class SimpleEngine {
      * @param docID the integer ID of the current document, needed when indexing
      * each term from the document.
      */
-    private static void indexFile(File file, PositionalInvertedIndex index,
-            int docID) throws FileNotFoundException {
-        // TO-DO: finish this method for indexing a particular file.
-        // Construct a SimpleTokenStream for the given File.
-        // Read each token from the stream and add it to the index.
+    private static void indexFile(File file, PositionalInvertedIndex index, 
+            SortedSet vocabTree, KGramIndex kGramIndex, int docID) throws FileNotFoundException {
+        
         SimpleTokenStream s = new SimpleTokenStream(file);
         int positionNumber = 0;
         while(s.hasNextToken()){
-            index.addTerm(s.nextToken(), docID, positionNumber);
+            TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
+            while(t.hasNextToken()){
+                String proToken = t.nextToken(); // the processed token         
+                // add the processed and stemmed token to the inverted index
+                index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                // add the processed token to the vocab tree
+                vocabTree.add(proToken);
+            }
             positionNumber++;
         }
-
+        // build kgram index when vocab tree is complete (after walkFileTree)
     }
     
     private static void printResults(PositionalInvertedIndex index,
@@ -138,15 +153,8 @@ public class SimpleEngine {
         for(String term : index.getDictionary()){
             System.out.printf("%s:", term);
             printSpaces(longestTerm - term.length() + 1);
-            for(Integer docID : index.getDocumentPostingsList(term)){
-                System.out.printf("< %s ",fileNames.get(docID));
-                System.out.print("[");
-                for(Integer pos : index.getDocumentTermPositions(term, docID)){
-                    System.out.printf(" %d ",pos);
-                }
-                System.out.print("]");
-                System.out.print(" > ");
-                
+            for(PositionalPosting p : index.getPostingsList(term)){
+                System.out.print(p.toString());      
             }
             System.out.println();            
         }
