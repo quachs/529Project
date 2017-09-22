@@ -4,7 +4,11 @@ import java.util.*;
 
 /**
  * Class of generic methods to handle boolean retrieval operations
- *
+ * Implementations of intersection algorithms presented in
+ * "Introduction to Information Retrieval, Online Edition" by
+ *  Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
+ *  Cambridge University Press, 2009, p. 11, Figure 1.6
+ *  https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
  */
 public final class BooleanRetrieval {
     
