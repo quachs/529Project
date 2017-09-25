@@ -1,7 +1,10 @@
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /*
 
@@ -26,7 +29,8 @@ public class QueryProcessor {
         (String wcQuery, PositionalInvertedIndex index, KGramIndex kGramIndex) {
 
         // Generate all the k-grams for the wildcard
-        List<String> wcKGrams = new ArrayList<String>();
+        Set<String> wcKGrams = new TreeSet<String>();
+        List<PositionalPosting> results = new ArrayList<PositionalPosting>();
 
         // Append '$' if the beginning or end of the wildcard
         String modifiedQuery = wcQuery;
@@ -50,17 +54,25 @@ public class QueryProcessor {
             }
         }
 
+        // Convert treeset to array to make iterating easier
+        String[] kgrams = new String[wcKGrams.size()];
+        kgrams = wcKGrams.toArray(kgrams);
+
         // Merge the postings list of each k-gram
         List<String> candidates = new ArrayList<String>();
-        if(kGramIndex.getTypes(wcKGrams.get(0)) != null){
-            candidates = kGramIndex.getTypes(wcKGrams.get(0));
+        if (kGramIndex.getTypes(kgrams[0]) != null) {
+            candidates = kGramIndex.getTypes(kgrams[0]);
             for (int i = 1; i < wcKGrams.size(); i++) {
-                if(kGramIndex.getTypes(wcKGrams.get(i)) != null){
-                    candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(wcKGrams.get(i)));
+                if (kGramIndex.getTypes(kgrams[i]) != null) {
+                    candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(kgrams[i]));
+                } else { // return if no matches
+                    return results;
                 }
             }
+        } else { // return if no matches
+            return results;
         }
-        
+
         // Remove candidates that do not match the original query
         Iterator<String> iter = candidates.iterator();
         while (iter.hasNext()) {
@@ -69,14 +81,16 @@ public class QueryProcessor {
             }
         }
 
-        // OR together the postings for the processed/stemmed term from each candidate
-        List<PositionalPosting> results = new ArrayList<PositionalPosting>();
+        // OR together the postings for the processed/stemmed term from each candidate    
         for (String candidate : candidates) { // will skip if candidates is empty
             // process and stem the token
             TokenProcessorStream t = new TokenProcessorStream(candidate);
             while (t.hasNextToken()) {
                 String proToken = PorterStemmer.getStem(t.nextToken());
-                results = BooleanRetrieval.orList(results, index.getPostingsList(proToken));
+                if (index.getPostingsList(proToken) != null) {
+                    results = BooleanRetrieval.orList(results, index.getPostingsList(proToken));
+                }
+
             }
         }
 
@@ -95,8 +109,7 @@ public class QueryProcessor {
      * @return positional postings list from the intersection; the position
      * corresponds to term2
      */
-    public static List<PositionalPosting> positionalIntersect
-        (List<PositionalPosting> term1, List<PositionalPosting> term2, int k) {
+    public static List<PositionalPosting> positionalIntersect(List<PositionalPosting> term1, List<PositionalPosting> term2, int k) {
 
         List<PositionalPosting> result = new ArrayList<PositionalPosting>();
         List<Integer> docs1 = new ArrayList<Integer>(); // term1 documents
