@@ -4,23 +4,23 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-
 /**
- * Class that generates the 1-, 2-, and 3-grams for a type and
- * inserts them into an inverted index structure
- * 
+ * Class that generates the 1-, 2-, and 3-grams for a type and inserts them into
+ * an inverted index structure
+ *
  */
 public class KGramIndex {
-    
+
     private HashMap<String, List<String>> mIndex;
-    
+
     public KGramIndex() {
         mIndex = new HashMap<String, List<String>>();
     }
-    
+
     /**
-     * Generate the k-grams of the given vocabulary type and call a
-     * helper method to insert to the index
+     * Generate the k-grams of the given vocabulary type and call a helper
+     * method to insert to the index
+     *
      * @param type vocabulary type from the corpus
      */
     public void addType(String type) {
@@ -41,17 +41,21 @@ public class KGramIndex {
             addType(type + "$", type);
         }
     }
-    
+
     /**
      * Insert the k-gram and its type to the index
+     *
      * @param kgram from the vocabulary type
      * @param type vocabulary type from the corpus
      */
     private void addType(String kgram, String type) {
         // The term exists in the index. Add the vocab type to the
-        // corresponding kgram (the types are unique and inserted in order)
+        // corresponding kgram if it doesn't already exist.
         if (mIndex.containsKey(kgram)) {
-            mIndex.get(kgram).add(type);
+            if (!mIndex.get(kgram).get(mIndex.get(kgram).size() - 1).equals(type)) {
+                mIndex.get(kgram).add(type);
+            }
+
         } else {
             // Add a new posting to the index
             List<String> typeList = new ArrayList<String>();
@@ -59,21 +63,23 @@ public class KGramIndex {
             mIndex.put(kgram, typeList);
         }
     }
-    
+
     /**
      * Retrieve the list of types that contain a given k-gram
+     *
      * @param kgram
      * @return
      */
-    public List<String> getTypes(String kgram){
+    public List<String> getTypes(String kgram) {
         return mIndex.get(kgram);
     }
-    
+
     /**
      * Get an array of the k-grams
-     * @return 
+     *
+     * @return
      */
-    public String[] getDictionary(){
+    public String[] getDictionary() {
         String[] kgrams = new String[mIndex.size()];
         kgrams = mIndex.keySet().toArray(kgrams);
         Arrays.sort(kgrams);
