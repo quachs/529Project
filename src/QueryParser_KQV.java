@@ -1,15 +1,15 @@
+//Class includes a call to implementations of the Intersect algorithm from 
+//"Introduction to Information Retrieval, Online Edition" by
+//Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
+//Cambridge University Press, 2009, p. 11, Figure 1.6
+//https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
+
 //Sources:
 //https://docs.oracle.com/javase/7/docs/api/java/util/ArrayList.html
 //https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split(java.lang.String)
 //https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
 //https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#startsWith(java.lang.String)
 //https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.lang.String)
-
-//Class includes a call to implementations of the Intersect algorithm from 
-//"Introduction to Information Retrieval, Online Edition" by
-//Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
-//Cambridge University Press, 2009, p. 11, Figure 1.6
-//https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
 
 import java.io.*;
 import java.util.*;
@@ -18,36 +18,34 @@ class QueryParser_KQV{
     
     private PositionalInvertedIndex posIndex; //Used in andQuery(), orQuery()
     private List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>(); 
-    BooleanRetrieval intersector = new BooleanRetrieval();
+    private BooleanRetrieval intersector = new BooleanRetrieval();
+    private KGramIndex kgIndex = new KGramIndex();
     
     QueryParser_KQV(){}
-    QueryParser_KQV(PositionalInvertedIndex posIndex){
+    QueryParser_KQV(PositionalInvertedIndex posIndex, KGramIndex kgIndex){
         this.posIndex = posIndex;
+        this.kgIndex = kgIndex;
     }
       
     private String getPhrase(SimpleTokenStream andReader, String pBegCandidate){
         SimpleTokenStream phraseDetector = andReader;   
         String phraseQuery = "", nextCandidate = "";
 
-        if(pBegCandidate.startsWith("\"")){
-            
+        if(pBegCandidate.startsWith("\"")){            
             phraseQuery = pBegCandidate;
             
-            //If phrase if only one token long
-            if(phraseQuery.endsWith("\"")){
-                return phraseQuery;
+            if(phraseQuery.endsWith("\"")){ //If phrase if only one token long
+                return phraseQuery;  
             }
 
             nextCandidate = phraseDetector.nextToken();
-
-            //Add all phrase tokens to final phrase
-            while(!nextCandidate.endsWith("\"")){
+            while(!nextCandidate.endsWith("\"")){ //build phrase
                 phraseQuery = phraseQuery + " " + nextCandidate;
+                
                 if(phraseDetector.hasNextToken()){
                     nextCandidate = phraseDetector.nextToken();
                 }
-            }  
-            
+            }     
             phraseQuery = phraseQuery + " " + nextCandidate;
             return phraseQuery;
         }
@@ -75,11 +73,10 @@ class QueryParser_KQV{
                 if (andReader.hasNextToken()){
                     String nearCandidate = andReader.nextToken();
                     
+                    //https://docs.oracle.com/javase/tutorial/java/data/converting.html
                     if(nearCandidate.contains("near")){
-                        String lNearOp  = pBegCandidate;
-
-                        //https://docs.oracle.com/javase/tutorial/java/data/converting.html
                         int k = Integer.valueOf(nearCandidate.substring(4));
+                        String lNearOp = pBegCandidate;
                         String rNearOp = andReader.nextToken();
                         String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;
                         andQueries.addLiteral(nearLiteral);
@@ -103,17 +100,15 @@ class QueryParser_KQV{
         SimpleTokenStream tReader = new SimpleTokenStream(query);
         List<Subquery> allQueries = new ArrayList<Subquery>();   
         
-        //Constructs a string representing a complete AND query Q_i;
-        //Stops when first OR token ("+") is encountered
+        //Constructs a complete AND query Q_i (stops at OR token ("+"));
         String qString = "";
         while(tReader.hasNextToken()){
             String plusCandidate = tReader.nextToken();
+            
             if(!plusCandidate.equals("+")){
                 qString = qString + " " + plusCandidate;
                 
                 if(!tReader.hasNextToken()){
-                    //Once a complete AND query has been formed, add its 
-                    //postings list to the AndCollection of postings lists.
                     allQueries.add(collectAndQueries(qString));    
                 }
             }
@@ -131,55 +126,50 @@ class QueryParser_KQV{
         
         List<PositionalPosting> masterList = new ArrayList<PositionalPosting>();
         String preLiteral = andQueryLiterals.getLiterals().get(0);
-        if(preLiteral.contains("\"")){
-            
-            preLiteral = preLiteral.substring(1);
-            preLiteral = preLiteral.substring(0, preLiteral.length() - 1);
-            
+        List<PositionalPosting> intermediateList = new ArrayList<PositionalPosting>();
+        
+        if(preLiteral.contains("\"")){       
+            preLiteral = preLiteral.replaceAll("\"", "");         
             String[] splitPhrase = preLiteral.split(" ");
-                List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
-
-                for(int j = 0; j < splitPhrase.length - 1; j++){
-                    phraseList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
-                    posIndex.getPostingsList(splitPhrase[j + 1]), 1);
-                }
-                masterList = phraseList;
+            
+            for(int j = 0; j < splitPhrase.length - 1; j++){
+                masterList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
+                posIndex.getPostingsList(splitPhrase[j + 1]), 1);
+            }
+        }
+        else if (preLiteral.contains("*")){
+            masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);  
         }
         else{
-            //Stems the first token
-            //String preMasterList = preStemmer.nextToken();
             masterList = posIndex.getPostingsList(preLiteral);
         }
                         
         //Merge all of the postings lists of each. 
         //query literal of a given AND query into one master postings list. 
         if (andQueryLiterals.getSize() > 1){
-                for(int i = 1; i < andQueryLiterals.getSize(); i++){
-
+            
+            for(int i = 1; i < andQueryLiterals.getSize(); i++){
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
-                if(currentLiteral.contains("\"")){
-                    
-                currentLiteral = currentLiteral.substring(1);
-                currentLiteral = currentLiteral.substring(0, currentLiteral.length() - 1);
-                    
+                if(currentLiteral.contains("\"")){        
+                    currentLiteral = currentLiteral.replaceAll("\"", "");                   
                     String[] splitPhrase = currentLiteral.split(" ");
-                    List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
-                    
+                                   
                     for(int j = 0; j < splitPhrase.length - 1; j++){
-                        phraseList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
+                        intermediateList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
                         posIndex.getPostingsList(splitPhrase[j + 1]), 1);
-                    }
-                    
-                    masterList = BooleanRetrieval.intersectList(masterList,
-                        phraseList);
+                    }       
+                    masterList = BooleanRetrieval.intersectList(masterList, intermediateList);
                 }
-
-                masterList = BooleanRetrieval.intersectList(masterList, 
-                    posIndex.getPostingsList(currentLiteral));
+                else if (currentLiteral.contains("*")){
+                    intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
+                    masterList = BooleanRetrieval.intersectList(masterList, intermediateList);
+                }
+                else{
+                    masterList = BooleanRetrieval.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
+                }
             }
         }
-        
         //Add this AND postings list to the collection of AND postings lists
         AndCollection.add(masterList);       
     }
@@ -208,12 +198,10 @@ class QueryParser_KQV{
     //Takes a string representing a query, returns list of relevant documents
     public List<Integer> getDocumentList(String query){            
     
-        List<Integer> documentList = new ArrayList<Integer>();
-        
-        //Parse query and store in a collection, then
-        //performs the query and returns a master postings list.
+        //Parse query, store in a collection, perform the query, return a final postings list.
         List<Subquery> allQueries = collectOrQueries(query);      
         List<PositionalPosting> masterPostings = orQuery(allQueries);       
+        List<Integer> documentList = new ArrayList<Integer>();
         
         //Constuct a list of document IDs from this final postings list.
         for(int i = 0; i < masterPostings.size(); i++){

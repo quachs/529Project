@@ -1,7 +1,10 @@
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /*
 
@@ -26,7 +29,8 @@ public class QueryProcessor {
         (String wcQuery, PositionalInvertedIndex index, KGramIndex kGramIndex) {
 
         // Generate all the k-grams for the wildcard
-        List<String> wcKGrams = new ArrayList<String>();
+        Set<String> wcKGrams = new TreeSet<String>();
+        List<PositionalPosting> results = new ArrayList<PositionalPosting>();
 
         // Append '$' if the beginning or end of the wildcard
         String modifiedQuery = wcQuery;
@@ -50,12 +54,25 @@ public class QueryProcessor {
             }
         }
 
-        // Merge the postings list of each k-gram
-        List<String> candidates = kGramIndex.getTypes(wcKGrams.get(0));
-        for (int i = 1; i < wcKGrams.size(); i++) {
-            candidates = BooleanRetrieval.intersectList2(candidates, kGramIndex.getTypes(wcKGrams.get(i)));
-        }
+        // Convert treeset to array to make iterating easier
+        String[] kgrams = new String[wcKGrams.size()];
+        kgrams = wcKGrams.toArray(kgrams);
 
+        // Merge the postings list of each k-gram
+        List<String> candidates = new ArrayList<String>();
+        if (kGramIndex.getTypes(kgrams[0]) != null){
+            candidates = kGramIndex.getTypes(kgrams[0]);
+            for (int i = 1; i < wcKGrams.size(); i++) {
+                if (kGramIndex.getTypes(kgrams[i]) != null){
+                    candidates = BooleanRetrieval.intersectList2(candidates, kGramIndex.getTypes(kgrams[i]));
+                } else { // return if no matches
+                    return results;
+                }
+            }
+        } else{ // return if no matches
+            return results;
+        }
+        
         // Remove candidates that do not match the original query
         if (candidates != null) { // avoid null pointer exception if no matches
             Iterator<String> iter = candidates.iterator();
@@ -65,18 +82,19 @@ public class QueryProcessor {
                 }
             }
         }
-
+//        System.out.println("final candidates: " + candidates);
+        
         // OR together the postings for the processed/stemmed term from each candidate
-        List<PositionalPosting> results = new ArrayList<PositionalPosting>();
         for (String candidate : candidates) {
             SimpleTokenStream s = new SimpleTokenStream(candidate);
             while (s.hasNextToken()) { // process and stem ***** THIS IS TEMPORARY *****
-                results = BooleanRetrieval.orList(results, index.getPostingsList(s.nextToken()));
+                List<PositionalPosting> tempList = index.getPostingsList(s.nextToken());
+                if(tempList != null){
+                    results = BooleanRetrieval.orList(results, tempList);
+                }
             }
         }
-
         return results;
-
     }
 
     /**
