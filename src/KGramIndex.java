@@ -48,7 +48,9 @@ public class KGramIndex {
      */
     private void addType(String kgram, String type) {
         if (mIndex.containsKey(kgram)) {
-            mIndex.get(kgram).add(type);
+            if (!mIndex.get(kgram).get(mIndex.get(kgram).size() - 1).equals(type)){
+                mIndex.get(kgram).add(type);    
+            }
         } else {
             List<String> typeList = new ArrayList<String>();
             typeList.add(type);

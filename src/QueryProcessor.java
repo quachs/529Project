@@ -1,9 +1,8 @@
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 /*
@@ -29,7 +28,7 @@ public class QueryProcessor {
         (String wcQuery, PositionalInvertedIndex index, KGramIndex kGramIndex) {
 
         // Generate all the k-grams for the wildcard
-        Set<String> wcKGrams = new TreeSet<String>();
+        SortedSet<String> wcKGrams = new TreeSet<String>();
         List<PositionalPosting> results = new ArrayList<PositionalPosting>();
 
         // Append '$' if the beginning or end of the wildcard
@@ -62,9 +61,9 @@ public class QueryProcessor {
         List<String> candidates = new ArrayList<String>();
         if (kGramIndex.getTypes(kgrams[0]) != null){
             candidates = kGramIndex.getTypes(kgrams[0]);
-            for (int i = 1; i < wcKGrams.size(); i++) {
+            for (int i = 1; i < kgrams.length; i++) {
                 if (kGramIndex.getTypes(kgrams[i]) != null){
-                    candidates = BooleanRetrieval.intersectList2(candidates, kGramIndex.getTypes(kgrams[i]));
+                    candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(kgrams[i]));
                 } else { // return if no matches
                     return results;
                 }

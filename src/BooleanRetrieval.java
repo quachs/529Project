@@ -14,42 +14,13 @@ public final class BooleanRetrieval {
      * @param list2
      * @return 
      */
-    public static List<PositionalPosting> intersectList(List<PositionalPosting> list1, 
-            List<PositionalPosting> list2){
-        List<PositionalPosting> result = new ArrayList<PositionalPosting>();
+     public static <T extends Comparable> List<T> intersectList(List<T> list1, List<T> list2){
+        List<T> result = new ArrayList<T>();
         int i = 0;
         int j = 0;
         
         while( i < list1.size() && j < list2.size()){
-            if(list1.get(i).getDocumentID() == list2.get(j).getDocumentID()){
-                result.add(list1.get(i));
-                i++;
-                j++;
-            }
-            else if(list1.get(i).getDocumentID() < list2.get(j).getDocumentID()){ // list1 before list2
-                i++; 
-            }
-            else{ // list2 before list1
-                j++;
-            }
-        }
-        
-        return result;
-    }
-    
-     /**
-     * Merge the two given lists
-     * @param list1
-     * @param list2
-     * @return 
-     */
-    public static List<String> intersectList2(List<String> list1, List<String> list2){
-        List<String> result = new ArrayList<String>();
-        int i = 0;
-        int j = 0;
-        
-        while( i < list1.size() && j < list2.size()){
-            if(list1.get(i).equals(list2.get(j))){
+            if(list1.get(i).compareTo(list2.get(j)) == 0){
                 result.add(list1.get(i));
                 i++;
                 j++;
@@ -63,7 +34,7 @@ public final class BooleanRetrieval {
         }
         
         return result;
-    }
+}
     
      /**
      * OR the two given lists
