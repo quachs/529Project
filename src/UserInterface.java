@@ -32,7 +32,7 @@ public class UserInterface implements MouseListener {
     JFrame frame;
     // after the path is chosen it is saved here for calling the indexing method.
     private Path path;
-    
+
     private String directory;
 
     // Task where you can find positionalindex
@@ -57,7 +57,7 @@ public class UserInterface implements MouseListener {
     private JButton all = new JButton("Print vocabulary");
 
     // List of results that are shown in the foundDocArea
-    private List<JLabel> labels = new ArrayList<>();
+    private List<JLabel> labels = new ArrayList<JLabel>();
 
     public UserInterface() throws IOException {
         this.index = task.getIndex();
@@ -227,18 +227,24 @@ public class UserInterface implements MouseListener {
                 this.num.setVisible(false);
                 this.frame.pack();
                 // Save the result of stemming, call Simple Token Stream
-                String result = "Result";
+                String result = PorterStemmer.getStem(this.tQuery.getText());
                 // Aufruf der statischen Methode showMessageDialog()
                 JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
             }
             if (e.getSource() == newDic) {
                 String res = JOptionPane.showInputDialog("Choosing index directory will start at the following path:", this.tQuery.getText());
                 if (res != null) {
-                    if(res.length() > 0){
+                    if (res.length() > 0) {
                         directory = res;
                     }
                     this.frame.setVisible(false);
                     this.frame.dispose();
+                    // close everything
+                    // Task where you can find positionalindex
+                    task = new Indexing();
+                    foundDocArea.removeAll();
+                    labels = new ArrayList<JLabel>();
+                    num.setVisible(false);
                     this.frame = new JFrame();
                     try {
                         chooseDirectory();
@@ -247,11 +253,11 @@ public class UserInterface implements MouseListener {
                     }
                 }
             }
-            if(e.getSource()== all){
+            if (e.getSource() == all) {
                 this.foundDocArea.removeAll();
                 this.labels = new ArrayList<JLabel>();
                 this.num.setVisible(true);
-                for(String s: index.getDictionary()){
+                for (String s : index.getDictionary()) {
                     JLabel lab = new JLabel(s);
                     this.labels.add(lab);
                     this.foundDocArea.add(lab);
