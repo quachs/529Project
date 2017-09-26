@@ -38,8 +38,26 @@ public class PositionalInvertedIndex {
         Arrays.sort(terms);
         return terms;
     }
-        
+    
+    public List<Integer> getDocumentPostingsList(String term){
+        List<Integer> docList = new ArrayList<Integer>();
+        for (PositionalPosting p : mIndex.get(term)) {
+            docList.add(p.getDocumentID());
+        }
+        return docList;
+    }
+    
+    public List<Integer> getDocumentTermPositions(String term, int docID){
+        int docIndex = Collections.binarySearch(getDocumentPostingsList(term), docID);
+        if (docIndex >= 0){
+            return mIndex.get(term).get(docIndex).getTermPositions();
+        }
+        return null;
+    }
+    
     public List<PositionalPosting> getPostingsList(String term){
         return mIndex.get(term);
     }
+    
+
 }
