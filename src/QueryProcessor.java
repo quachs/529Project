@@ -1,18 +1,13 @@
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 /*
 
-ISSUES:
-+ Positional merge assumes the terms exist in the index. Check before using!!!
-
-UPDATE:
-+ Wildcard and PositionalMerge returns an empty postings list if no matches.
+Class to process a query.
 
  */
 public class QueryProcessor {
@@ -29,7 +24,7 @@ public class QueryProcessor {
         (String wcQuery, PositionalInvertedIndex index, KGramIndex kGramIndex) {
 
         // Generate all the k-grams for the wildcard
-        Set<String> wcKGrams = new TreeSet<String>();
+        SortedSet<String> wcKGrams = new TreeSet<String>();
         List<PositionalPosting> results = new ArrayList<PositionalPosting>();
 
         // Append '$' if the beginning or end of the wildcard
@@ -53,16 +48,16 @@ public class QueryProcessor {
                 wcKGrams.add(fragment); // 1-,2-, or 3-grams
             }
         }
-
+        
         // Convert treeset to array to make iterating easier
         String[] kgrams = new String[wcKGrams.size()];
         kgrams = wcKGrams.toArray(kgrams);
-
+        
         // Merge the postings list of each k-gram
         List<String> candidates = new ArrayList<String>();
         if (kGramIndex.getTypes(kgrams[0]) != null) {
             candidates = kGramIndex.getTypes(kgrams[0]);
-            for (int i = 1; i < wcKGrams.size(); i++) {
+            for (int i = 1; i < kgrams.length; i++) {
                 if (kGramIndex.getTypes(kgrams[i]) != null) {
                     candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(kgrams[i]));
                 } else { // return if no matches
@@ -80,15 +75,15 @@ public class QueryProcessor {
                 iter.remove();
             }
         }
-
+        
         // OR together the postings for the processed/stemmed term from each candidate    
         for (String candidate : candidates) { // will skip if candidates is empty
             // process and stem the token
             TokenProcessorStream t = new TokenProcessorStream(candidate);
             while (t.hasNextToken()) {
-                String proToken = PorterStemmer.getStem(t.nextToken());
-                if (index.getPostingsList(proToken) != null) {
-                    results = BooleanRetrieval.orList(results, index.getPostingsList(proToken));
+                String term = PorterStemmer.getStem(t.nextToken());
+                if (index.getPostingsList(term) != null) {
+                    results = BooleanRetrieval.orList(results, index.getPostingsList(term));
                 }
 
             }
@@ -109,7 +104,8 @@ public class QueryProcessor {
      * @return positional postings list from the intersection; the position
      * corresponds to term2
      */
-    public static List<PositionalPosting> positionalIntersect(List<PositionalPosting> term1, List<PositionalPosting> term2, int k) {
+    public static List<PositionalPosting> positionalIntersect
+        (List<PositionalPosting> term1, List<PositionalPosting> term2, int k) {
 
         List<PositionalPosting> result = new ArrayList<PositionalPosting>();
         List<Integer> docs1 = new ArrayList<Integer>(); // term1 documents
