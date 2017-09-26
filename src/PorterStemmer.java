@@ -1,6 +1,5 @@
 
 // http://snowball.tartarus.org/download.html
-import org.tartarus.snowball.*;
 import org.tartarus.snowball.ext.englishStemmer;
 
 
@@ -14,13 +13,13 @@ public final class PorterStemmer {
     /**
      * Stem the given token string
      * @param token
-     * @return 
+     * @return stem of the token
      */
     public static String getStem(String token){
         STEMMER.setCurrent(token);
         if(STEMMER.stem()){
             return STEMMER.getCurrent();
         }
-        return "";
+        return null;
     }
 }
