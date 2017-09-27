@@ -7,7 +7,7 @@ import java.util.*;
  * processing: removing all non-alphanumeric characters, and converting to
  * lowercase.
  */
-public class SimpleTokenStream implements TokenStream {
+public class QueryTokenStream implements TokenStream {
 
     private Scanner mReader;
     private Queue<String> tokenQueue;
@@ -15,7 +15,7 @@ public class SimpleTokenStream implements TokenStream {
     /**
      * Constructs a SimpleTokenStream to read from the specified file.
      */
-    public SimpleTokenStream(File fileToOpen) throws FileNotFoundException {
+    public QueryTokenStream(File fileToOpen) throws FileNotFoundException {
         mReader = new Scanner(new FileReader(fileToOpen));
         tokenQueue = new LinkedList<String>();
     }
@@ -23,7 +23,7 @@ public class SimpleTokenStream implements TokenStream {
     /**
      * Constructs a SimpleTokenStream to read from a String of text.
      */
-    public SimpleTokenStream(String text) {
+    public QueryTokenStream(String text) {
         mReader = new Scanner(text);
         tokenQueue = new LinkedList<String>();
     }
