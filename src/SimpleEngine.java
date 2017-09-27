@@ -60,11 +60,6 @@ public class SimpleEngine {
                     mDocumentID++;
                 }
                 else if (file.toString().endsWith(".json")){
-                    System.out.println("Indexing file " + file.getFileName());
-                    
-                    fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, vocabTree, kgIndex, mDocumentID); // add to sandra branch
-                    mDocumentID++;
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -80,7 +75,6 @@ public class SimpleEngine {
         });
         
         // iterate the vocab tree to build the kgramindex
-        // add to sandra branch
         Iterator<String> iter = vocabTree.iterator();
         while(iter.hasNext()){
             kgIndex.addType(iter.next());
@@ -88,7 +82,7 @@ public class SimpleEngine {
         
         System.out.println(index.getTermCount());
         printResults(index, fileNames);
-        //for(String k : kgIndex.getDictionary()){
+        //for(String k : kgIndex.getDictionary()){ //don't need
         //    System.out.println(k+": "+kgIndex.getTypes(k));
         //}
         
@@ -96,48 +90,12 @@ public class SimpleEngine {
         System.out.println("Enter a query: "); //don't need
         Scanner uScanner = new Scanner(System.in); //don't need
         String uInput = uScanner.nextLine(); //don't need
-        QueryParser_KQV qParser = new QueryParser_KQV(index, kgIndex); // add to sandra branch
+        QueryParser_KQV qParser = new QueryParser_KQV(index, kgIndex);
         List<Integer> docList = qParser.getDocumentList(uInput); //don't need
         for(int i = 0; i < docList.size(); i++){ //don't need
             System.out.println("document" + docList.get(i)); 
         }
-    }
-        
-            
-        /*
-        // Implement the same program as in Homework 1: ask the user for a term,
-        // retrieve the postings list for that term, and print the names of the 
-        // documents which contain the term.
-        
-        Scanner input = new Scanner(System.in);
-        String term;
-        
-        while(true){
-            
-            System.out.print("Enter a term to search for: ");
-            term = input.next();
-            
-            if(term.equals("quit")){
-                break;
-            }
-            
-            // check if the term exists in the index
-            if(Arrays.binarySearch(index.getDictionary(), term) >= 0){
-                // iterate postings list and print file name
-                System.out.println("These documents contain that term: ");
-                for(Integer posting : index.getPostings(term)){ 
-                    System.out.printf("%s ",fileNames.get(posting));
-                }
-                System.out.println();
-            }
-            else{
-                System.out.println("The term does not exist!");
-            }
-        }
-        
-    }
-
-    
+    }        
     
     /**
      * Indexes a file by reading a series of tokens from the file, treating each
@@ -155,13 +113,17 @@ public class SimpleEngine {
         // TO-DO: finish this method for indexing a particular file.
         // Construct a SimpleTokenStream for the given File.
         // Read each token from the stream and add it to the index.
-        SimpleTokenStream s = new SimpleTokenStream(file);
-        
+        SimpleTokenStream s = new SimpleTokenStream(file);       
         int positionNumber = 0;
         while(s.hasNextToken()){
-            String indexee = s.nextToken();
-            index.addTerm(indexee, docID, positionNumber);
-            vocabTree.add(indexee); // add to sandra branch
+            TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
+            while(t.hasNextToken()){
+                String proToken = t.nextToken(); // the processed token
+                // add the processed and stemmed token to the inverted index
+                index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                // add the processed token to the vocab tree
+                vocabTree.add(proToken);
+            }
             positionNumber++;
         }
         // build kgram index when vocab tree is complete (after walkFileTree)
@@ -190,25 +152,5 @@ public class SimpleEngine {
         for (int i = 0; i < spaces; i++) {
             System.out.print(" ");
         }
-    }
-   
-    public void jsonBodyReader(File file) throws FileNotFoundException{
-    SimpleTokenStream s = new SimpleTokenStream(file);
-        String bodyDetector = "";
-        while(!bodyDetector.contains("\"body\"")){
-        bodyDetector = s.nextToken();
-        }
-        
-        String[] bFieldValueSeparator = bodyDetector.split("\"body\"");
-        //System.out.println(bFieldValueSeparator[1]);
-        bodyDetector = s.nextToken();
-        
-        while(!bodyDetector.contains("\"url\"")){
-            //System.out.println(bodyDetector);
-            bodyDetector = s.nextToken();
-        }
-        
-        String[] uFieldValueSeparator = bodyDetector.split("\"url\"");
-        //System.out.println(uFieldValueSeparator[0]);
     }
 }
