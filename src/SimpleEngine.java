@@ -12,7 +12,7 @@ import javax.swing.JFileChooser;
 public class SimpleEngine {
 
     public static void main(String[] args) throws IOException {
-        
+                
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select Folder");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -22,10 +22,14 @@ public class SimpleEngine {
 
         // the inverted index
         final PositionalInvertedIndex index = new PositionalInvertedIndex();
+        final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
 
         // the list of file names that were processed
         final List<String> fileNames = new ArrayList<String>();
 
+        // the set of vocabulary types in the corpus
+        final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
+        
         // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(currentWorkingPath, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
@@ -48,7 +52,14 @@ public class SimpleEngine {
                     System.out.println("Indexing file " + file.getFileName());
 
                     fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, mDocumentID);
+                    indexFile(file.toFile(), index, vocabTree, kgIndex, mDocumentID); // add to sandra branch
+                    mDocumentID++;
+                }
+                else if (file.toString().endsWith(".json")){
+                    System.out.println("Indexing file " + file.getFileName());
+                    
+                    fileNames.add(file.getFileName().toString());
+                    indexFile(file.toFile(), index, vocabTree, kgIndex, mDocumentID); // add to sandra branch
                     mDocumentID++;
                 }
                 return FileVisitResult.CONTINUE;
@@ -63,8 +74,30 @@ public class SimpleEngine {
 
         });
         
+        // iterate the vocab tree to build the kgramindex
+        // add to sandra branch
+        Iterator<String> iter = vocabTree.iterator();
+        while(iter.hasNext()){
+            kgIndex.addType(iter.next());
+        }
+        
         System.out.println(index.getTermCount());
         printResults(index, fileNames);
+        //for(String k : kgIndex.getDictionary()){
+        //    System.out.println(k+": "+kgIndex.getTypes(k));
+        //}
+        
+        //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
+        System.out.println("Enter a query: "); //don't need
+        Scanner uScanner = new Scanner(System.in); //don't need
+        String uInput = uScanner.nextLine(); //don't need
+        QueryParser_KQV qParser = new QueryParser_KQV(index, kgIndex); // add to sandra branch
+        List<Integer> docList = qParser.getDocumentList(uInput); //don't need
+        for(int i = 0; i < docList.size(); i++){ //don't need
+            System.out.println("document" + docList.get(i)); 
+        }
+        
+        
             
         /*
         // Implement the same program as in Homework 1: ask the user for a term,
@@ -114,14 +147,17 @@ public class SimpleEngine {
      * each term from the document.
      */
     private static void indexFile(File file, PositionalInvertedIndex index,
-            int docID) throws FileNotFoundException {
+            SortedSet vocabTree, KGramIndex kgIndex, int docID) throws FileNotFoundException { //// add to sandra branch
         // TO-DO: finish this method for indexing a particular file.
         // Construct a SimpleTokenStream for the given File.
         // Read each token from the stream and add it to the index.
         SimpleTokenStream s = new SimpleTokenStream(file);
+        
         int positionNumber = 0;
         while(s.hasNextToken()){
-            index.addTerm(s.nextToken(), docID, positionNumber);
+            String indexee = s.nextToken();
+            index.addTerm(indexee, docID, positionNumber);
+            vocabTree.add(indexee); // add to sandra branch
             positionNumber++;
         }
 
@@ -157,5 +193,25 @@ public class SimpleEngine {
         for (int i = 0; i < spaces; i++) {
             System.out.print(" ");
         }
+    }
+    
+    public void jsonBodyReader(File file) throws FileNotFoundException{
+    SimpleTokenStream s = new SimpleTokenStream(file);
+        String bodyDetector = "";
+        while(!bodyDetector.contains("\"body\"")){
+        bodyDetector = s.nextToken();
+        }
+        
+        String[] bFieldValueSeparator = bodyDetector.split("\"body\"");
+        //System.out.println(bFieldValueSeparator[1]);
+        bodyDetector = s.nextToken();
+        
+        while(!bodyDetector.contains("\"url\"")){
+            //System.out.println(bodyDetector);
+            bodyDetector = s.nextToken();
+        }
+        
+        String[] uFieldValueSeparator = bodyDetector.split("\"url\"");
+        //System.out.println(uFieldValueSeparator[0]);
     }
 }
