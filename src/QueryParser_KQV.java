@@ -1,4 +1,4 @@
-//Class includes a call to implementations of the Intersect algorithm from 
+//Class includes a call to implementations of the ListMerge algorithm from 
 //"Introduction to Information Retrieval, Online Edition" by
 //Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
 //Cambridge University Press, 2009, p. 11, Figure 1.6
@@ -18,7 +18,7 @@ class QueryParser_KQV{
     
     private PositionalInvertedIndex posIndex; //Used in andQuery(), orQuery()
     private List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>(); 
-    private BooleanRetrieval intersector = new BooleanRetrieval();
+    private ListMerge intersector = new ListMerge();
     private KGramIndex kgIndex = new KGramIndex();
     
     QueryParser_KQV(){}
@@ -91,76 +91,13 @@ class QueryParser_KQV{
         }     
         return allQueries;
     }
-     
-    //Add the positional postings list of an AND query to the 
-    //collection of AND query positional postings lists
-    private void addAndQuery(Subquery andQueryLiterals){
-        
-        List<PositionalPosting> masterList = new ArrayList<PositionalPosting>();
-        String preLiteral = andQueryLiterals.getLiterals().get(0);
-        List<PositionalPosting> intermediateList = new ArrayList<PositionalPosting>();
-        
-        if(preLiteral.contains("\"")){       
-            masterList = Phrase.phraseQuery(preLiteral, posIndex);
-        }
-        else if (preLiteral.contains("*")){
-            masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);  
-        }
-        else{
-            masterList = posIndex.getPostingsList(preLiteral);
-        }
-                        
-        //Merge all of the postings lists of each. 
-        //query literal of a given AND query into one master postings list. 
-        if (andQueryLiterals.getSize() > 1){
-            
-            for(int i = 1; i < andQueryLiterals.getSize(); i++){
-                String currentLiteral = andQueryLiterals.getLiterals().get(i);
-
-                if(currentLiteral.contains("\"")){        
-                    intermediateList = Phrase.phraseQuery(currentLiteral, posIndex);
-                    masterList = BooleanRetrieval.intersectList(masterList, intermediateList);
-                }
-                else if (currentLiteral.contains("*")){
-                    intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
-                    masterList = BooleanRetrieval.intersectList(masterList, intermediateList);
-                }
-                else{
-                    masterList = BooleanRetrieval.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
-                }
-            }
-        }
-        //Add this AND postings list to the collection of AND postings lists
-        AndCollection.add(masterList);       
-    }
-        
-    //Run all AND Queries Q_i, store results in collection of positional 
-    //postings lists, then run an OR query that merges all postings lists
-    //into one master positional postings list representing the entire query.
-    private List<PositionalPosting> orQuery(List<Subquery> allQueries){
-       
-        //Add all Q_i positional postings lists to AndCollection
-        for(int i = 0; i < allQueries.size(); i++){
-            addAndQuery(allQueries.get(i));
-        }
-        
-        //Merge all Q_i postings list into Master List using OR intersection
-        List<PositionalPosting> masterList = AndCollection.get(0);
-        
-        if(AndCollection.size() > 1){
-            for(int i = 1; i < AndCollection.size(); i++){
-                masterList = BooleanRetrieval.orList(masterList, AndCollection.get(i));
-            }
-        }
-        return masterList;
-    }
-    
+      
     //Takes a string representing a query, returns list of relevant documents
     public List<Integer> getDocumentList(String query){            
     
         //Parse query, store in a collection, perform the query, return a final postings list.
         List<Subquery> allQueries = collectOrQueries(query);      
-        List<PositionalPosting> masterPostings = orQuery(allQueries);       
+        List<PositionalPosting> masterPostings = QueryProcessor.orQuery(allQueries, posIndex, kgIndex);       
         List<Integer> documentList = new ArrayList<Integer>();
         
         //Constuct a list of document IDs from this final postings list.

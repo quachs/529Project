@@ -20,7 +20,7 @@ class Soundex_KQV{
     Soundex_KQV(){}
     Soundex_KQV(String term){this.term = term;}
     
-    private String reduceToSoundex(String term){
+    public String reduceToSoundex(String term){
         String soundexForm = term;
         String firstLetter = soundexForm.substring(0,1); //left alone
         String remainingString = soundexForm.substring(1); //to be processed

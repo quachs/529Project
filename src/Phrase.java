@@ -1,12 +1,9 @@
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /*
 
-Class to process a query.
+Class to process a phrase.
 
  */
 public class Phrase {
@@ -45,7 +42,7 @@ public class Phrase {
             List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
 
             for(int j = 0; j < splitPhrase.length - 1; j++){
-                phraseList = QueryProcessor.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
+                phraseList = ListMerge.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
                 posIndex.getPostingsList(splitPhrase[j + 1]), 1);
             }       
         return phraseList;
