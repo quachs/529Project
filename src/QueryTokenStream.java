@@ -56,7 +56,7 @@ public class SimpleTokenStream implements TokenStream {
         // https://stackoverflow.com/questions/24967089/java-remove-all-non-alphanumeric-character-from-beginning-and-end-of-string
         
         //Modified 9/17 to ignore double quotes
-        next = next.replaceAll("^\\W+|\\W+$", "");
+        next = next.replaceAll("[^[\\W&&[^\"\\*]]+|[\\W&&[^\"\\*]]+$]+", "");
         next = next.replaceAll("'", "");
         if (next.contains("-")) { // split hyphenated token
             String[] tokens = next.split("-");

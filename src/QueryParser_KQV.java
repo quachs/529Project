@@ -27,8 +27,8 @@ class QueryParser_KQV{
         this.kgIndex = kgIndex;
     }
       
-    private String getPhrase(SimpleTokenStream andReader, String pBegCandidate){
-        SimpleTokenStream phraseDetector = andReader;   
+    private String getPhrase(QueryTokenStream andReader, String pBegCandidate){
+        QueryTokenStream phraseDetector = andReader;   
         String phraseQuery = "", nextCandidate = "";
 
         if(pBegCandidate.startsWith("\"")){            
@@ -60,7 +60,7 @@ class QueryParser_KQV{
     public Subquery collectAndQueries(String queryString){
              
         Subquery andQueries = new Subquery();
-        SimpleTokenStream andReader = new SimpleTokenStream(queryString);
+        QueryTokenStream andReader = new QueryTokenStream(queryString);
                 
         while(andReader.hasNextToken()){
             String pBegCandidate = andReader.nextToken();
@@ -97,7 +97,7 @@ class QueryParser_KQV{
     //Splits up query into subqueries Q_1...Q_k, placing AND queries into collection.
     public List<Subquery> collectOrQueries(String query){
         
-        SimpleTokenStream tReader = new SimpleTokenStream(query);
+        QueryTokenStream tReader = new QueryTokenStream(query);
         List<Subquery> allQueries = new ArrayList<Subquery>();   
         
         //Constructs a complete AND query Q_i (stops at OR token ("+"));
