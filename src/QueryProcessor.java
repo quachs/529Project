@@ -89,7 +89,7 @@ public class QueryProcessor {
         }
         return results;
     }
-
+        
     /**
      * Positional intersection of two terms where the second term appears within
      * k positions after the first. Source: Introduction to Information
