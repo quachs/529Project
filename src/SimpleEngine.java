@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
@@ -25,7 +24,10 @@ public class SimpleEngine {
         final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
 
         // the list of file names that were processed
-        final List<String> fileNames = new ArrayList<String>();
+        final List<String> fileNames = new ArrayList<String>();      
+        
+        // the K-Gram Index
+        final KGramIndex kGramIndex = new KGramIndex();
 
         // the set of vocabulary types in the corpus
         final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
@@ -34,6 +36,7 @@ public class SimpleEngine {
         Files.walkFileTree(currentWorkingPath, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
 
+            @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
                 // make sure we only process the current working directory
@@ -43,6 +46,7 @@ public class SimpleEngine {
                 return FileVisitResult.SKIP_SUBTREE;
             }
 
+            @Override
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws FileNotFoundException {
                 // only process .txt files
@@ -66,6 +70,7 @@ public class SimpleEngine {
             }
 
             // don't throw exceptions if files are locked/other errors occur
+            @Override
             public FileVisitResult visitFileFailed(Path file,
                     IOException e) {
 
@@ -96,7 +101,7 @@ public class SimpleEngine {
         for(int i = 0; i < docList.size(); i++){ //don't need
             System.out.println("document" + docList.get(i)); 
         }
-        
+    }
         
             
         /*
@@ -129,12 +134,11 @@ public class SimpleEngine {
                 System.out.println("The term does not exist!");
             }
         }
-        input.close();
-        System.out.println("Bye!");
-        */
         
     }
 
+    
+    
     /**
      * Indexes a file by reading a series of tokens from the file, treating each
      * token as a term, and then adding the given document's ID to the inverted
@@ -160,7 +164,7 @@ public class SimpleEngine {
             vocabTree.add(indexee); // add to sandra branch
             positionNumber++;
         }
-
+        // build kgram index when vocab tree is complete (after walkFileTree)
     }
     
     private static void printResults(PositionalInvertedIndex index,
@@ -174,15 +178,8 @@ public class SimpleEngine {
         for(String term : index.getDictionary()){
             System.out.printf("%s:", term);
             printSpaces(longestTerm - term.length() + 1);
-            for(Integer docID : index.getDocumentPostingsList(term)){
-                System.out.printf("< %s ",fileNames.get(docID));
-                System.out.print("[");
-                for(Integer pos : index.getDocumentTermPositions(term, docID)){
-                    System.out.printf(" %d ",pos);
-                }
-                System.out.print("]");
-                System.out.print(" > ");
-                
+            for(PositionalPosting p : index.getPostingsList(term)){
+                System.out.print(p.toString());      
             }
             System.out.println();            
         }
@@ -194,7 +191,7 @@ public class SimpleEngine {
             System.out.print(" ");
         }
     }
-    
+   
     public void jsonBodyReader(File file) throws FileNotFoundException{
     SimpleTokenStream s = new SimpleTokenStream(file);
         String bodyDetector = "";
