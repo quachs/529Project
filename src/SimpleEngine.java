@@ -1,3 +1,5 @@
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
@@ -19,15 +21,13 @@ public class SimpleEngine {
         
         final Path currentWorkingPath = chooser.getSelectedFile().toPath();
 
-        // the inverted index
+        // the indices
         final PositionalInvertedIndex index = new PositionalInvertedIndex();
         final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
+        final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
 
         // the list of file names that were processed
         final List<String> fileNames = new ArrayList<String>();      
-        
-        // the K-Gram Index
-        final KGramIndex kGramIndex = new KGramIndex();
 
         // the set of vocabulary types in the corpus
         final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
@@ -39,27 +39,38 @@ public class SimpleEngine {
             @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
+                /*
                 // make sure we only process the current working directory
                 if (currentWorkingPath.equals(dir)) {
                     return FileVisitResult.CONTINUE;
                 }
                 return FileVisitResult.SKIP_SUBTREE;
+                */
+                
+                // process the current working directory and subdirectories
+                return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws FileNotFoundException {
                 // only process .txt files
-                if (file.toString().endsWith(".txt")) {
+                /*
+                if (file.toString().endsWith(".txt")) { 
                     // we have found a .txt file; add its name to the fileName list,
                     // then index the file and increase the document ID counter.
                     System.out.println("Indexing file " + file.getFileName());
 
                     fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, vocabTree, kgIndex, mDocumentID); // add to sandra branch
+                    indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID); // add to sandra branch
                     mDocumentID++;
-                }
-                else if (file.toString().endsWith(".json")){
+                } */
+                // only process .json files
+                if (file.toString().endsWith(".json")){
+                    System.out.println("Indexing file " + file.getFileName());
+                    fileNames.add(file.getFileName().toString());
+                    indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID); // add to sandra branch
+                    mDocumentID++;
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -80,12 +91,12 @@ public class SimpleEngine {
             kgIndex.addType(iter.next());
         }
         
-        System.out.println(index.getTermCount());
-        printResults(index, fileNames);
-        //for(String k : kgIndex.getDictionary()){ //don't need
-        //    System.out.println(k+": "+kgIndex.getTypes(k));
-        //}
+        // ===================================================================
         
+        System.out.println(index.getTermCount());
+        //printResults(index, fileNames);
+        
+        /*
         //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
         System.out.println("Enter a query: "); //don't need
         Scanner uScanner = new Scanner(System.in); //don't need
@@ -95,6 +106,19 @@ public class SimpleEngine {
         for(int i = 0; i < docList.size(); i++){ //don't need
             System.out.println("document" + docList.get(i)); 
         }
+        */
+        
+        // TESTING SOUNDEX ===================================================
+        
+        // *** make reducedToSoundex public for testing purposes ***
+        
+        String hash = sIndex.reduceToSoundex("michael");
+        List<Integer> docList = sIndex.getPostingsList(hash);
+        for(int i = 0; i < docList.size(); i++){ 
+            // docID corresponds to fileNames index
+            System.out.println(fileNames.get(docList.get(i))); 
+        }
+        
     }        
     
     /**
@@ -109,23 +133,49 @@ public class SimpleEngine {
      * each term from the document.
      */
     private static void indexFile(File file, PositionalInvertedIndex index,
-            SortedSet vocabTree, KGramIndex kgIndex, int docID) throws FileNotFoundException { //// add to sandra branch
-        // TO-DO: finish this method for indexing a particular file.
-        // Construct a SimpleTokenStream for the given File.
-        // Read each token from the stream and add it to the index.
-        SimpleTokenStream s = new SimpleTokenStream(file);       
+            SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException { //// add to sandra branch
+        
+        Gson gson = new Gson();
+        JsonDocument doc;
+        String docBody, docAuthor;
+        
+        JsonReader reader = new JsonReader(new FileReader(file));
+        doc = gson.fromJson(reader,JsonDocument.class);
+        docBody = doc.getBody();
+        docAuthor = doc.getAuthor();
+        
+        // process the body field of the document
+        SimpleTokenStream s = new SimpleTokenStream(docBody);       
         int positionNumber = 0;
         while(s.hasNextToken()){
             TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
             while(t.hasNextToken()){
                 String proToken = t.nextToken(); // the processed token
-                // add the processed and stemmed token to the inverted index
-                index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
-                // add the processed token to the vocab tree
-                vocabTree.add(proToken);
+                if(proToken != null){
+                    // add the processed and stemmed token to the inverted index
+                    index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                    // add the processed token to the vocab tree
+                    vocabTree.add(proToken);
+                }
+                
             }
             positionNumber++;
         }
+        
+        // process the author field of the document and add to soundex
+        if(docAuthor != null){
+            s = new SimpleTokenStream(docAuthor);
+            while(s.hasNextToken()){
+                TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
+                while(t.hasNextToken()){ // process the author's name
+                    String name = t.nextToken();
+                    if(name != null){
+                        sIndex.addToSoundex(name, docID);
+                    }
+                }
+            }
+        }
+        
         // build kgram index when vocab tree is complete (after walkFileTree)
     }
     
