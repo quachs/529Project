@@ -1,18 +1,26 @@
-
+//Source:
+//Implementation of the soundex algorithm as described in 
+//"Introduction to Information Retrieval, Online Edition" by
+//Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
+//Cambridge University Press, 2009, p. 64
+//https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
+//https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-
-public class SoundexIndex {
-    private HashMap<String, List<Integer>> mIndex;
+/**
+ * Class for a soundex index. The keys are a phonetic hashing of a term and
+ * the postings are the docIDs that contain the term.
+ * 
+ */
+public class SoundexIndex extends Index<Integer> {
 
     public SoundexIndex() {
-        mIndex = new HashMap<String, List<Integer>>();
+        super();
     }
     
-    public void addToSoundex(String authorName, int docID){
-        String soundexHash = reduceToSoundex(authorName);
+    public void addToSoundex(String term, int docID){
+        String soundexHash = reduceToSoundex(term);
         if(mIndex.containsKey(soundexHash)){
             // add docID to existing soundex hash key
             mIndex.get(soundexHash).add(docID);
@@ -24,6 +32,11 @@ public class SoundexIndex {
         }
     }
     
+    /**
+     * Soundex algorithm to generate a phonetic hashing from the given term
+     * @param term
+     * @return soundex hash
+     */
     private String reduceToSoundex(String term){
         String soundexForm = term;
         String firstLetter = soundexForm.substring(0,1); //left alone
@@ -70,8 +83,10 @@ public class SoundexIndex {
         return soundexForm.substring(0, 4);
     }
     
-    public List<Integer> getPostingsList(String authorName){
-        return mIndex.get(reduceToSoundex(authorName));
+    @Override
+    public List<Integer> getPostingsList(String term){
+        return mIndex.get(reduceToSoundex(term));
     }
+    
     
 }

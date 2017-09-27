@@ -1,20 +1,16 @@
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 /**
- * Class that generates the 1-, 2-, and 3-grams for a type and inserts them into
- * an inverted index structure
+ * Class for a K-Gram index. The keys are the 1-, 2-, and 3-grams for a 
+ * vocabulary type and the postings are the corresponding types.
  *
  */
-public class KGramIndex {
-
-    private HashMap<String, List<String>> mIndex;
+public class KGramIndex extends Index<String> {
 
     public KGramIndex() {
-        mIndex = new HashMap<String, List<String>>();
+        super();
     }
 
     /**
@@ -64,25 +60,4 @@ public class KGramIndex {
         }
     }
 
-    /**
-     * Retrieve the list of types that contain a given k-gram
-     *
-     * @param kgram
-     * @return
-     */
-    public List<String> getTypes(String kgram) {
-        return mIndex.get(kgram);
-    }
-
-    /**
-     * Get an array of the k-grams
-     *
-     * @return
-     */
-    public String[] getDictionary() {
-        String[] kgrams = new String[mIndex.size()];
-        kgrams = mIndex.keySet().toArray(kgrams);
-        Arrays.sort(kgrams);
-        return kgrams;
-    }
 }

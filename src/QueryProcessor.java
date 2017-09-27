@@ -54,11 +54,11 @@ public class QueryProcessor {
         
         // Merge the postings list of each k-gram
         List<String> candidates = new ArrayList<String>();
-        if (kGramIndex.getTypes(kgrams[0]) != null) {
-            candidates = kGramIndex.getTypes(kgrams[0]);
+        if (kGramIndex.getPostingsList(kgrams[0]) != null) {
+            candidates = kGramIndex.getPostingsList(kgrams[0]);
             for (int i = 1; i < kgrams.length; i++) {
-                if (kGramIndex.getTypes(kgrams[i]) != null) {
-                    candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getTypes(kgrams[i]));
+                if (kGramIndex.getPostingsList(kgrams[i]) != null) {
+                    candidates = BooleanRetrieval.intersectList(candidates, kGramIndex.getPostingsList(kgrams[i]));
                 } else { // return if no matches
                     return results;
                 }
