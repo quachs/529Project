@@ -1,14 +1,18 @@
 
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import static java.util.Locale.filter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -308,9 +312,29 @@ public class UserInterface implements MouseListener {
                 // for testing: print the name of the button
                 // TO-DO: Open the file that is saved there. This works with the saved path and the name of the button
                 System.out.println(labels.get(indx).getText());
-            }
+                FilenameFilter filter = new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        File file = new File(name);
 
+                        if (name.equals(labels.get(indx).getText()) && !file.isDirectory()) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+                };
+                Desktop dt = Desktop.getDesktop();
+                Path p = Paths.get(path.toString()
+                        + "/" + labels.get(indx).getText());
+                try {
+                    dt.open(p.toFile());
+                } catch (IOException ex) {
+                    Logger.getLogger(UserInterface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
+
     }
 
     /**
