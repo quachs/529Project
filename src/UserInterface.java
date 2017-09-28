@@ -12,19 +12,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import static java.util.Locale.filter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
 
 /**
- * UserInterface extends JFrame -> this means a JFrame element implements
- * ActionListener and MouseListener for user input handling
- *
- * TO-DO: Button: Stem Token -> calls simpleTokenStream and shows the reason
- * Button: New directory Button: Print all terms for corpus plus number of
- * documents found.
+ * UserInterface Implements MouseListener for user input handling
  *
  * @author Sandra
  */
@@ -35,12 +29,10 @@ public class UserInterface implements MouseListener {
     // after the path is chosen it is saved here for calling the indexing method.
     private Path path;
 
-    private String directory;
-
     // Task where you can find positionalindex
-    private Indexing task = new Indexing();
+    private Indexing indexedCorpus = new Indexing();
 
-    // Positional index is initialiezed in constructor
+    // indecis
     private PositionalInvertedIndex index;
     private KGramIndex kIndex;
     private SoundexIndex sIndex;
@@ -54,9 +46,9 @@ public class UserInterface implements MouseListener {
 
     // UI elements
     private JPanel foundDocArea = new JPanel();
-    JTextField tQuery = new JTextField();
+    private JTextField tQuery = new JTextField();
     private JButton bSubmit = new JButton("Submit");
-    JPanel num = new JPanel(new FlowLayout());
+    private JPanel num = new JPanel(new FlowLayout());
     private JLabel number = new JLabel("");
     private JLabel numberRes = new JLabel();
     private JButton stem = new JButton("Stem");
@@ -67,68 +59,13 @@ public class UserInterface implements MouseListener {
     // List of results that are shown in the foundDocArea
     private List<JLabel> labels = new ArrayList<JLabel>();
 
+    // Constructor
     public UserInterface() throws IOException {
-        this.index = task.getIndex();
+        this.index = indexedCorpus.getIndex();
         this.frame = new JFrame();
-        this.directory = "C:/Users/Sandra/Documents/NetBeansProjects/CECS429-Homework2/src/files";
+        path = Paths.get("C");
         // Let the user choose his directory
         chooseDirectory();
-    }
-
-    public static void main(String[] args) {
-
-    }
-
-    private void createUI() {
-        kIndex = task.getKgIndex();
-        parser = new QueryParser_KQV(index, kIndex);
-        sIndex = task.getsIndex();
-        JLabel lQuery = new JLabel("Enter the Query");
-
-        bSubmit.addMouseListener(this);
-        this.combo.addItem("Normal search");
-        if (sIndex.getTermCount() > 0) {
-            this.combo.addItem("Search by author");
-        }
-        this.frame.add(combo);
-        this.frame.add(lQuery);
-        this.frame.add(tQuery);
-
-        JPanel buttons = new JPanel(new FlowLayout());
-        buttons.add(bSubmit);
-
-        stem.addMouseListener(this);
-        buttons.add(stem);
-
-        newDic.addMouseListener(this);
-        buttons.add(newDic);
-
-        all.addMouseListener(this);
-        buttons.add(all);
-
-        this.frame.add(buttons);
-
-        this.frame.add(foundDocArea);
-        this.frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
-        foundDocArea = new JPanel(new GridLayout(0, 1));
-        JScrollPane jsp = new JScrollPane(foundDocArea);
-
-        jsp.setPreferredSize(new Dimension(300, 300));
-        jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        this.frame.add(jsp);
-
-        num.add(number);
-        num.add(numberRes);
-        this.frame.add(num);
-
-        this.frame.setTitle("My search engine");
-        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.frame.setMinimumSize(new Dimension(500, frame.HEIGHT));
-        this.frame.pack();
-        this.frame.setLocationRelativeTo(null);
-        this.frame.setVisible(true);
     }
 
     /**
@@ -139,7 +76,7 @@ public class UserInterface implements MouseListener {
         // initialize file chooser
         JFileChooser chooser = new JFileChooser();
         // for easier testing I chose the start directory where my created json files from homework 2 are saved
-        chooser.setCurrentDirectory(new java.io.File(directory));
+        chooser.setCurrentDirectory(new java.io.File(path.toString()));
         // set the title of the dialog
         chooser.setDialogTitle("Choose Directory for corpus");
         // tell the file chooser that it only shows the directory that the user only is able to choose a directory and not a file
@@ -177,20 +114,100 @@ public class UserInterface implements MouseListener {
         // sets the location to the center of the screen
         progressDialog.setLocationRelativeTo(null);
         // start the task idexing -> it is king of a thread
-        task = new Indexing(path);
+        indexedCorpus = new Indexing(path);
         // start the task  
         //task.doInBackground();
-        task.execute();
+        indexedCorpus.execute();
         // show the dialog
         progressDialog.setVisible(true);
         // wait till the task is finished -> set true when done() is finished
-        while (!task.isDone()) {
+        while (!indexedCorpus.isDone()) {
         }
-        this.index = task.getIndex();
+        this.index = indexedCorpus.getIndex();
         // close the dialog
         progressDialog.dispose();
+        // save created indecis
+        saveIndecies();
         // creat the view
         createUI();
+    }
+
+    private void saveIndecies() {
+        kIndex = indexedCorpus.getKgIndex();
+        parser = new QueryParser_KQV(index, kIndex);
+        sIndex = indexedCorpus.getsIndex();
+        index = indexedCorpus.getIndex();
+    }
+
+    // After indexing create the UI
+    private void createUI() {
+        // create all Components
+        this.frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+        JLabel lQuery = new JLabel("Enter the Query");
+        JPanel buttons = new JPanel(new FlowLayout());
+        foundDocArea = new JPanel(new GridLayout(0, 1));
+
+        // Modify components
+        this.combo.removeAllItems();
+        this.combo.addItem("Normal search");
+        if (sIndex.getTermCount() > 0) {
+            this.combo.addItem("Search by author");
+        }
+
+        // add components to subpanel
+        buttons.add(bSubmit);
+        buttons.add(stem);
+        buttons.add(newDic);
+        buttons.add(all);
+
+        
+        // add all components to frame
+        this.frame.add(combo);
+        this.frame.add(lQuery);
+        this.frame.add(tQuery);
+        this.frame.add(buttons);
+        this.frame.add(foundDocArea);
+
+        // add mouseListener
+        bSubmit.addMouseListener(this);
+        stem.addMouseListener(this);
+        newDic.addMouseListener(this);
+        all.addMouseListener(this);
+        
+        
+        // add scrolbar        
+        JScrollPane jsp = new JScrollPane(foundDocArea);
+        jsp.setPreferredSize(new Dimension(300, 300));
+        jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        this.frame.add(jsp);
+        
+        // add num panel
+        num.add(number);
+        num.add(numberRes);
+        this.frame.add(num);
+
+        // setup frame
+        this.frame.setTitle("My search engine");
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.frame.setMinimumSize(new Dimension(500, frame.HEIGHT));
+        this.frame.pack();
+        this.frame.setLocationRelativeTo(null);
+        this.frame.setVisible(true);
+    }
+
+    private void checkResults(List foundDocs) {
+        if (foundDocs != null) {
+            // .. yes than go though them and add them to the label list
+            for (int i = 0; i < foundDocs.size(); i++) {
+                JLabel lab = new JLabel(this.indexedCorpus.getFileNames().get(i));
+                this.labels.add(lab);
+                this.foundDocArea.add(lab);
+            }
+        } else {
+            // .. no print that there are no documents
+            this.foundDocArea.add(new JLabel("No document found."));
+        }
     }
 
     /**
@@ -210,37 +227,28 @@ public class UserInterface implements MouseListener {
                 // remove all existing elements in the panel 
                 // if we don´t do this and submit the query twice we would get the result twice too
                 this.foundDocArea.removeAll();
+                // create a list to save found documents
                 List<Integer> foundDocs;
+                // initialize list of labels new - important for more than one submit action
                 this.labels = new ArrayList<JLabel>();
-                // for test purpose I filled the array with test buttons
-                // TO-DO: get the results of the query, and take the name of the file as name (including .txt,...) -> impotant for opening the file later!
-                // TO-DO: try to get a list of title of the document
-                if (combo.getSelectedItem().toString() == "Normal search") {// parse the query
+                // check if combobox is selected for normal search
+                if (combo.getSelectedItem().toString() == "Normal search") {
+                    // .. yes than parse the query and save the resilt IDs
                     foundDocs = parser.getDocumentList(query);
-                    if (foundDocs != null) {
-                        for (int i = 0; i < foundDocs.size(); i++) {
-                            JLabel lab = new JLabel(this.task.getFileNames().get(i));
-                            this.labels.add(lab);
-                            this.foundDocArea.add(lab);
-                        }
-                    } else {
-                        this.foundDocArea.add(new JLabel("No document found."));
-                    }
+                    // check if there are any results
+                    checkResults(foundDocs);
 
-                } else {
+                } else { // .. not normal search == author search
+                    // save DocIds for author search
                     foundDocs = QueryProcessor.authorQuery(query, sIndex);
-                    if (foundDocs != null) {
-                        for (int i = 0; i < foundDocs.size(); i++) {
-                            JLabel lab = new JLabel(this.task.getFileNames().get(i));
-                            this.labels.add(lab);
-                            this.foundDocArea.add(lab);
-                        }
-                    } else {
-                        this.foundDocArea.add(new JLabel("No document found."));
-                    }
+                    // check if there are any results                    
+                    checkResults(foundDocs);
                 }
+                // set text for found documents
                 this.number.setText(this.docs);
+                // save size of documents
                 this.numberRes.setText(labels.size() + "");
+                // make num panel visible
                 this.num.setVisible(true);
 
                 // add a listener for mouseclicks for every single button saved in the list 
@@ -267,13 +275,14 @@ public class UserInterface implements MouseListener {
                 String res = JOptionPane.showInputDialog("Choosing index directory will start at the following path:", this.tQuery.getText());
                 if (res != null) {
                     if (res.length() > 0) {
-                        directory = res;
+                        String directory = res;
+                        path = Paths.get(directory);
                     }
                     this.frame.setVisible(false);
                     this.frame.dispose();
                     // close everything
                     // Task where you can find positionalindex
-                    task = new Indexing();
+                    indexedCorpus = new Indexing();
                     foundDocArea.removeAll();
                     labels = new ArrayList<JLabel>();
                     num.setVisible(false);
@@ -309,8 +318,6 @@ public class UserInterface implements MouseListener {
             int indx = labels.indexOf(e.getSource());
             // this shows that there is really an entry found -> double click submit can´t go in this
             if (indx >= 0) {
-                // for testing: print the name of the button
-                // TO-DO: Open the file that is saved there. This works with the saved path and the name of the button
                 System.out.println(labels.get(indx).getText());
                 FilenameFilter filter = new FilenameFilter() {
                     @Override

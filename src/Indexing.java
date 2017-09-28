@@ -24,45 +24,30 @@ import java.io.FileReader;
  * @author Sandra
  */
 class Indexing extends SwingWorker<Void, Void> {
-// the indices
-
+    // the indices
     final PositionalInvertedIndex index = new PositionalInvertedIndex();
-    final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
-
-    public KGramIndex getKgIndex() {
-        return kgIndex;
-    }
-    final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
-
-    public SoundexIndex getsIndex() {
-        return sIndex;
-    }
+    final KGramIndex kgIndex = new KGramIndex(); 
+    final SoundexIndex sIndex = new SoundexIndex();
 
     // the list of file names that were processed
     final List<String> fileNames = new ArrayList<String>();
 
-    public List<String> getFileNames() {
-        return fileNames;
-    }
-
     // the set of vocabulary types in the corpus
-    final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
+    final SortedSet<String> vocabTree = new TreeSet<String>();
 
     // saving the path
     private Path path;
 
+    /**
+     * Constructors
+     */
     public Indexing() {
         path = Paths.get(".");
     }
-
-    public PositionalInvertedIndex getIndex() {
-        return index;
-    }
-
-    // this constructor with the path is important to find the directory the user likes
+// this constructor with the path is important to find the directory the user likes
     public Indexing(Path path) {
         this.path = path;
-    }
+    }    
 
     public void setPath(Path p) {
         this.path = p;
@@ -203,7 +188,19 @@ class Indexing extends SwingWorker<Void, Void> {
                 }
             }
         }
-
-        // build kgram index when vocab tree is complete (after walkFileTree)
+    }
+    
+    // Getter
+    public KGramIndex getKgIndex() {
+        return kgIndex;
+    }
+    public SoundexIndex getsIndex() {
+        return sIndex;
+    }
+    public List<String> getFileNames() {
+        return fileNames;
+    }
+    public PositionalInvertedIndex getIndex() {
+        return index;
     }
 }
