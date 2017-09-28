@@ -4,9 +4,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -54,7 +52,8 @@ public class UserInterface implements MouseListener {
     private JLabel numberRes = new JLabel();
     private JButton stem = new JButton("Stem");
     private JButton newDic = new JButton("Index new directory");
-    private JButton all = new JButton("Print vocabulary");
+    private JButton all = new JButton("Print vocabulary");    
+    private JComboBox combo = new JComboBox(new String[]{"Normal search", "Search by author"});
 
     // List of results that are shown in the foundDocArea
     private List<JLabel> labels = new ArrayList<JLabel>();
@@ -76,7 +75,7 @@ public class UserInterface implements MouseListener {
         JLabel lQuery = new JLabel("Enter the Query");
 
         bSubmit.addMouseListener(this);
-
+        this.frame.add(combo);
         this.frame.add(lQuery);
         this.frame.add(tQuery);
 
@@ -202,6 +201,15 @@ public class UserInterface implements MouseListener {
                 // for test purpose I filled the array with test buttons
                 // TO-DO: get the results of the query, and take the name of the file as name (including .txt,...) -> impotant for opening the file later!
                 // TO-DO: try to get a list of title of the document
+                if(combo.getSelectedItem().toString() == "Normal search"){
+                    JLabel lab = new JLabel("Normal search");
+                    this.labels.add(lab);
+                    this.foundDocArea.add(lab);
+                }else {
+                    JLabel lab = new JLabel("Author seach");
+                    this.labels.add(lab);
+                    this.foundDocArea.add(lab);
+                }
                 for (int i = 0; i < 10; i++) {
                     JLabel lab = new JLabel("Label " + i);
                     this.labels.add(lab);
