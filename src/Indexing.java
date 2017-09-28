@@ -27,10 +27,18 @@ class Indexing extends SwingWorker<Void, Void> {
 // the indices
         final PositionalInvertedIndex index = new PositionalInvertedIndex();
         final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
+
+    public KGramIndex getKgIndex() {
+        return kgIndex;
+    }
         final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
 
         // the list of file names that were processed
         final List<String> fileNames = new ArrayList<String>();      
+
+    public List<String> getFileNames() {
+        return fileNames;
+    }
 
         // the set of vocabulary types in the corpus
         final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch

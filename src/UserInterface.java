@@ -38,6 +38,10 @@ public class UserInterface implements MouseListener {
 
     // Positional index is initialiezed in constructor
     private PositionalInvertedIndex index;
+    private KGramIndex kIndex;
+    
+    // Parser
+    private QueryParser_KQV parser;
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
@@ -71,7 +75,8 @@ public class UserInterface implements MouseListener {
     }
 
     private void createUI() {
-        // TO-DO: add label for number of documents returned by the quers.
+        kIndex = task.getKgIndex();        
+        parser = new QueryParser_KQV(index, kIndex);
         JLabel lQuery = new JLabel("Enter the Query");
 
         bSubmit.addMouseListener(this);
@@ -197,6 +202,8 @@ public class UserInterface implements MouseListener {
                 // remove all existing elements in the panel 
                 // if we don´t do this and submit the query twice we would get the result twice too
                 this.foundDocArea.removeAll();
+                List<Integer> docs = new ArrayList<Integer>();
+                parser.getDocumentList(query);
                 this.labels = new ArrayList<JLabel>();
                 // for test purpose I filled the array with test buttons
                 // TO-DO: get the results of the query, and take the name of the file as name (including .txt,...) -> impotant for opening the file later!
@@ -210,8 +217,8 @@ public class UserInterface implements MouseListener {
                     this.labels.add(lab);
                     this.foundDocArea.add(lab);
                 }
-                for (int i = 0; i < 10; i++) {
-                    JLabel lab = new JLabel("Label " + i);
+                for (int i = 0; i < docs.size(); i++) {
+                    JLabel lab = new JLabel(this.task.getFileNames().get(i));
                     this.labels.add(lab);
                     this.foundDocArea.add(lab);
                 }
