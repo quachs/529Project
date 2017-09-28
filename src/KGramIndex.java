@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class for a K-Gram index. The keys are the 1-, 2-, and 3-grams for a 
+ * Class for a K-Gram index. The keys are the 1-, 2-, and 3-grams for a
  * vocabulary type and the postings are the corresponding types.
  *
  */
@@ -46,7 +46,7 @@ public class KGramIndex extends Index<String> {
      */
     private void addType(String kgram, String type) {
         // The term exists in the index. Add the vocab type to the
-        // corresponding kgram if it doesn't already exist.
+        // corresponding k-gram if it doesn't already exist.
         if (mIndex.containsKey(kgram)) {
             if (!mIndex.get(kgram).get(mIndex.get(kgram).size() - 1).equals(type)) {
                 mIndex.get(kgram).add(type);
