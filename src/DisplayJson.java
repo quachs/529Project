@@ -42,6 +42,10 @@ public class DisplayJson {
                     jEditorPane.setDocument(doc);
                     jEditorPane.setText(htmlString);
                     
+                    // start scrollbar at top
+                    jEditorPane.setSelectionStart(0);
+                    jEditorPane.setSelectionEnd(0);
+                    
                 } catch (IOException ex) {
                     Logger.getLogger(DisplayJson.class.getName()).log(Level.SEVERE, null, ex);
                 }
