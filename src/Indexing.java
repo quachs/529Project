@@ -34,6 +34,10 @@ class Indexing extends SwingWorker<Void, Void> {
     }
     final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
 
+    public SoundexIndex getsIndex() {
+        return sIndex;
+    }
+
     // the list of file names that were processed
     final List<String> fileNames = new ArrayList<String>();
 

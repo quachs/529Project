@@ -39,7 +39,8 @@ public class UserInterface implements MouseListener {
     // Positional index is initialiezed in constructor
     private PositionalInvertedIndex index;
     private KGramIndex kIndex;
-    
+    private SoundexIndex sIndex;
+
     // Parser
     private QueryParser_KQV parser;
 
@@ -56,8 +57,8 @@ public class UserInterface implements MouseListener {
     private JLabel numberRes = new JLabel();
     private JButton stem = new JButton("Stem");
     private JButton newDic = new JButton("Index new directory");
-    private JButton all = new JButton("Print vocabulary");    
-    private JComboBox combo = new JComboBox(new String[]{"Normal search", "Search by author"});
+    private JButton all = new JButton("Print vocabulary");
+    private JComboBox combo = new JComboBox();
 
     // List of results that are shown in the foundDocArea
     private List<JLabel> labels = new ArrayList<JLabel>();
@@ -75,11 +76,16 @@ public class UserInterface implements MouseListener {
     }
 
     private void createUI() {
-        kIndex = task.getKgIndex();        
+        kIndex = task.getKgIndex();
         parser = new QueryParser_KQV(index, kIndex);
+        sIndex = task.getsIndex();
         JLabel lQuery = new JLabel("Enter the Query");
 
         bSubmit.addMouseListener(this);
+        this.combo.addItem("Normal search");
+        if (sIndex.getTermCount() > 0) {
+            this.combo.addItem("Search by author");
+        }
         this.frame.add(combo);
         this.frame.add(lQuery);
         this.frame.add(tQuery);
@@ -200,23 +206,35 @@ public class UserInterface implements MouseListener {
                 // remove all existing elements in the panel 
                 // if we don´t do this and submit the query twice we would get the result twice too
                 this.foundDocArea.removeAll();
-                List<Integer> foundDocs ;                
+                List<Integer> foundDocs;
                 this.labels = new ArrayList<JLabel>();
                 // for test purpose I filled the array with test buttons
                 // TO-DO: get the results of the query, and take the name of the file as name (including .txt,...) -> impotant for opening the file later!
                 // TO-DO: try to get a list of title of the document
-                if(combo.getSelectedItem().toString() == "Normal search"){// parse the query
-                foundDocs = parser.getDocumentList(query);
-                    for (int i = 0; i < foundDocs.size(); i++) {
-                    JLabel lab = new JLabel(this.task.getFileNames().get(i));
-                    this.labels.add(lab);
-                    this.foundDocArea.add(lab);
+                if (combo.getSelectedItem().toString() == "Normal search") {// parse the query
+                    foundDocs = parser.getDocumentList(query);
+                    if (foundDocs != null) {
+                        for (int i = 0; i < foundDocs.size(); i++) {
+                            JLabel lab = new JLabel(this.task.getFileNames().get(i));
+                            this.labels.add(lab);
+                            this.foundDocArea.add(lab);
+                        }
+                    } else {
+                        this.foundDocArea.add(new JLabel("No document found."));
+                    }
+
+                } else {
+                    foundDocs = QueryProcessor.authorQuery(query, sIndex);
+                    if (foundDocs != null) {
+                        for (int i = 0; i < foundDocs.size(); i++) {
+                            JLabel lab = new JLabel(this.task.getFileNames().get(i));
+                            this.labels.add(lab);
+                            this.foundDocArea.add(lab);
+                        }
+                    } else {
+                        this.foundDocArea.add(new JLabel("No document found."));
+                    }
                 }
-                }else {
-                    JLabel lab = new JLabel("Author seach");
-                    this.labels.add(lab);
-                    this.foundDocArea.add(lab);
-                }                
                 this.number.setText(this.docs);
                 this.numberRes.setText(labels.size() + "");
                 this.num.setVisible(true);

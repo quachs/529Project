@@ -154,4 +154,21 @@ public class QueryProcessor {
         }
         return results;
     }   
+        /**
+     * Retrieve a list of document IDs that match the author query
+     * 
+     * @param aQuery query for the author's name
+     * @param sIndex soundex index
+     * @return list of document IDs that match the author's name
+     */
+    public static List<Integer> authorQuery(String aQuery, SoundexIndex sIndex){
+        List<Integer> result = new ArrayList<Integer>();
+        TokenProcessorStream t = new TokenProcessorStream(aQuery);
+        while(t.hasNextToken()){
+            if(sIndex.getPostingsList(t.nextToken()) != null){
+                result = ListMerge.orList(result, sIndex.getPostingsList(t.nextToken()));
+            }
+        }
+        return result;
+    }
 }
