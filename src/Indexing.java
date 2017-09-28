@@ -25,24 +25,25 @@ import java.io.FileReader;
  */
 class Indexing extends SwingWorker<Void, Void> {
 // the indices
-        final PositionalInvertedIndex index = new PositionalInvertedIndex();
-        final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
+
+    final PositionalInvertedIndex index = new PositionalInvertedIndex();
+    final KGramIndex kgIndex = new KGramIndex(); // add to sandra branch
 
     public KGramIndex getKgIndex() {
         return kgIndex;
     }
-        final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
+    final SoundexIndex sIndex = new SoundexIndex(); // add to sandra branch
 
-        // the list of file names that were processed
-        final List<String> fileNames = new ArrayList<String>();      
+    // the list of file names that were processed
+    final List<String> fileNames = new ArrayList<String>();
 
     public List<String> getFileNames() {
         return fileNames;
     }
 
-        // the set of vocabulary types in the corpus
-        final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
-     
+    // the set of vocabulary types in the corpus
+    final SortedSet<String> vocabTree = new TreeSet<String>(); // add to sandra branch
+
     // saving the path
     private Path path;
 
@@ -74,7 +75,7 @@ class Indexing extends SwingWorker<Void, Void> {
     public Void doInBackground() throws IOException {
         // 
         setProgress(0);
-        
+
         // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
@@ -88,8 +89,8 @@ class Indexing extends SwingWorker<Void, Void> {
                     return FileVisitResult.CONTINUE;
                 }
                 return FileVisitResult.SKIP_SUBTREE;
-                */
-                
+                 */
+
                 // process the current working directory and subdirectories
                 return FileVisitResult.CONTINUE;
             }
@@ -108,7 +109,7 @@ class Indexing extends SwingWorker<Void, Void> {
                     mDocumentID++;
                 } */
                 // only process .json files
-                if (file.toString().endsWith(".json")){
+                if (file.toString().endsWith(".json")) {
                     //System.out.println("Indexing file " + file.getFileName());
                     fileNames.add(file.getFileName().toString());
                     indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID); // add to sandra branch
@@ -133,13 +134,15 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public void done() {
-        System.out.println(index.getTermCount());
-        
         // iterate the vocab tree to build the kgramindex
         Iterator<String> iter = vocabTree.iterator();
-        while(iter.hasNext()){
+        while (iter.hasNext()) {
             kgIndex.addType(iter.next());
         }
+        System.out.println("PositionalInvertedIndex Count: " + index.getTermCount());
+        System.out.println("KgramIndex Count: " + kgIndex.getTermCount());
+        System.out.println("Vocabulary Count: " + vocabTree.size());
+        System.out.println("SoundexIndex Count: " + sIndex.getTermCount());
     }
 
     /**
@@ -155,48 +158,48 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     private static void indexFile(File file, PositionalInvertedIndex index,
             SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException { //// add to sandra branch
-        
+
         Gson gson = new Gson();
         JsonDocument doc;
         String docBody, docAuthor;
-        
+
         JsonReader reader = new JsonReader(new FileReader(file));
-        doc = gson.fromJson(reader,JsonDocument.class);
+        doc = gson.fromJson(reader, JsonDocument.class);
         docBody = doc.getBody();
         docAuthor = doc.getAuthor();
-        
+
         // process the body field of the document
-        SimpleTokenStream s = new SimpleTokenStream(docBody);       
+        SimpleTokenStream s = new SimpleTokenStream(docBody);
         int positionNumber = 0;
-        while(s.hasNextToken()){
+        while (s.hasNextToken()) {
             TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
-            while(t.hasNextToken()){
+            while (t.hasNextToken()) {
                 String proToken = t.nextToken(); // the processed token
-                if(proToken != null){
+                if (proToken != null) {
                     // add the processed and stemmed token to the inverted index
                     index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
                     // add the processed token to the vocab tree
                     vocabTree.add(proToken);
                 }
-                
+
             }
             positionNumber++;
         }
-        
+
         // process the author field of the document and add to soundex
-        if(docAuthor != null){
+        if (docAuthor != null) {
             s = new SimpleTokenStream(docAuthor);
-            while(s.hasNextToken()){
+            while (s.hasNextToken()) {
                 TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
-                while(t.hasNextToken()){ // process the author's name
+                while (t.hasNextToken()) { // process the author's name
                     String name = t.nextToken();
-                    if(name != null){
+                    if (name != null) {
                         sIndex.addToSoundex(name, docID);
                     }
                 }
             }
         }
-        
+
         // build kgram index when vocab tree is complete (after walkFileTree)
     }
 }

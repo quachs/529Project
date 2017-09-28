@@ -197,31 +197,26 @@ public class UserInterface implements MouseListener {
             if (e.getSource() == bSubmit) {
                 // save the query
                 String query = this.tQuery.getText();
-                //q = new Query(query, index);
-                //String[] res = q.checkQuery();
                 // remove all existing elements in the panel 
                 // if we don´t do this and submit the query twice we would get the result twice too
                 this.foundDocArea.removeAll();
-                List<Integer> docs = new ArrayList<Integer>();
-                parser.getDocumentList(query);
+                List<Integer> foundDocs ;                
                 this.labels = new ArrayList<JLabel>();
                 // for test purpose I filled the array with test buttons
                 // TO-DO: get the results of the query, and take the name of the file as name (including .txt,...) -> impotant for opening the file later!
                 // TO-DO: try to get a list of title of the document
-                if(combo.getSelectedItem().toString() == "Normal search"){
-                    JLabel lab = new JLabel("Normal search");
-                    this.labels.add(lab);
-                    this.foundDocArea.add(lab);
-                }else {
-                    JLabel lab = new JLabel("Author seach");
-                    this.labels.add(lab);
-                    this.foundDocArea.add(lab);
-                }
-                for (int i = 0; i < docs.size(); i++) {
+                if(combo.getSelectedItem().toString() == "Normal search"){// parse the query
+                foundDocs = parser.getDocumentList(query);
+                    for (int i = 0; i < foundDocs.size(); i++) {
                     JLabel lab = new JLabel(this.task.getFileNames().get(i));
                     this.labels.add(lab);
                     this.foundDocArea.add(lab);
                 }
+                }else {
+                    JLabel lab = new JLabel("Author seach");
+                    this.labels.add(lab);
+                    this.foundDocArea.add(lab);
+                }                
                 this.number.setText(this.docs);
                 this.numberRes.setText(labels.size() + "");
                 this.num.setVisible(true);
@@ -279,11 +274,6 @@ public class UserInterface implements MouseListener {
                 }
                 this.number.setText(this.voc);
                 this.numberRes.setText(labels.size() + "");
-
-                // add a listener for mouseclicks for every single button saved in the list 
-                for (JLabel b : labels) {
-                    b.addMouseListener(this);
-                }
                 // show panel where buttons are in
                 this.foundDocArea.setVisible(true);
                 // reload the view again by packing the frame              
