@@ -27,7 +27,10 @@ public class QueryProcessor {
             masterList = Phrase.phraseQuery(preLiteral, posIndex);
         } else if (preLiteral.contains("*")) {
             masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);
-        } else {
+        } else if (preLiteral.contains("near")) {
+            masterList = Phrase.nearQuery(preLiteral, posIndex);
+        } 
+        else {
             masterList = posIndex.getPostingsList(preLiteral);
         }
 
@@ -43,6 +46,9 @@ public class QueryProcessor {
                     masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else if (currentLiteral.contains("*")) {
                     intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
+                    masterList = ListMerge.intersectList(masterList, intermediateList);
+                } else if (currentLiteral.contains("near")) {
+                    intermediateList = Phrase.nearQuery(currentLiteral, posIndex);
                     masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else {
                     masterList = ListMerge.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
