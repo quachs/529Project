@@ -36,17 +36,21 @@ public class QueryProcessor {
 
         //Merge all of the postings lists of each. 
         //query literal of a given AND query into one master postings list. 
-        if (andQueryLiterals.getSize() > 1) {
+        if (andQueryLiterals.getSize() > 1 && masterList != null) {
 
             for (int i = 1; i < andQueryLiterals.getSize(); i++) {
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
                 if (currentLiteral.contains("\"")) {
                     intermediateList = Phrase.phraseQuery(currentLiteral, posIndex);
-                    masterList = ListMerge.intersectList(masterList, intermediateList);
+                    if (intermediateList != null) {
+                        masterList = ListMerge.intersectList(masterList, intermediateList);
+                    }
                 } else if (currentLiteral.contains("*")) {
                     intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
-                    masterList = ListMerge.intersectList(masterList, intermediateList);
+                    if (intermediateList != null) {
+                        masterList = ListMerge.intersectList(masterList, intermediateList);
+                    }
                 } else if (currentLiteral.contains("near")) {
                     intermediateList = Phrase.nearQuery(currentLiteral, posIndex);
                     masterList = ListMerge.intersectList(masterList, intermediateList);

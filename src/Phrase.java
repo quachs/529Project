@@ -16,6 +16,10 @@ public class Phrase {
             phraseQuery = pBegCandidate;
             
             if(phraseQuery.endsWith("\"")){ //If phrase if only one token long
+                PorterStemmer onePhraseStemmer = new PorterStemmer();
+                phraseQuery = phraseQuery.replaceAll("\"", "");          
+                phraseQuery = onePhraseStemmer.getStem(phraseQuery);
+                System.out.println(phraseQuery);
                 return phraseQuery;  
             }
 
@@ -33,21 +37,29 @@ public class Phrase {
         else{
             pBegCandidate = phraseDetector.nextToken();
         }
+        System.out.println(phraseQuery);
         return phraseQuery;      
     }
     
     public static List<PositionalPosting> phraseQuery(String phraseLiteral, PositionalInvertedIndex posIndex){
         phraseLiteral = phraseLiteral.replaceAll("\"", "");                   
         String[] splitPhrase = phraseLiteral.split(" ");
+        PorterStemmer phraseStemmer = new PorterStemmer();
         List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
+        
+        for (int i = 0; i < splitPhrase.length; i++){
+            splitPhrase[i] = phraseStemmer.getStem(splitPhrase[i]);
+        }
 
-        for(int j = 0; j < splitPhrase.length - 1; j++){
-            if(posIndex.getPostingsList(splitPhrase[j]) != null && 
-            posIndex.getPostingsList(splitPhrase[j+1]) != null){
-                phraseList = ListMerge.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
-                posIndex.getPostingsList(splitPhrase[j + 1]), 1);
+        phraseList = posIndex.getPostingsList(splitPhrase[0]);
+        
+        for(int j = 1; j < splitPhrase.length; j++){
+            if(posIndex.getPostingsList(splitPhrase[j]) != null) {
+                phraseList = ListMerge.positionalIntersect(phraseList,
+                posIndex.getPostingsList(splitPhrase[j]), 1);
             }
-        }       
+        }  
+           
         return phraseList;
     }
     
