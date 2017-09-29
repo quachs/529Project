@@ -17,6 +17,7 @@ import javax.swing.SwingWorker;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import java.io.FileReader;
+import java.util.Date;
 
 /**
  * this is kind of a thread that works in the background
@@ -34,6 +35,8 @@ class Indexing extends SwingWorker<Void, Void> {
 
     // the set of vocabulary types in the corpus
     final SortedSet<String> vocabTree = new TreeSet<String>();
+    
+    long timer;
 
     // saving the path
     private Path path;
@@ -64,7 +67,7 @@ class Indexing extends SwingWorker<Void, Void> {
     public Void doInBackground() throws IOException {
         // 
         setProgress(0);
-
+        timer = new Date().getTime();
         // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
@@ -123,15 +126,12 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public void done() {
+        System.out.println("Time for indexing: "+ (new Date().getTime()-timer));
         // iterate the vocab tree to build the kgramindex
         Iterator<String> iter = vocabTree.iterator();
         while (iter.hasNext()) {
             kgIndex.addType(iter.next());
         }
-        System.out.println("PositionalInvertedIndex Count: " + index.getTermCount());
-        System.out.println("KgramIndex Count: " + kgIndex.getTermCount());
-        System.out.println("Vocabulary Count: " + vocabTree.size());
-        System.out.println("SoundexIndex Count: " + sIndex.getTermCount());
     }
 
     /**

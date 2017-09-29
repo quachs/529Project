@@ -160,7 +160,6 @@ public class UserInterface implements MouseListener {
         buttons.add(newDic);
         buttons.add(all);
 
-        
         // add all components to frame
         this.frame.add(combo);
         this.frame.add(lQuery);
@@ -173,15 +172,14 @@ public class UserInterface implements MouseListener {
         stem.addMouseListener(this);
         newDic.addMouseListener(this);
         all.addMouseListener(this);
-        
-        
+
         // add scrolbar        
         JScrollPane jsp = new JScrollPane(foundDocArea);
         jsp.setPreferredSize(new Dimension(300, 300));
         jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.frame.add(jsp);
-        
+
         // add num panel
         num.add(number);
         num.add(numberRes);
@@ -227,33 +225,38 @@ public class UserInterface implements MouseListener {
                 // remove all existing elements in the panel 
                 // if we don´t do this and submit the query twice we would get the result twice too
                 this.foundDocArea.removeAll();
-                // create a list to save found documents
-                List<Integer> foundDocs;
-                // initialize list of labels new - important for more than one submit action
-                this.labels = new ArrayList<JLabel>();
-                // check if combobox is selected for normal search
-                if (combo.getSelectedItem().toString() == "Normal search") {
-                    // .. yes than parse the query and save the resilt IDs
-                    foundDocs = parser.getDocumentList(query);
-                    // check if there are any results
-                    checkResults(foundDocs);
+                this.foundDocArea.repaint();
+                if (query.length() > 0) {
+                    // create a list to save found documents
+                    List<Integer> foundDocs;
+                    // initialize list of labels new - important for more than one submit action
+                    this.labels = new ArrayList<JLabel>();
+                    // check if combobox is selected for normal search
+                    if (combo.getSelectedItem().toString() == "Normal search") {
+                        // .. yes than parse the query and save the resilt IDs
+                        foundDocs = parser.getDocumentList(query);
+                        // check if there are any results
+                        checkResults(foundDocs);
 
-                } else { // .. not normal search == author search
-                    // save DocIds for author search
-                    foundDocs = QueryProcessor.authorQuery(query, sIndex);
-                    // check if there are any results                    
-                    checkResults(foundDocs);
-                }
-                // set text for found documents
-                this.number.setText(this.docs);
-                // save size of documents
-                this.numberRes.setText(labels.size() + "");
-                // make num panel visible
-                this.num.setVisible(true);
+                    } else { // .. not normal search == author search
+                        // save DocIds for author search
+                        foundDocs = QueryProcessor.authorQuery(query, sIndex);
+                        // check if there are any results                    
+                        checkResults(foundDocs);
+                    }
+                    // set text for found documents
+                    this.number.setText(this.docs);
+                    // save size of documents
+                    this.numberRes.setText(labels.size() + "");
+                    // make num panel visible
+                    this.num.setVisible(true);
 
-                // add a listener for mouseclicks for every single button saved in the list 
-                for (JLabel b : labels) {
-                    b.addMouseListener(this);
+                    // add a listener for mouseclicks for every single button saved in the list 
+                    for (JLabel b : labels) {
+                        b.addMouseListener(this);
+                    }
+                }else{
+                    this.foundDocArea.add(new JLabel("Please enter a term!"));
                 }
                 // show panel where buttons are in
                 this.foundDocArea.setVisible(true);
@@ -286,6 +289,7 @@ public class UserInterface implements MouseListener {
                     foundDocArea.removeAll();
                     labels = new ArrayList<JLabel>();
                     num.setVisible(false);
+                    tQuery.setText("");
                     this.frame = new JFrame();
                     try {
                         chooseDirectory();
@@ -323,7 +327,6 @@ public class UserInterface implements MouseListener {
                     @Override
                     public boolean accept(File dir, String name) {
                         File file = new File(name);
-
                         if (name.equals(labels.get(indx).getText()) && !file.isDirectory()) {
                             return false;
                         } else {
@@ -331,11 +334,10 @@ public class UserInterface implements MouseListener {
                         }
                     }
                 };
-                Desktop dt = Desktop.getDesktop();
-                Path p = Paths.get(path.toString()
-                        + "/" + labels.get(indx).getText());
+                String p = path.toString() + "/" + labels.get(indx).getText();
+                File file = new File(p);
                 try {
-                    dt.open(p.toFile());
+                    new DisplayJson(file);
                 } catch (IOException ex) {
                     Logger.getLogger(UserInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
