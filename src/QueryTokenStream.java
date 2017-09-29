@@ -62,7 +62,9 @@ public class QueryTokenStream implements TokenStream {
             String[] tokens = next.split("-");
             for (String t : tokens) {
                 t = t.toLowerCase();
-                t = PorterStemmer.getStem(t);
+                if (!t.contains("*")){
+                    t = PorterStemmer.getStem(t);
+                }
                 if (t.length() > 0) {
                     tokenQueue.add(t);
                 }
@@ -70,7 +72,9 @@ public class QueryTokenStream implements TokenStream {
             next = next.replaceAll("-", ""); // modified token
         }
         next = next.toLowerCase();
-        next = PorterStemmer.getStem(next);
+        if (!next.contains("*")){
+            next = PorterStemmer.getStem(next);
+        }
         return next.length() > 0 ? next
                 : hasNextToken() ? nextToken() : null;
 

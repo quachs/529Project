@@ -37,14 +37,30 @@ public class Phrase {
     }
     
     public static List<PositionalPosting> phraseQuery(String phraseLiteral, PositionalInvertedIndex posIndex){
-            phraseLiteral = phraseLiteral.replaceAll("\"", "");                   
-            String[] splitPhrase = phraseLiteral.split(" ");
-            List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
+        phraseLiteral = phraseLiteral.replaceAll("\"", "");                   
+        String[] splitPhrase = phraseLiteral.split(" ");
+        List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
 
-            for(int j = 0; j < splitPhrase.length - 1; j++){
+        for(int j = 0; j < splitPhrase.length - 1; j++){
+            if(posIndex.getPostingsList(splitPhrase[j]) != null && 
+            posIndex.getPostingsList(splitPhrase[j+1]) != null){
                 phraseList = ListMerge.positionalIntersect(posIndex.getPostingsList(splitPhrase[j]),
                 posIndex.getPostingsList(splitPhrase[j + 1]), 1);
-            }       
+            }
+        }       
         return phraseList;
+    }
+    
+    public static List<PositionalPosting> nearQuery(String nearLiteral, PositionalInvertedIndex posIndex){                 
+        String[] splitNear = nearLiteral.split(" ");
+        List<PositionalPosting> nearList = new ArrayList<PositionalPosting>();
+        int k = Integer.valueOf(splitNear[1].substring(4));
+        
+        if(posIndex.getPostingsList(splitNear[0]) != null && 
+        posIndex.getPostingsList(splitNear[2]) != null){
+            nearList = ListMerge.positionalIntersect(posIndex.getPostingsList(splitNear[0]),
+            posIndex.getPostingsList(splitNear[2]), k);    
+        }
+        return nearList;
     }
 }

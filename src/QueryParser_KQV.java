@@ -47,7 +47,6 @@ class QueryParser_KQV{
                     
                     //https://docs.oracle.com/javase/tutorial/java/data/converting.html
                     if(nearCandidate.contains("near")){
-                        int k = Integer.valueOf(nearCandidate.substring(4));
                         String lNearOp = pBegCandidate;
                         String rNearOp = andReader.nextToken();
                         String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;
