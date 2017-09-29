@@ -66,7 +66,7 @@ class Indexing extends SwingWorker<Void, Void> {
     @Override
     public Void doInBackground() throws IOException {
         // 
-        setProgress(0);
+        setProgress(0); 
         timer = new Date().getTime();
         // This is our standard "walk through all .txt files" code.
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {

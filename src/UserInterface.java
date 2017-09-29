@@ -31,6 +31,7 @@ public class UserInterface implements MouseListener {
 
     // Task where you can find positionalindex
     private Indexing indexedCorpus = new Indexing();
+    GeneratingLabels gen;
 
     // indecis
     private PositionalInvertedIndex index;
@@ -87,7 +88,7 @@ public class UserInterface implements MouseListener {
             // ... save the returend path
             path = Paths.get(chooser.getSelectedFile().getPath());
             // and start indexing. While indexing show a progress bar that the user can see that something happens
-            showProgressBar();
+            indexing();
         } else {
             // if any other key is pressed, the window closes
         }
@@ -96,7 +97,7 @@ public class UserInterface implements MouseListener {
     /**
      * While Indexing processes show a progress bar
      */
-    public void showProgressBar() throws IOException {
+    public void indexing() throws IOException {
         // initialize a new dialog, this is the frame and "Indexing..." is the title
         JDialog progressDialog = new JDialog(this.frame, "Indexing...");
         // create a new panel
@@ -196,16 +197,52 @@ public class UserInterface implements MouseListener {
 
     private void checkResults(List foundDocs) {
         if (foundDocs != null) {
-            // .. yes than go though them and add them to the label list
-            for (int i = 0; i < foundDocs.size(); i++) {
-                JLabel lab = new JLabel(this.indexedCorpus.getFileNames().get(i));
-                this.labels.add(lab);
-                this.foundDocArea.add(lab);
-            }
+            //////////////////////////////////////////////////////////////////////////////////////////
+            // .. yes than go through them and add them to the label list
+            generatingLabels(null, (ArrayList<Integer>) foundDocs);
         } else {
             // .. no print that there are no documents
             this.foundDocArea.add(new JLabel("No document found."));
         }
+    }
+
+    private void generatingLabels(String[] docsArray, ArrayList<Integer> docIDList) {
+        if (docIDList == null) {
+            this.gen = new GeneratingLabels(docsArray);
+        } else {
+            this.gen = new GeneratingLabels(docIDList, (ArrayList<String>)indexedCorpus.getFileNames());
+        }
+        // initialize a new dialog, this is the frame and "Indexing..." is the title
+        JDialog progressDialog = new JDialog(this.frame, "Generating Labels...");
+        // create a new panel
+        JPanel contentPane = new JPanel();
+        // set preferred size
+        contentPane.setPreferredSize(new Dimension(300, 100));
+        // initialize progress bar and add it to the panel
+        JProgressBar bar = new JProgressBar(0, 100);
+        bar.setIndeterminate(true);
+        contentPane.add(bar);
+        // add panel to the dialog
+        progressDialog.setContentPane(contentPane);
+        // with pack() you minimalize the size of the dialog
+        progressDialog.pack();
+        // sets the location to the center of the screen
+        progressDialog.setLocationRelativeTo(null);
+        // start the task  
+        gen.execute();
+        // show the dialog
+        progressDialog.setVisible(true);
+        // wait till the task is finished -> set true when done() is finished
+        while (!gen.isDone()) {
+        }
+        this.labels = gen.array;
+        for (JLabel a : this.labels) {
+            this.foundDocArea.add(a);
+        }
+        this.frame.repaint();
+        this.frame.pack();
+        // close the dialog
+        progressDialog.dispose();
     }
 
     /**
@@ -228,7 +265,7 @@ public class UserInterface implements MouseListener {
                 this.foundDocArea.repaint();
                 if (query.length() > 0) {
                     // create a list to save found documents
-                    List<Integer> foundDocs;
+                    List<Integer> foundDocs = new ArrayList<Integer>();
                     // initialize list of labels new - important for more than one submit action
                     this.labels = new ArrayList<JLabel>();
                     // check if combobox is selected for normal search
@@ -255,7 +292,7 @@ public class UserInterface implements MouseListener {
                     for (JLabel b : labels) {
                         b.addMouseListener(this);
                     }
-                }else{
+                } else {
                     this.foundDocArea.add(new JLabel("Please enter a term!"));
                 }
                 // show panel where buttons are in
@@ -298,17 +335,19 @@ public class UserInterface implements MouseListener {
                     }
                 }
             }
+            ///////////////////////////////////////////////////////////////////////////////////////////////
             if (e.getSource() == all) {
                 this.foundDocArea.removeAll();
                 this.labels = new ArrayList<JLabel>();
                 this.num.setVisible(true);
-                for (String s : index.getDictionary()) {
-                    JLabel lab = new JLabel(s);
-                    this.labels.add(lab);
-                    this.foundDocArea.add(lab);
-                }
+                generatingLabels(index.getDictionary(), null);
+                JTextArea label = new JTextArea();
+                label.setEditable(false);
+                String res = gen.res;
+                label.setText(res);
+                this.foundDocArea.add(label);
                 this.number.setText(this.voc);
-                this.numberRes.setText(labels.size() + "");
+                this.numberRes.setText(index.getTermCount() + "");
                 // show panel where buttons are in
                 this.foundDocArea.setVisible(true);
                 // reload the view again by packing the frame              
