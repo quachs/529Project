@@ -36,26 +36,30 @@ public class QueryProcessor {
 
         //Merge all of the postings lists of each. 
         //query literal of a given AND query into one master postings list. 
-        if (andQueryLiterals.getSize() > 1 && masterList != null) {
+        if (andQueryLiterals.getSize() > 1) {
 
             for (int i = 1; i < andQueryLiterals.getSize(); i++) {
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
                 if (currentLiteral.contains("\"")) {
                     intermediateList = Phrase.phraseQuery(currentLiteral, posIndex);
-                    if (intermediateList != null) {
+                    if (masterList != null && intermediateList != null) {
                         masterList = ListMerge.intersectList(masterList, intermediateList);
                     }
                 } else if (currentLiteral.contains("*")) {
                     intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
-                    if (intermediateList != null) {
+                    if (masterList != null && intermediateList != null) {
                         masterList = ListMerge.intersectList(masterList, intermediateList);
                     }
                 } else if (currentLiteral.contains("near")) {
                     intermediateList = Phrase.nearQuery(currentLiteral, posIndex);
-                    masterList = ListMerge.intersectList(masterList, intermediateList);
+                    if (masterList != null && intermediateList != null) {
+                        masterList = ListMerge.intersectList(masterList, intermediateList);
+                    }
                 } else {
-                    masterList = ListMerge.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
+                    if (masterList != null && posIndex.getPostingsList(currentLiteral) != null) {
+                        masterList = ListMerge.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
+                    }
                 }
             }
         }
@@ -79,7 +83,9 @@ public class QueryProcessor {
 
         if (AndCollection.size() > 1) {
             for (int i = 1; i < AndCollection.size(); i++) {
-                masterList = ListMerge.orList(masterList, AndCollection.get(i));
+                if (masterList != null && AndCollection.get(i) != null){
+                    masterList = ListMerge.orList(masterList, AndCollection.get(i));
+                }
             }
         }
         return masterList;

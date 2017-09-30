@@ -14,15 +14,15 @@
 import java.io.*;
 import java.util.*;
 
-class QueryParser_KQV{
+class QueryParser{
     
     private PositionalInvertedIndex posIndex; //Used in andQuery(), orQuery()
     private List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>(); 
     private ListMerge intersector = new ListMerge();
     private KGramIndex kgIndex = new KGramIndex();
     
-    QueryParser_KQV(){}
-    QueryParser_KQV(PositionalInvertedIndex posIndex, KGramIndex kgIndex){
+    QueryParser(){}
+    QueryParser(PositionalInvertedIndex posIndex, KGramIndex kgIndex){
         this.posIndex = posIndex;
         this.kgIndex = kgIndex;
     }
@@ -100,10 +100,12 @@ class QueryParser_KQV{
         List<Integer> documentList = new ArrayList<Integer>();
         
         //Constuct a list of document IDs from this final postings list.
-        for(int i = 0; i < masterPostings.size(); i++){
-           int currentDocID = masterPostings.get(i).getDocumentID();    
-           documentList.add(currentDocID);
-        }   
+        if (masterPostings != null){
+            for(int i = 0; i < masterPostings.size(); i++){
+                int currentDocID = masterPostings.get(i).getDocumentID();    
+                documentList.add(currentDocID);
+            }
+        }
         return documentList;
     }
 }

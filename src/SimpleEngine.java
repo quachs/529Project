@@ -55,19 +55,19 @@ public class SimpleEngine {
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws FileNotFoundException {
                 // only process .txt files
-                /*
+                
                 if (file.toString().endsWith(".txt")) { 
                     // we have found a .txt file; add its name to the fileName list,
                     // then index the file and increase the document ID counter.
-                    System.out.println("Indexing file " + file.getFileName());
+                    //System.out.println("Indexing file " + file.getFileName());
 
                     fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID); // add to sandra branch
+                    indexFile(file.toFile(), index, vocabTree, mDocumentID); // add to sandra branch
                     mDocumentID++;
-                } */
+                }
                 // only process .json files
                 if (file.toString().endsWith(".json")){
-                    System.out.println("Indexing file " + file.getFileName());
+                    //System.out.println("Indexing file " + file.getFileName());
                     fileNames.add(file.getFileName().toString());
                     indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID); // add to sandra branch
                     mDocumentID++;
@@ -96,29 +96,33 @@ public class SimpleEngine {
         System.out.println(index.getTermCount());
         //printResults(index, fileNames);
         
-        /*
+        
         //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
         System.out.println("Enter a query: "); //don't need
         Scanner uScanner = new Scanner(System.in); //don't need
         String uInput = uScanner.nextLine(); //don't need
-        QueryParser_KQV qParser = new QueryParser_KQV(index, kgIndex);
+        QueryParser qParser = new QueryParser(index, kgIndex);
         List<Integer> docList = qParser.getDocumentList(uInput); //don't need
-        for(int i = 0; i < docList.size(); i++){ //don't need
-            System.out.println("document" + docList.get(i)); 
+        if (docList.size() > 0){
+            for(int i = 0; i < docList.size(); i++){ //don't need
+                System.out.println(fileNames.get(docList.get(i))); 
+            }
         }
-        */
+        else {
+            System.out.println("There are no results for your query.");
+        }
         
         // TESTING SOUNDEX ===================================================
         
         // *** make reducedToSoundex public for testing purposes ***
-        
+        /*
         String hash = sIndex.reduceToSoundex("michael");
         List<Integer> docList = sIndex.getPostingsList(hash);
         for(int i = 0; i < docList.size(); i++){ 
             // docID corresponds to fileNames index
             System.out.println(fileNames.get(docList.get(i))); 
         }
-        
+        */
     }        
     
     /**
@@ -137,12 +141,13 @@ public class SimpleEngine {
         
         Gson gson = new Gson();
         JsonDocument doc;
-        String docBody, docAuthor;
+        String docBody, docAuthor, docUrl;
         
         JsonReader reader = new JsonReader(new FileReader(file));
         doc = gson.fromJson(reader,JsonDocument.class);
         docBody = doc.getBody();
         docAuthor = doc.getAuthor();
+        docUrl = doc.getUrl();
         
         // process the body field of the document
         SimpleTokenStream s = new SimpleTokenStream(docBody);       
@@ -174,6 +179,30 @@ public class SimpleEngine {
                     }
                 }
             }
+        }
+        
+        // build kgram index when vocab tree is complete (after walkFileTree)
+    }
+    
+    private static void indexFile(File file, PositionalInvertedIndex index,
+            SortedSet vocabTree, int docID) throws FileNotFoundException { //// add to sandra branch
+        
+        // process the body field of the document
+        SimpleTokenStream s = new SimpleTokenStream(file);       
+        int positionNumber = 0;
+        while(s.hasNextToken()){
+            TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
+            while(t.hasNextToken()){
+                String proToken = t.nextToken(); // the processed token
+                if(proToken != null){
+                    // add the processed and stemmed token to the inverted index
+                    index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                    // add the processed token to the vocab tree
+                    vocabTree.add(proToken);
+                }
+                
+            }
+            positionNumber++;
         }
         
         // build kgram index when vocab tree is complete (after walkFileTree)
