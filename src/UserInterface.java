@@ -39,7 +39,7 @@ public class UserInterface implements MouseListener {
     private SoundexIndex sIndex;
 
     // Parser
-    private QueryParser_KQV parser;
+    private QueryParser parser;
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
@@ -247,7 +247,7 @@ public class UserInterface implements MouseListener {
             // check if Submit is clicked
             if (e.getSource() == bSubmit) {
                 num.setVisible(false);
-                parser = new QueryParser_KQV(index, kIndex);
+                parser = new QueryParser(index, kIndex);
                 // save the query
                 String query = this.tQuery.getText();
                 // remove all existing elements in the panel 
