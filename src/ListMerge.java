@@ -106,7 +106,7 @@ public final class ListMerge {
         for (PositionalPosting p : term2) {
             docs2.add(p.getDocumentID());
         }
-
+        
         // intersect the docs
         while (i < docs1.size() && j < docs2.size()) {
             // both terms appear in the doc
@@ -154,7 +154,7 @@ public final class ListMerge {
                 j++;
             }
         }
-
+        
         return result;
     }
 }
