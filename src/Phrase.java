@@ -64,7 +64,7 @@ public class Phrase {
         for (int i = 0; i < spPhrase.length; i++){
             spPhrase[i] = phraseStemmer.getStem(spPhrase[i]);
         }
-
+  
         phraseList = posIndex.getPostingsList(spPhrase[0]);
         
         for(int j = 1; j < spPhrase.length; j++){
