@@ -16,7 +16,7 @@ import java.util.*;
 
 class QueryParser{
     
-    private PositionalInvertedIndex posIndex; //Used in andQuery(), orQuery()
+    private PositionalInvertedIndex posIndex;
     private List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>(); 
     private ListMerge intersector = new ListMerge();
     private KGramIndex kgIndex = new KGramIndex();
@@ -26,9 +26,13 @@ class QueryParser{
         this.posIndex = posIndex;
         this.kgIndex = kgIndex;
     }
-            
-    //Splits up an individual query Q_i into its query literals.
-    //Uses professor Neal Terrell's SimpleTokenStream to parse query literals
+    
+    /**
+     * Splits up an individual query Q_i into its query literals.
+     * 
+     * @param queryString All query literals of one AND query
+     * @return Subquery data structure that stores all query literals
+     */
     public Subquery collectAndQueries(String queryString){
              
         Subquery andQueries = new Subquery();
@@ -37,27 +41,29 @@ class QueryParser{
         while(andReader.hasNextToken()){
             String pBegCandidate = andReader.nextToken();
             
-            if (pBegCandidate.startsWith("\"")){ //If starts with dbl quotes
+            //Phrase candidate must start with a left double quote
+            if (pBegCandidate.startsWith("\"")){
                 String phrase = Phrase.getPhrase(andReader, pBegCandidate);
                 andQueries.addLiteral(phrase);        
-            }   
-            else{
+            } else{
                 if (andReader.hasNextToken()){
                     String nearCandidate = andReader.nextToken();
                     
-                    //https://docs.oracle.com/javase/tutorial/java/data/converting.html
+                    /* Search for "near" keyword.  If found,
+                    rebuild near literal in the form [term1] near[k] [term2] */
                     if(nearCandidate.contains("near")){
                         String lNearOp = pBegCandidate;
                         String rNearOp = andReader.nextToken();
                         String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;
                         andQueries.addLiteral(nearLiteral);
-                    }
-                    else{
+                    } else{
+                        /* Add original token, pBegCandidate
+                        //Since reader was advanced past original token in order to
+                        //look for "near," nearCandidate token must be added here */
                         andQueries.addLiteral(pBegCandidate);
-                        andQueries.addLiteral(nearCandidate);
+                        andQueries.addLiteral(nearCandidate); 
                     }
-                }
-                else{
+                } else{
                     andQueries.addLiteral(pBegCandidate);
                 }
             }
@@ -65,14 +71,20 @@ class QueryParser{
         return andQueries;                
     }
      
-    //Splits up query into subqueries Q_1...Q_k, placing AND queries into collection.
+    /**
+     * Splits up query into subqueries Q_1...Q_k, placing AND queries into collection.
+     * 
+     * @param query All query literals of a user query.
+     * @return A list of all Subquery structures; essentially,
+     * a list of Positional Posting lists
+     */
     public List<Subquery> collectOrQueries(String query){
         
         QueryTokenStream tReader = new QueryTokenStream(query);
         List<Subquery> allQueries = new ArrayList<Subquery>();   
+        String qString = "";
         
         //Constructs a complete AND query Q_i (stops at OR token ("+"));
-        String qString = "";
         while(tReader.hasNextToken()){
             String plusCandidate = tReader.nextToken();
             
@@ -82,16 +94,21 @@ class QueryParser{
                 if(!tReader.hasNextToken()){
                     allQueries.add(collectAndQueries(qString));    
                 }
-            }
-            else{
+            } else{
                  allQueries.add(collectAndQueries(qString)); 
                  qString = ""; //clears string for later use          
             }
         }     
         return allQueries;
     }
-      
-    //Takes a string representing a query, returns list of relevant documents
+    
+    /**
+     * Takes a string representing a query, returns list of relevant documents
+     * 
+     * @param query A string representing a user query.
+     * @return A list of Positional Postings representing the
+     * results of a user query.
+     */
     public List<Integer> getDocumentList(String query){            
     
         //Parse query, store in a collection, perform the query, return a final postings list.

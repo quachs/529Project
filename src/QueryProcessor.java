@@ -14,8 +14,14 @@ public class QueryProcessor {
 
     private static List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>();
 
-    //Add the positional postings list of an AND query to the 
-    //collection of AND query positional postings lists
+    /**
+     * Add the positional postings list of an AND query to the 
+     * collection of AND query positional postings lists.
+     * 
+     * @param andQueryLiterals
+     * @param posIndex Positional inverted index of selected corpus
+     * @param kgIndex KGram index of all types in corpus
+     */
     private static void addAndQuery(Subquery andQueryLiterals, PositionalInvertedIndex posIndex,
             KGramIndex kgIndex) {
 
@@ -29,13 +35,12 @@ public class QueryProcessor {
             masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);
         } else if (preLiteral.contains("near")) {
             masterList = Phrase.nearQuery(preLiteral, posIndex);
-        } 
-        else {
+        } else {
             masterList = posIndex.getPostingsList(preLiteral);
         }
 
-        //Merge all of the postings lists of each. 
-        //query literal of a given AND query into one master postings list. 
+        /* Merge all of the postings lists of each query literal
+        of a given AND query into one master postings list. */
         if (andQueryLiterals.getSize() > 1) {
 
             for (int i = 1; i < andQueryLiterals.getSize(); i++) {
@@ -67,9 +72,17 @@ public class QueryProcessor {
         AndCollection.add(masterList);
     }
 
-    //Run all AND Queries Q_i, store results in collection of positional 
-    //postings lists, then run an OR query that merges all postings lists
-    //into one master positional postings list representing the entire query.
+    /**
+     * Run all AND Queries Q_i, store results in collection of positional 
+     * postings lists, then run an OR query that merges all postings lists
+     * into one master positional postings list representing the entire query.
+    
+     * @param allQueries List of subqueries that represents user query
+     * @param posIndex Positional inverted index of selected corpus
+     * @param kgIndex KGram index of all types in corpus
+     * @return Positional Posting list representing all AND queries
+     * merged together using OR logic.
+     */
     public static List<PositionalPosting> orQuery
         (List<Subquery> allQueries, PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
 
@@ -97,7 +110,7 @@ public class QueryProcessor {
      * @param wcQuery the wildcard query from user input
      * @param index positional inverted index of the corpus
      * @param kGramIndex K-Gram index of the vocabulary type
-     * @return list of resulting positional postings
+     * @return list of resulting Positional Postings
      */
     public static List<PositionalPosting> wildcardQuery
         (String wcQuery, PositionalInvertedIndex index, KGramIndex kGramIndex) {
