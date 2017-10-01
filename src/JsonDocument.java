@@ -1,13 +1,15 @@
-/*
- * Class to represent a Json file
- */
 
+/**
+ * Class to represent a Json file
+ *
+ */
 public class JsonDocument {
+
     private String title;
     private String body;
     private String url;
     private String author;
-    
+
     /**
      * @return the title
      */
@@ -34,6 +36,6 @@ public class JsonDocument {
      */
     public String getAuthor() {
         return author;
-    }    
-    
+    }
+
 }

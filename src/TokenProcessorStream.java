@@ -1,3 +1,4 @@
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -34,7 +35,7 @@ public class TokenProcessorStream implements TokenStream {
         // remove apostrophes and convert to lowercase
         token = token.replaceAll("^\\W+|\\W+$", "");
         token = token.replaceAll("'", "").toLowerCase();
-        if (token.contains("-")) { 
+        if (token.contains("-")) {
             // split hyphenated token and add to queue
             String[] tokens = token.split("-");
             for (String t : tokens) {
@@ -43,7 +44,7 @@ public class TokenProcessorStream implements TokenStream {
                 }
             }
             // remove hyphens from the original token
-            token = token.replaceAll("-", ""); 
+            token = token.replaceAll("-", "");
         }
 
         firstPass = false; // done with the first token
