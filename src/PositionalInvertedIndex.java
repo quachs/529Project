@@ -54,5 +54,6 @@ public class PositionalInvertedIndex extends Index<PositionalPosting> {
         }
         return null;
     }
+    
 
 }

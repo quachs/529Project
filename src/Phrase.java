@@ -65,21 +65,23 @@ public class Phrase {
             spPhrase[i] = phraseStemmer.getStem(spPhrase[i]);
         }
   
-        phraseList = posIndex.getPostingsList(spPhrase[0]);
-        
-        for(int j = 1; j < spPhrase.length; j++){
-            if(posIndex.getPostingsList(spPhrase[j]) != null) {
-                phraseList = ListMerge.positionalIntersect(phraseList,
-                posIndex.getPostingsList(spPhrase[j]), 1);
+        if (posIndex.getPostingsList(spPhrase[0]) != null){
+            phraseList = posIndex.getPostingsList(spPhrase[0]);
+            for(int j = 1; j < spPhrase.length; j++){
+                if(posIndex.getPostingsList(spPhrase[j]) != null) {
+                    phraseList = ListMerge.positionalIntersect(phraseList,
+                    posIndex.getPostingsList(spPhrase[j]), 1);
+                } else { // return empty list
+                    phraseList.clear();
+                    return phraseList;
+                    
+                    
+                }
             }
-        }     
-        if (phraseList != null){
+        } else { // return empty list 
             return phraseList;
         }
-        else {
-           phraseList.clear();
-           return phraseList;
-        }
+        return phraseList;
     }
     
     /**

@@ -63,6 +63,9 @@ public class QueryProcessor {
                     if (posIndex.getPostingsList(currentLiteral) != null) {
                         masterList = ListMerge.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
                     }
+                    else {
+                        masterList.clear();
+                    }
                 }
             }
         }
@@ -71,8 +74,8 @@ public class QueryProcessor {
             AndCollection.add(masterList);
         }
         else {
-            masterList.clear();
             AndCollection.add(masterList);
+            masterList.clear();
         } 
     }
 
