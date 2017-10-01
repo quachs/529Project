@@ -103,6 +103,7 @@ public class QueryProcessor {
                 masterList = ListMerge.orList(masterList, AndCollection.get(i));
             }
         }
+        AndCollection.clear();
         return masterList;
     }
 
