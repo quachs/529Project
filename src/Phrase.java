@@ -73,7 +73,13 @@ public class Phrase {
                 posIndex.getPostingsList(spPhrase[j]), 1);
             }
         }     
-        return phraseList;
+        if (phraseList != null){
+            return phraseList;
+        }
+        else {
+           phraseList.clear();
+           return phraseList;
+        }
     }
     
     /**

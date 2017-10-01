@@ -36,7 +36,9 @@ public class QueryProcessor {
         } else if (preLiteral.contains("near")) {
             masterList = Phrase.nearQuery(preLiteral, posIndex);
         } else {
-            masterList = posIndex.getPostingsList(preLiteral);
+            if (posIndex.getPostingsList(preLiteral) != null){
+                masterList = posIndex.getPostingsList(preLiteral);
+            }
         }
 
         /* Merge all of the postings lists of each query literal
@@ -53,23 +55,25 @@ public class QueryProcessor {
                     }
                 } else if (currentLiteral.contains("*")) {
                     intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
-                    if (masterList != null && intermediateList != null) {
-                        masterList = ListMerge.intersectList(masterList, intermediateList);
-                    }
+                    masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else if (currentLiteral.contains("near")) {
-                    intermediateList = Phrase.nearQuery(currentLiteral, posIndex);
-                    if (masterList != null && intermediateList != null) {
-                        masterList = ListMerge.intersectList(masterList, intermediateList);
-                    }
+                    intermediateList = Phrase.nearQuery(currentLiteral, posIndex); 
+                    masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else {
-                    if (masterList != null && posIndex.getPostingsList(currentLiteral) != null) {
+                    if (posIndex.getPostingsList(currentLiteral) != null) {
                         masterList = ListMerge.intersectList(masterList, posIndex.getPostingsList(currentLiteral));
                     }
                 }
             }
         }
         //Add this AND postings list to the collection of AND postings lists
-        AndCollection.add(masterList);
+        if (masterList != null){
+            AndCollection.add(masterList);
+        }
+        else {
+            masterList.clear();
+            AndCollection.add(masterList);
+        } 
     }
 
     /**
@@ -96,9 +100,7 @@ public class QueryProcessor {
 
         if (AndCollection.size() > 1) {
             for (int i = 1; i < AndCollection.size(); i++) {
-                if (masterList != null && AndCollection.get(i) != null){
-                    masterList = ListMerge.orList(masterList, AndCollection.get(i));
-                }
+                masterList = ListMerge.orList(masterList, AndCollection.get(i));
             }
         }
         return masterList;
