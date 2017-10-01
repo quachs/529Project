@@ -6,7 +6,7 @@ import java.io.*;
  */
 public class SimpleEngine {
 
-    public static void main(String[] args) throws IOException  {        
+    public static void main(String[] args) throws IOException {
         UserInterface a = new UserInterface();
     }
 }

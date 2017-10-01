@@ -13,12 +13,12 @@ import javax.swing.*;
  */
 public class GeneratingLabels extends SwingWorker<Void, Void> {
 
-    long timer;
-    ArrayList<JLabel> array = new ArrayList<JLabel>();
-    ArrayList<Integer> docIds;
-    String[] docArray;
-    String res;
-    ArrayList<String> fileNames;
+    private long timer;
+    private ArrayList<JLabel> array = new ArrayList<JLabel>();
+    private ArrayList<Integer> docIds;
+    private String[] docArray;
+    private String res;
+    private ArrayList<String> fileNames;
 
     GeneratingLabels() {
 
@@ -39,18 +39,17 @@ public class GeneratingLabels extends SwingWorker<Void, Void> {
     protected Void doInBackground() throws Exception {
         setProgress(0);
         timer = new Date().getTime();
-        if (this.docArray.length > 0 && this.docIds.size() ==0) {
+        if (this.docArray.length > 0 && this.docIds.size() == 0) {
             res = "";
-                for (String s : docArray) {
-                    res = res + s + "\n";
-                }
+            for (String s : docArray) {
+                res = res + s + "\n";
+            }
         } else {
             for (int i = 0; i < this.docIds.size(); i++) {
                 JLabel lab = new JLabel(this.fileNames.get(docIds.get(i)));
                 array.add(lab);
             }
         }
-
         return null;
     }
 
@@ -62,4 +61,12 @@ public class GeneratingLabels extends SwingWorker<Void, Void> {
         System.out.println("Time for Generating panel: " + (new Date().getTime() - timer));
     }
 
+    public ArrayList<JLabel> getArray() {
+        return array;
+    }
+
+    public String getRes() {
+        return res;
+    }
+    
 }

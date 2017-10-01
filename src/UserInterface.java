@@ -1,14 +1,9 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,10 +25,13 @@ public class UserInterface implements MouseListener {
     JFrame frame;
     // after the path is chosen it is saved here for calling the indexing method.
     private Path path;
-
+    private String pathString;
     // Task where you can find positionalindex
     private Indexing indexedCorpus = new Indexing();
     GeneratingLabels gen;
+
+    // initialize a new dialog, this is the frame and "Indexing..." is the title
+    JDialog progressDialog = new JDialog(this.frame, "Please wait...");
 
     // indecis
     private PositionalInvertedIndex index;
@@ -58,15 +56,16 @@ public class UserInterface implements MouseListener {
     private JButton newDic = new JButton("Index new directory");
     private JButton all = new JButton("Print vocabulary");
     private JComboBox combo = new JComboBox();
-
     // List of results that are shown in the foundDocArea
-    private List<JLabel> labels = new ArrayList<JLabel>();
+    private List<JLabel> labels;
 
     // Constructor
     public UserInterface() throws IOException {
+        this.labels = new ArrayList<>();
         this.index = indexedCorpus.getIndex();
         this.frame = new JFrame();
         path = Paths.get("C");
+        createProgressBaer();
         // Let the user choose his directory
         chooseDirectory();
     }
@@ -75,7 +74,7 @@ public class UserInterface implements MouseListener {
      * this method opens a file chooser dialog that the user can choose the
      * directory where his corpus is saved
      */
-    public void chooseDirectory() throws IOException {
+    private void chooseDirectory() throws IOException {
         // initialize file chooser
         JFileChooser chooser = new JFileChooser();
         // for easier testing I chose the start directory where my created json files from homework 2 are saved
@@ -98,16 +97,37 @@ public class UserInterface implements MouseListener {
 
     /**
      * While Indexing processes show a progress bar
+     *
+     * @throws java.io.IOException
      */
     public void indexing() throws IOException {
-        // initialize a new dialog, this is the frame and "Indexing..." is the title
-        JDialog progressDialog = new JDialog(this.frame, "Indexing...");
+
+        // show the dialog
+        progressDialog.setVisible(true);
+        // start the task idexing -> it is king of a thread
+        indexedCorpus = new Indexing(path);
+        // start the task  
+        //task.doInBackground();
+        indexedCorpus.execute();
+        // wait till the task is finished -> set true when done() is finished
+        while (!indexedCorpus.isDone()) {
+        }
+        this.index = indexedCorpus.getIndex();
+        // close the dialog
+        progressDialog.setVisible(false);
+        // save created indecis
+        saveIndecies();
+        // creat the view
+        createUI();
+    }
+
+    public void createProgressBaer() {
         // create a new panel
         JPanel contentPane = new JPanel();
         // set preferred size
         contentPane.setPreferredSize(new Dimension(300, 100));
         // initialize progress bar and add it to the panel
-        JProgressBar bar = new JProgressBar(0, 100);
+        JProgressBar bar = new JProgressBar(SwingConstants.HORIZONTAL);
         bar.setIndeterminate(true);
         contentPane.add(bar);
         // add panel to the dialog
@@ -116,28 +136,12 @@ public class UserInterface implements MouseListener {
         progressDialog.pack();
         // sets the location to the center of the screen
         progressDialog.setLocationRelativeTo(null);
-        // start the task idexing -> it is king of a thread
-        indexedCorpus = new Indexing(path);
-        // start the task  
-        //task.doInBackground();
-        indexedCorpus.execute();
-        // show the dialog
-        progressDialog.setVisible(true);
-        // wait till the task is finished -> set true when done() is finished
-        while (!indexedCorpus.isDone()) {
-        }
-        this.index = indexedCorpus.getIndex();
-        // close the dialog
-        progressDialog.dispose();
-        // save created indecis
-        saveIndecies();
-        // creat the view
-        createUI();
+        progressDialog.setVisible(false);
     }
 
     private void saveIndecies() {
         kIndex = indexedCorpus.getKgIndex();
-        parser = new QueryParser(index, kIndex);
+        //parser = new QueryParser_KQV(index, kIndex);
         sIndex = indexedCorpus.getsIndex();
         index = indexedCorpus.getIndex();
     }
@@ -198,8 +202,7 @@ public class UserInterface implements MouseListener {
     }
 
     private void checkResults(List foundDocs) {
-        if (foundDocs != null) {
-            //////////////////////////////////////////////////////////////////////////////////////////
+        if (foundDocs != null && foundDocs.size() > 0) {
             // .. yes than go through them and add them to the label list
             generatingLabels(null, (ArrayList<Integer>) foundDocs);
         } else {
@@ -212,39 +215,23 @@ public class UserInterface implements MouseListener {
         if (docIDList == null) {
             this.gen = new GeneratingLabels(docsArray);
         } else {
-            this.gen = new GeneratingLabels(docIDList, (ArrayList<String>)indexedCorpus.getFileNames());
+            this.gen = new GeneratingLabels(docIDList, (ArrayList<String>) indexedCorpus.getFileNames());
         }
-        // initialize a new dialog, this is the frame and "Indexing..." is the title
-        JDialog progressDialog = new JDialog(this.frame, "Generating Labels...");
-        // create a new panel
-        JPanel contentPane = new JPanel();
-        // set preferred size
-        contentPane.setPreferredSize(new Dimension(300, 100));
-        // initialize progress bar and add it to the panel
-        JProgressBar bar = new JProgressBar(0, 100);
-        bar.setIndeterminate(true);
-        contentPane.add(bar);
-        // add panel to the dialog
-        progressDialog.setContentPane(contentPane);
-        // with pack() you minimalize the size of the dialog
-        progressDialog.pack();
-        // sets the location to the center of the screen
-        progressDialog.setLocationRelativeTo(null);
-        // start the task  
-        gen.execute();
         // show the dialog
         progressDialog.setVisible(true);
+        // start the task  
+        gen.execute();
         // wait till the task is finished -> set true when done() is finished
         while (!gen.isDone()) {
         }
-        this.labels = gen.array;
+        this.labels = gen.getArray();
         for (JLabel a : this.labels) {
             this.foundDocArea.add(a);
         }
         this.frame.repaint();
         this.frame.pack();
         // close the dialog
-        progressDialog.dispose();
+        progressDialog.setVisible(false);
     }
 
     /**
@@ -259,6 +246,8 @@ public class UserInterface implements MouseListener {
         if (e.getClickCount() == 1) {
             // check if Submit is clicked
             if (e.getSource() == bSubmit) {
+                num.setVisible(false);
+                parser = new QueryParser(index, kIndex);
                 // save the query
                 String query = this.tQuery.getText();
                 // remove all existing elements in the panel 
@@ -267,16 +256,15 @@ public class UserInterface implements MouseListener {
                 this.foundDocArea.repaint();
                 if (query.length() > 0) {
                     // create a list to save found documents
-                    List<Integer> foundDocs = new ArrayList<Integer>();
+                    List<Integer> foundDocs;
                     // initialize list of labels new - important for more than one submit action
-                    this.labels = new ArrayList<JLabel>();
+                    this.labels = new ArrayList<>();
                     // check if combobox is selected for normal search
-                    if (combo.getSelectedItem().toString() == "Normal search") {
+                    if ("Normal search".equals(combo.getSelectedItem().toString())) {
                         // .. yes than parse the query and save the resilt IDs
                         foundDocs = parser.getDocumentList(query);
                         // check if there are any results
                         checkResults(foundDocs);
-
                     } else { // .. not normal search == author search
                         // save DocIds for author search
                         foundDocs = QueryProcessor.authorQuery(query, sIndex);
@@ -289,12 +277,13 @@ public class UserInterface implements MouseListener {
                     this.numberRes.setText(labels.size() + "");
                     // make num panel visible
                     this.num.setVisible(true);
-
                     // add a listener for mouseclicks for every single button saved in the list 
                     for (JLabel b : labels) {
                         b.addMouseListener(this);
                     }
                 } else {
+                    labels = new ArrayList<JLabel>();
+                    this.num.setVisible(false);
                     this.foundDocArea.add(new JLabel("Please enter a term!"));
                 }
                 // show panel where buttons are in
@@ -326,7 +315,7 @@ public class UserInterface implements MouseListener {
                     // Task where you can find positionalindex
                     indexedCorpus = new Indexing();
                     foundDocArea.removeAll();
-                    labels = new ArrayList<JLabel>();
+                    labels = new ArrayList<>();
                     num.setVisible(false);
                     tQuery.setText("");
                     this.frame = new JFrame();
@@ -337,15 +326,15 @@ public class UserInterface implements MouseListener {
                     }
                 }
             }
-            ///////////////////////////////////////////////////////////////////////////////////////////////
             if (e.getSource() == all) {
                 this.foundDocArea.removeAll();
-                this.labels = new ArrayList<JLabel>();
+                this.labels = new ArrayList<>();
                 this.num.setVisible(true);
                 generatingLabels(index.getDictionary(), null);
                 JTextArea label = new JTextArea();
                 label.setEditable(false);
-                String res = gen.res;
+                label.setCaretPosition(0);
+                String res = gen.getRes();
                 label.setText(res);
                 this.foundDocArea.add(label);
                 this.number.setText(this.voc);
@@ -363,19 +352,8 @@ public class UserInterface implements MouseListener {
             int indx = labels.indexOf(e.getSource());
             // this shows that there is really an entry found -> double click submit can´t go in this
             if (indx >= 0) {
-                System.out.println(labels.get(indx).getText());
-                FilenameFilter filter = new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        File file = new File(name);
-                        if (name.equals(labels.get(indx).getText()) && !file.isDirectory()) {
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
-                };
-                String p = path.toString() + "/" + labels.get(indx).getText();
+                findFile(labels.get(indx).getText(), new File(path.toUri()));
+                String p = pathString + "/" + labels.get(indx).getText();
                 File file = new File(p);
                 try {
                     new DisplayJson(file);
@@ -386,7 +364,23 @@ public class UserInterface implements MouseListener {
         }
 
     }
-
+public void findFile(String name,File file)
+    {
+        File[] list = file.listFiles();
+        if(list!=null)
+        for (File fil : list)
+        {
+            if (fil.isDirectory())
+            {
+                findFile(name,fil);
+            }
+            else if (name.equalsIgnoreCase(fil.getName()))
+            {
+                File p = fil.getParentFile();
+                pathString = p.getAbsolutePath();
+            }
+        }
+    }
     /**
      * all the other mouse click events aren´t used because we don´t need them
      *
