@@ -166,7 +166,7 @@ public class UserInterface implements MouseListener {
         buttons.add(stem);
         buttons.add(newDic);
         buttons.add(all);
-
+        
         // add all components to frame
         this.frame.add(combo);
         this.frame.add(lQuery);
@@ -333,16 +333,17 @@ public class UserInterface implements MouseListener {
                 generatingLabels(index.getDictionary(), null);
                 JTextArea label = new JTextArea();
                 label.setEditable(false);
-                label.setCaretPosition(0);
                 String res = gen.getRes();
                 label.setText(res);
+                label.setCaretPosition(0);
                 this.foundDocArea.add(label);
                 this.number.setText(this.voc);
                 this.numberRes.setText(index.getTermCount() + "");
                 // show panel where buttons are in
                 this.foundDocArea.setVisible(true);
-                // reload the view again by packing the frame              
+                // reload the view again by packing the frame
                 this.frame.pack();
+                
             }
         }
 
