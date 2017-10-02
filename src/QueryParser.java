@@ -21,7 +21,6 @@ class QueryParser{
     private ListMerge intersector = new ListMerge();
     private KGramIndex kgIndex = new KGramIndex();
     
-    QueryParser(){}
     QueryParser(PositionalInvertedIndex posIndex, KGramIndex kgIndex){
         this.posIndex = posIndex;
         this.kgIndex = kgIndex;
