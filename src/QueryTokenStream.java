@@ -17,7 +17,6 @@ public class QueryTokenStream implements TokenStream {
      */
     public QueryTokenStream(File fileToOpen) throws FileNotFoundException {
         mReader = new Scanner(new FileReader(fileToOpen));
-        tokenQueue = new LinkedList<String>();
     }
 
     /**
@@ -25,7 +24,6 @@ public class QueryTokenStream implements TokenStream {
      */
     public QueryTokenStream(String text) {
         mReader = new Scanner(text);
-        tokenQueue = new LinkedList<String>();
     }
 
     /**
@@ -33,7 +31,7 @@ public class QueryTokenStream implements TokenStream {
      */
     @Override
     public boolean hasNextToken() {
-        return mReader.hasNext() || !tokenQueue.isEmpty();
+        return mReader.hasNext();
     }
 
     /**
@@ -44,10 +42,6 @@ public class QueryTokenStream implements TokenStream {
     public String nextToken() {
         if (!hasNextToken()) {
             return null;
-        }
-
-        if (!tokenQueue.isEmpty()) {
-            return tokenQueue.poll();
         }
 
         String next = mReader.next();
@@ -64,9 +58,6 @@ public class QueryTokenStream implements TokenStream {
                 t = t.toLowerCase();
                 if (!t.contains("*")){
                     t = PorterStemmer.getStem(t);
-                }
-                if (t.length() > 0) {
-                    tokenQueue.add(t);
                 }
             }
             next = next.replaceAll("-", ""); // modified token

@@ -64,7 +64,6 @@ class QueryParser{
                         andQueries.addLiteral(nearCandidate); 
                     }
                 } else{
-                    System.out.println("Adding literal: " + pBegCandidate);
                     andQueries.addLiteral(pBegCandidate);
                 }
             }
