@@ -5,10 +5,9 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-/*
-
-Class to process a query.
-
+/**
+ * Class to process various types of queries
+ * 
  */
 public class QueryProcessor {
 
@@ -30,11 +29,11 @@ public class QueryProcessor {
         List<PositionalPosting> intermediateList = new ArrayList<PositionalPosting>();
 
         if (preLiteral.contains("\"")) {
-            masterList = Phrase.phraseQuery(preLiteral, posIndex);
+            masterList = phraseQuery(preLiteral, posIndex);
         } else if (preLiteral.contains("*")) {
             masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);
         } else if (preLiteral.contains("near")) {
-            masterList = Phrase.nearQuery(preLiteral, posIndex);
+            masterList = nearQuery(preLiteral, posIndex);
         } else {
             if (posIndex.getPostingsList(preLiteral) != null){
                 masterList = posIndex.getPostingsList(preLiteral);
@@ -49,7 +48,7 @@ public class QueryProcessor {
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
                 if (currentLiteral.contains("\"")) {
-                    intermediateList = Phrase.phraseQuery(currentLiteral, posIndex);
+                    intermediateList = phraseQuery(currentLiteral, posIndex);
                     if (masterList != null && intermediateList != null) {
                         masterList = ListMerge.intersectList(masterList, intermediateList);
                     }
@@ -57,7 +56,7 @@ public class QueryProcessor {
                     intermediateList = QueryProcessor.wildcardQuery(currentLiteral, posIndex, kgIndex);
                     masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else if (currentLiteral.contains("near")) {
-                    intermediateList = Phrase.nearQuery(currentLiteral, posIndex); 
+                    intermediateList = nearQuery(currentLiteral, posIndex); 
                     masterList = ListMerge.intersectList(masterList, intermediateList);
                 } else {
                     if (posIndex.getPostingsList(currentLiteral) != null) {
@@ -207,4 +206,64 @@ public class QueryProcessor {
         }
         return result;
     }
+    
+     /**
+     * Uses positional intersection algorithm to merge all phrase terms into one
+     * final list representing the results for the entire phrase.
+     *
+     * @param phraseLiteral A sequential set of terms enclosed in double quotes
+     * @param posIndex Positional inverted index of selected corpus
+     * @return A PositionalPosting list of the results of the phrase query.
+     */
+    public static List<PositionalPosting> phraseQuery(String phraseLiteral, PositionalInvertedIndex posIndex) {
+        phraseLiteral = phraseLiteral.replaceAll("\"", "");
+        String[] spPhrase = phraseLiteral.split(" ");
+        PorterStemmer phraseStemmer = new PorterStemmer();
+        List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
+
+        for (int i = 0; i < spPhrase.length; i++) {
+            spPhrase[i] = phraseStemmer.getStem(spPhrase[i]);
+        }
+  
+        if (posIndex.getPostingsList(spPhrase[0]) != null){
+            phraseList = posIndex.getPostingsList(spPhrase[0]);
+            for(int j = 1; j < spPhrase.length; j++){
+                if(posIndex.getPostingsList(spPhrase[j]) != null) {
+                    phraseList = ListMerge.positionalIntersect(phraseList,
+                    posIndex.getPostingsList(spPhrase[j]), 1);
+                } else { // return empty list
+                    phraseList.clear();
+                    return phraseList;
+                    
+                    
+                }
+            }
+        } else { // return empty list 
+            return phraseList;
+        }
+        return phraseList;
+    }
+
+    /**
+     * Uses positional intersection algorithm to merge two terms in a string
+     * literal that contains the NEAR operator.
+     *
+     * @param nearLiteral Near literal in the form [term1] near[k] [term2]
+     * @param posIndex Positional inverted index of selected corpus
+     * @return List resulting from the positional intersect of term1 and term2
+     */
+    public static List<PositionalPosting> nearQuery(String nearLiteral, PositionalInvertedIndex posIndex) {
+        String[] spNear = nearLiteral.split(" ");
+        List<PositionalPosting> nearList = new ArrayList<PositionalPosting>();
+
+        //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
+        int k = Integer.valueOf(spNear[1].substring(4));
+
+        if (posIndex.getPostingsList(spNear[0]) != null && posIndex.getPostingsList(spNear[2]) != null) {
+            nearList = ListMerge.positionalIntersect(posIndex.getPostingsList(spNear[0]),
+                    posIndex.getPostingsList(spNear[2]), k);
+        }
+        return nearList;
+    }
+    
 }
