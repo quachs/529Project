@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Scanner;
 
 /**
  * Class to process various types of queries
@@ -28,7 +29,7 @@ public class QueryProcessor {
         String preLiteral = andQueryLiterals.getLiterals().get(0);
         List<PositionalPosting> intermediateList = new ArrayList<PositionalPosting>();
 
-        if (preLiteral.contains("\"")) {
+        if (preLiteral.contains("\"") && !preLiteral.contains("near")) {
             masterList = phraseQuery(preLiteral, posIndex);
         } else if (preLiteral.contains("*")) {
             masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);
@@ -225,15 +226,38 @@ public class QueryProcessor {
      * @return List resulting from the positional intersect of term1 and term2
      */
     public static List<PositionalPosting> nearQuery(String nearLiteral, PositionalInvertedIndex posIndex) {
-        String[] spNear = nearLiteral.split(" ");
+        
+        Scanner nearSearcher = new Scanner(nearLiteral);
         List<PositionalPosting> nearList = new ArrayList<PositionalPosting>();
-
-        //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
-        int k = Integer.valueOf(spNear[1].substring(4));
-
-        if (posIndex.getPostingsList(spNear[0]) != null && posIndex.getPostingsList(spNear[2]) != null) {
-            nearList = positionalIntersect(posIndex.getPostingsList(spNear[0]),
-                    posIndex.getPostingsList(spNear[2]), k);
+        List<PositionalPosting> leftList = new ArrayList<PositionalPosting>();
+        List<PositionalPosting> rightList = new ArrayList<PositionalPosting>();
+        
+         //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
+        int k = 0;
+        
+        while(nearSearcher.hasNext()){
+            String nearCandidate = nearSearcher.next();
+            if (nearCandidate.startsWith("near")){
+                k = Integer.valueOf(nearCandidate.substring(4));
+                break;
+            }
+        }
+        
+        String[] spNear = nearLiteral.split(" near[\\d+] ");
+        
+        if (spNear[0].contains("\"")){
+            leftList = phraseQuery(spNear[0], posIndex);
+        } else {
+            leftList = posIndex.getPostingsList(spNear[0]);
+        }
+        if (spNear[1].contains("\"")){
+            rightList = phraseQuery(spNear[1], posIndex);
+        } else {
+            rightList = posIndex.getPostingsList(spNear[1]);
+        }
+        
+        if (leftList != null && rightList != null) {
+            nearList = positionalIntersect(leftList, rightList, k);
         }
         return nearList;
     }

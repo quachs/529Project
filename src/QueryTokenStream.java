@@ -52,7 +52,7 @@ public class QueryTokenStream implements TokenStream {
         next = next.replaceAll("[^[\\W&&[^\"\\*]]+|[\\W&&[^\"\\*]]+$]+", "");
         next = next.replaceAll("'", "").toLowerCase();
         next = next.replaceAll("-", ""); // modified token
-        if (!next.contains("*")){ // do not stem wildcard 
+        if (!next.contains("*") && !next.contains("\"")){ // do not stem wildcard 
             next = PorterStemmer.getStem(next);
         }
         return next.length() > 0 ? next

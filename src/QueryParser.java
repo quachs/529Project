@@ -39,7 +39,32 @@ class QueryParser {
             //Phrase candidate must start with a left double quote
             if (pBegCandidate.startsWith("\"")) {
                 String phrase = getPhrase(andReader, pBegCandidate);
-                andQueries.addLiteral(phrase);
+                 
+                 if (andReader.hasNextToken()) {
+                    String nearCandidate = andReader.nextToken();
+                    
+                    /* Search for "near" keyword.  If found,
+                        rebuild near literal in the form [term1] near[k] [term2] */
+                    if (nearCandidate.contains("near")) {
+                        String lNearOp = phrase;
+                        String rNearOp = andReader.nextToken();
+
+                        if (rNearOp.startsWith("\"")){
+                            rNearOp = getPhrase(andReader, rNearOp);
+                        }
+
+                        String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;     
+                        andQueries.addLiteral(nearLiteral);
+                    } else {
+                        /* Add original token, pBegCandidate
+                        Since reader was advanced past original token in order to
+                        look for "near," nearCandidate token must be added here */
+                        andQueries.addLiteral(phrase);
+                        andQueries.addLiteral(nearCandidate);
+                    }
+                 } else {
+                     andQueries.addLiteral(phrase);
+                 }
             } else if (andReader.hasNextToken()) {
                 String nearCandidate = andReader.nextToken();
 
@@ -48,6 +73,11 @@ class QueryParser {
                 if (nearCandidate.contains("near")) {
                     String lNearOp = pBegCandidate;
                     String rNearOp = andReader.nextToken();
+                    
+                    if (rNearOp.startsWith("\"")){
+                        rNearOp = getPhrase(andReader, rNearOp);
+                    }
+                    
                     String nearLiteral = lNearOp + " " + nearCandidate + " " + rNearOp;
                     andQueries.addLiteral(nearLiteral);
                 } else {
@@ -106,7 +136,6 @@ class QueryParser {
      * long, a single term *without* double quotes is returned.
      */
     public String getPhrase(QueryTokenStream tokenReader, String pBegCandidate) {
-        QueryTokenStream phraseDetector = tokenReader;
         String phraseQuery = "", nextCandidate = "";
 
         if (pBegCandidate.startsWith("\"")) {
@@ -119,18 +148,18 @@ class QueryParser {
                 return phraseQuery;
             }
 
-            nextCandidate = phraseDetector.nextToken();
+            nextCandidate = tokenReader.nextToken();
             while (!nextCandidate.endsWith("\"")) { //build phrase
                 phraseQuery = phraseQuery + " " + nextCandidate;
 
-                if (phraseDetector.hasNextToken()) {
-                    nextCandidate = phraseDetector.nextToken();
+                if (tokenReader.hasNextToken()) {
+                    nextCandidate = tokenReader.nextToken();
                 }
             }
             phraseQuery = phraseQuery + " " + nextCandidate;
             return phraseQuery;
         } else {
-            pBegCandidate = phraseDetector.nextToken();
+            pBegCandidate = tokenReader.nextToken();
         }
         return phraseQuery;
     }
