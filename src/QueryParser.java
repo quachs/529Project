@@ -39,12 +39,11 @@ class QueryParser{
                 
         while(andReader.hasNextToken()){
             String pBegCandidate = andReader.nextToken();
-            System.out.println("candidate: " + pBegCandidate);
             
             //Phrase candidate must start with a left double quote
             if (pBegCandidate.startsWith("\"")){
                 String phrase = Phrase.getPhrase(andReader, pBegCandidate);
-                andQueries.addLiteral(phrase);        
+                andQueries.addLiteral(phrase);
             } else{
                 if (andReader.hasNextToken()){
                     String nearCandidate = andReader.nextToken();
