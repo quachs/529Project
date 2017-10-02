@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.java.j2seproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-            <name>CECS529_Project</name>
+            <name>529Project</name>
             <source-roots>
                 <root id="src.gson-2.8.1.dir" name="Gson"/>
                 <root id="src.dir"/>

@@ -117,7 +117,7 @@ class QueryParser{
         List<Integer> documentList = new ArrayList<Integer>();
         
         //Constuct a list of document IDs from this final postings list.
-        if (masterPostings.size() != 0){
+        if (masterPostings.size() > 0){
             for(int i = 0; i < masterPostings.size(); i++){
                 int currentDocID = masterPostings.get(i).getDocumentID();    
                 documentList.add(currentDocID);
