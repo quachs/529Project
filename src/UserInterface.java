@@ -1,3 +1,4 @@
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -68,6 +69,11 @@ public class UserInterface implements MouseListener {
         createProgressBaer();
         // Let the user choose his directory
         chooseDirectory();
+        // add mouseListener
+        bSubmit.addMouseListener(this);
+        stem.addMouseListener(this);
+        newDic.addMouseListener(this);
+        all.addMouseListener(this);
     }
 
     /**
@@ -85,13 +91,15 @@ public class UserInterface implements MouseListener {
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         // chooser.showOpenDialog(null) opens the dialog in the middle of the screen, it is not depended by any frame or component
         // if user approves -> clicks "Open" ...
-        if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(null)) {
+        int resCooser = chooser.showOpenDialog(null);
+        if (JFileChooser.APPROVE_OPTION == resCooser) {
             // ... save the returend path
             path = Paths.get(chooser.getSelectedFile().getPath());
             // and start indexing. While indexing show a progress bar that the user can see that something happens
             indexing();
         } else {
-            // if any other key is pressed, the window closes
+            // Close the system
+            System.exit(0);
         }
     }
 
@@ -174,12 +182,7 @@ public class UserInterface implements MouseListener {
         this.frame.add(buttons);
         this.frame.add(foundDocArea);
 
-        // add mouseListener
-        bSubmit.addMouseListener(this);
-        stem.addMouseListener(this);
-        newDic.addMouseListener(this);
-        all.addMouseListener(this);
-
+  
         // add scrolbar        
         JScrollPane jsp = new JScrollPane(foundDocArea);
         jsp.setPreferredSize(new Dimension(300, 300));
@@ -297,18 +300,19 @@ public class UserInterface implements MouseListener {
                 this.foundDocArea.setVisible(false);
                 this.num.setVisible(false);
                 this.frame.pack();
-                // Save the result of stemming, call Simple Token Stream
-                String result = PorterStemmer.getStem(this.tQuery.getText());
-                // Aufruf der statischen Methode showMessageDialog()
-                JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                if (this.tQuery.getText().split(" ").length > 1) {
+                    JOptionPane.showMessageDialog(this.frame, "Please enter only one term for stemming", "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    // Save the result of stemming, call Simple Token Stream
+                    String result = PorterStemmer.getStem(this.tQuery.getText());
+                    // Aufruf der statischen Methode showMessageDialog()
+                    JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
-            if (e.getSource() == newDic) {
-                String res = JOptionPane.showInputDialog("Choosing index directory will start at the following path:", this.tQuery.getText());
-                if (res != null) {
-                    if (res.length() > 0) {
-                        String directory = res;
-                        path = Paths.get(directory);
-                    }
+            if (e.getSource() == newDic) 
+            {
+                int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?", "Index new directory", 2);
+                if (res == 0) {
                     this.frame.setVisible(false);
                     this.frame.dispose();
                     // close everything
@@ -362,25 +366,22 @@ public class UserInterface implements MouseListener {
                 }
             }
         }
-
     }
-public void findFile(String name,File file)
-    {
+
+    public void findFile(String name, File file) {
         File[] list = file.listFiles();
-        if(list!=null)
-        for (File fil : list)
-        {
-            if (fil.isDirectory())
-            {
-                findFile(name,fil);
-            }
-            else if (name.equalsIgnoreCase(fil.getName()))
-            {
-                File p = fil.getParentFile();
-                pathString = p.getAbsolutePath();
+        if (list != null) {
+            for (File fil : list) {
+                if (fil.isDirectory()) {
+                    findFile(name, fil);
+                } else if (name.equalsIgnoreCase(fil.getName())) {
+                    File p = fil.getParentFile();
+                    pathString = p.getAbsolutePath();
+                }
             }
         }
     }
+
     /**
      * all the other mouse click events aren´t used because we don´t need them
      *
