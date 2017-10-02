@@ -1,26 +1,22 @@
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
-
 /**
- * Class that generates the 1-, 2-, and 3-grams for a type and
- * inserts them into an inverted index structure
- * 
+ * Class for a K-Gram index. The keys are the 1-, 2-, and 3-grams for a
+ * vocabulary type and the postings are the corresponding types.
+ *
  */
-public class KGramIndex {
-    
-    private HashMap<String, List<String>> mIndex;
-    
+public class KGramIndex extends Index<String> {
+
     public KGramIndex() {
-        mIndex = new HashMap<String, List<String>>();
+        super();
     }
-    
+
     /**
-     * Generate the k-grams of the given vocabulary type and call a
-     * helper method to insert to the index
+     * Generate the k-grams of the given vocabulary type and call a helper
+     * method to insert to the index
+     *
      * @param type vocabulary type from the corpus
      */
     public void addType(String type) {
@@ -36,22 +32,27 @@ public class KGramIndex {
                 addType(modifiedType.substring(i, i + 3), type); // 3-grams
             }
         } else if (type.length() == 1) {
+            // Ignore 3-grams for 1 char types; not useful for wildcard query
             addType(type, type);
             addType("$" + type, type);
             addType(type + "$", type);
         }
     }
-    
+
     /**
      * Insert the k-gram and its type to the index
+     *
      * @param kgram from the vocabulary type
      * @param type vocabulary type from the corpus
      */
     private void addType(String kgram, String type) {
         // The term exists in the index. Add the vocab type to the
-        // corresponding kgram (the types are unique and inserted in order)
+        // corresponding k-gram if it doesn't already exist.
         if (mIndex.containsKey(kgram)) {
-            mIndex.get(kgram).add(type);
+            if (!mIndex.get(kgram).get(mIndex.get(kgram).size() - 1).equals(type)) {
+                mIndex.get(kgram).add(type);
+            }
+
         } else {
             // Add a new posting to the index
             List<String> typeList = new ArrayList<String>();
@@ -59,24 +60,5 @@ public class KGramIndex {
             mIndex.put(kgram, typeList);
         }
     }
-    
-    /**
-     * Retrieve the list of types that contain a given k-gram
-     * @param kgram
-     * @return
-     */
-    public List<String> getTypes(String kgram){
-        return mIndex.get(kgram);
-    }
-    
-    /**
-     * Get an array of the k-grams
-     * @return 
-     */
-    public String[] getDictionary(){
-        String[] kgrams = new String[mIndex.size()];
-        kgrams = mIndex.keySet().toArray(kgrams);
-        Arrays.sort(kgrams);
-        return kgrams;
-    }
+
 }

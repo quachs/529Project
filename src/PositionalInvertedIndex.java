@@ -3,16 +3,14 @@ import java.util.*;
 
 /**
  * Class for a positional inverted index
- * 
+ *
  */
-public class PositionalInvertedIndex {
-
-    private HashMap<String, List<PositionalPosting>> mIndex;
+public class PositionalInvertedIndex extends Index<PositionalPosting> {
 
     public PositionalInvertedIndex() {
-        mIndex = new HashMap<String, List<PositionalPosting>>();
+        super();
     }
-    
+
     public void addTerm(String term, int docID, int position) {
         if (mIndex.containsKey(term)) { // the index contains the term
             List<PositionalPosting> postingsList = mIndex.get(term);
@@ -28,35 +26,33 @@ public class PositionalInvertedIndex {
         }
     }
 
-    public int getTermCount() {
-        return mIndex.size();
-    }
-
-    public String[] getDictionary() {
-        String[] terms = new String[this.getTermCount()];
-        terms = mIndex.keySet().toArray(terms);
-        Arrays.sort(terms);
-        return terms;
-    }
-    
-    public List<Integer> getDocumentPostingsList(String term){
+    /**
+     * Get a list of docIDs for the given term
+     *
+     * @param term
+     * @return list of docIDs
+     */
+    public List<Integer> getDocumentPostingsList(String term) {
         List<Integer> docList = new ArrayList<Integer>();
         for (PositionalPosting p : mIndex.get(term)) {
             docList.add(p.getDocumentID());
         }
         return docList;
     }
-    
-    public List<Integer> getDocumentTermPositions(String term, int docID){
+
+    /**
+     * Get a list of term position for the given term and docID
+     *
+     * @param term
+     * @param docID
+     * @return list of term positions
+     */
+    public List<Integer> getDocumentTermPositions(String term, int docID) {
         int docIndex = Collections.binarySearch(getDocumentPostingsList(term), docID);
-        if (docIndex >= 0){
+        if (docIndex >= 0) {
             return mIndex.get(term).get(docIndex).getTermPositions();
         }
         return null;
-    }
-    
-    public List<PositionalPosting> getPostingsList(String term){
-        return mIndex.get(term);
     }
     
 
