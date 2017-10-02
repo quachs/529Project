@@ -47,9 +47,9 @@ public class QueryTokenStream implements TokenStream {
 
         String next = mReader.next();
 
-        // remove non-alphanumeric characters from beginning and end
-        //Modified 9/17 to ignore double quotes
-        next = next.replaceAll("[^[\\W&&[^\"\\*]]+|[\\W&&[^\"\\*]]+$]+", "");
+        // remove non-alphanumeric characters from beginning and end, except double quotes
+        //next = next.replaceAll("[^[\\W&&[^\"\\*]]+|[\\W&&[^\"\\*]]+$]+", "");
+        next = next.replaceAll("^[^a-zA-Z0-9 \"]+|[^a-zA-Z0-9 \"]+$", "");
         next = next.replaceAll("'", "").toLowerCase();
         next = next.replaceAll("-", ""); // modified token
         if (!next.contains("*") && !next.contains("\"")){ // do not stem wildcard 

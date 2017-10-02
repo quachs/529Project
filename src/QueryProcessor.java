@@ -192,11 +192,10 @@ public class QueryProcessor {
     public static List<PositionalPosting> phraseQuery(String phraseLiteral, PositionalInvertedIndex posIndex) {
         phraseLiteral = phraseLiteral.replaceAll("\"", "");
         String[] spPhrase = phraseLiteral.split(" ");
-        PorterStemmer phraseStemmer = new PorterStemmer();
         List<PositionalPosting> phraseList = new ArrayList<PositionalPosting>();
 
         for (int i = 0; i < spPhrase.length; i++) {
-            spPhrase[i] = phraseStemmer.getStem(spPhrase[i]);
+            spPhrase[i] = PorterStemmer.getStem(spPhrase[i]);
         }
 
         if (posIndex.getPostingsList(spPhrase[0]) != null) {
@@ -232,31 +231,35 @@ public class QueryProcessor {
         List<PositionalPosting> leftList = new ArrayList<PositionalPosting>();
         List<PositionalPosting> rightList = new ArrayList<PositionalPosting>();
         
-         //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
+        //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
         int k = 0;
         
         while(nearSearcher.hasNext()){
             String nearCandidate = nearSearcher.next();
             if (nearCandidate.startsWith("near")){
-                k = Integer.valueOf(nearCandidate.substring(4));
+                k = Integer.valueOf(nearCandidate.substring(5));
                 break;
             }
         }
         
-        String[] spNear = nearLiteral.split(" near[\\d+] ");
+        String[] spNear = nearLiteral.split(" near/[\\d+] ");
         
         if (spNear[0].contains("\"")){
             leftList = phraseQuery(spNear[0], posIndex);
         } else {
-            leftList = posIndex.getPostingsList(spNear[0]);
+            if(posIndex.getPostingsList(spNear[0]) != null){
+                leftList = posIndex.getPostingsList(spNear[0]);
+            }
         }
         if (spNear[1].contains("\"")){
             rightList = phraseQuery(spNear[1], posIndex);
         } else {
-            rightList = posIndex.getPostingsList(spNear[1]);
+            if(posIndex.getPostingsList(spNear[1]) != null){
+                rightList = posIndex.getPostingsList(spNear[1]);
+            }   
         }
         
-        if (leftList != null && rightList != null) {
+        if (leftList.size() > 0 && rightList.size() > 0) {
             nearList = positionalIntersect(leftList, rightList, k);
         }
         return nearList;
