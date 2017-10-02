@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
+import javax.swing.UIManager.*;
 
 /**
  * UserInterface Implements MouseListener for user input handling
@@ -59,12 +60,27 @@ public class UserInterface implements MouseListener {
     private JComboBox combo = new JComboBox();
     // List of results that are shown in the foundDocArea
     private List<JLabel> labels;
+    private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png");
 
     // Constructor
     public UserInterface() throws IOException {
+        // Change look and feel of swing components
+        // resource: http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/nimbus.html
+        try {
+            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // If Nimbus is not available, you can set the GUI to another look and feel.
+        }
+        this.progressDialog.setIconImage(img.getImage());
         this.labels = new ArrayList<>();
         this.index = indexedCorpus.getIndex();
         this.frame = new JFrame();
+        this.frame.setIconImage(img.getImage());
         path = Paths.get("C");
         createProgressBaer();
         // Let the user choose his directory
@@ -174,7 +190,7 @@ public class UserInterface implements MouseListener {
         buttons.add(stem);
         buttons.add(newDic);
         buttons.add(all);
-        
+
         // add all components to frame
         this.frame.add(combo);
         this.frame.add(lQuery);
@@ -182,7 +198,6 @@ public class UserInterface implements MouseListener {
         this.frame.add(buttons);
         this.frame.add(foundDocArea);
 
-  
         // add scrolbar        
         JScrollPane jsp = new JScrollPane(foundDocArea);
         jsp.setPreferredSize(new Dimension(300, 300));
@@ -301,17 +316,16 @@ public class UserInterface implements MouseListener {
                 this.num.setVisible(false);
                 this.frame.pack();
                 if (this.tQuery.getText().split(" ").length > 1) {
-                    JOptionPane.showMessageDialog(this.frame, "Please enter only one term for stemming", "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this.frame, "Please enter only one term for stemming", "Result of stemming", JOptionPane.INFORMATION_MESSAGE, this.img);
                 } else {
                     // Save the result of stemming, call Simple Token Stream
                     String result = PorterStemmer.getStem(this.tQuery.getText());
                     // Aufruf der statischen Methode showMessageDialog()
-                    JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this.frame, "Stemmed \"" + this.tQuery.getText() + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE, this.img);
                 }
             }
-            if (e.getSource() == newDic) 
-            {
-                int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?", "Index new directory", 2);
+            if (e.getSource() == newDic) {
+                int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?", "Index new directory", 2, JOptionPane.INFORMATION_MESSAGE, this.img);
                 if (res == 0) {
                     this.frame.setVisible(false);
                     this.frame.dispose();
@@ -347,7 +361,7 @@ public class UserInterface implements MouseListener {
                 this.foundDocArea.setVisible(true);
                 // reload the view again by packing the frame
                 this.frame.pack();
-                
+
             }
         }
 
