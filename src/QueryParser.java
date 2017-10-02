@@ -40,6 +40,7 @@ class QueryParser{
                 
         while(andReader.hasNextToken()){
             String pBegCandidate = andReader.nextToken();
+            System.out.println("candidate: " + pBegCandidate);
             
             //Phrase candidate must start with a left double quote
             if (pBegCandidate.startsWith("\"")){
@@ -64,6 +65,7 @@ class QueryParser{
                         andQueries.addLiteral(nearCandidate); 
                     }
                 } else{
+                    System.out.println("Adding literal: " + pBegCandidate);
                     andQueries.addLiteral(pBegCandidate);
                 }
             }
@@ -80,18 +82,18 @@ class QueryParser{
      */
     public List<Subquery> collectOrQueries(String query){
         
-        QueryTokenStream tReader = new QueryTokenStream(query);
+        Scanner tReader = new Scanner(query);
         List<Subquery> allQueries = new ArrayList<Subquery>();   
         String qString = "";
         
         //Constructs a complete AND query Q_i (stops at OR token ("+"));
-        while(tReader.hasNextToken()){
-            String plusCandidate = tReader.nextToken();
+        while(tReader.hasNext()){
+            String plusCandidate = tReader.next();
             
             if(!plusCandidate.equals("+")){
                 qString = qString + " " + plusCandidate;
                 
-                if(!tReader.hasNextToken()){
+                if(!tReader.hasNext()){
                     allQueries.add(collectAndQueries(qString));    
                 }
             } else{

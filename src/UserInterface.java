@@ -207,7 +207,7 @@ public class UserInterface implements MouseListener {
             generatingLabels(null, (ArrayList<Integer>) foundDocs);
         } else {
             // .. no print that there are no documents
-            this.foundDocArea.add(new JLabel("No document found."));
+            this.foundDocArea.add(new JLabel("No documents found."));
         }
     }
 
