@@ -12,7 +12,7 @@ import java.util.Scanner;
  */
 public class QueryProcessor {
 
-    private static List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>();
+    private static List<List<PositionalPosting>> andCollection = new ArrayList<List<PositionalPosting>>();
 
     /**
      * Add the positional postings list of an AND query to the collection of AND
@@ -66,9 +66,9 @@ public class QueryProcessor {
         }
         // Add this AND postings list to the collection of AND postings lists
         if (masterList != null) {
-            AndCollection.add(masterList);
+            andCollection.add(masterList);
         } else {
-            AndCollection.add(masterList);
+            andCollection.add(masterList);
             masterList.clear();
         }
     }
@@ -92,14 +92,14 @@ public class QueryProcessor {
         }
 
         // Merge all Q_i postings list into Master List using OR intersection
-        List<PositionalPosting> masterList = AndCollection.get(0);
+        List<PositionalPosting> masterList = andCollection.get(0);
 
-        if (AndCollection.size() > 1) {
-            for (int i = 1; i < AndCollection.size(); i++) {
-                masterList = unionList(masterList, AndCollection.get(i));
+        if (andCollection.size() > 1) {
+            for (int i = 1; i < andCollection.size(); i++) {
+                masterList = unionList(masterList, andCollection.get(i));
             }
         }
-        AndCollection.clear();
+        andCollection.clear();
         return masterList;
     }
 
