@@ -19,7 +19,7 @@ import java.io.FileReader;
 import java.util.Date;
 
 /**
- * this is kind of a thread to do the indexing in the background
+ * Thread to do the indexing in the background
  *
  * @author Sandra
  */
@@ -46,7 +46,7 @@ class Indexing extends SwingWorker<Void, Void> {
     public Indexing() {
         path = Paths.get(".");
     }
-// this constructor with the path is important to find the directory the user likes
+    // this constructor for the directory the user chooses
     public Indexing(Path path) {
         this.path = path;
     }    
@@ -56,6 +56,7 @@ class Indexing extends SwingWorker<Void, Void> {
     }
 
     /**
+     * Walk through all .json files in a directory and subdirectory.
      * Indexing should be a thread working in the background that the
      * progressbar still can work
      *
@@ -110,7 +111,8 @@ class Indexing extends SwingWorker<Void, Void> {
     }
 
     /**
-     * method is called when doInBackgrond is finished -> process is finished
+     * Method is called when doInBackgrond is finished -> process is finished
+     * Build the k-gram index when all the vocabulary types are collected.
      */
     @Override
     public void done() {
