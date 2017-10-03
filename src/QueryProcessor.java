@@ -237,12 +237,12 @@ public class QueryProcessor {
         while(nearSearcher.hasNext()){
             String nearCandidate = nearSearcher.next();
             if (nearCandidate.startsWith("near")){
-                k = Integer.valueOf(nearCandidate.substring(5));
+                k = Integer.valueOf(nearCandidate.substring(4));
                 break;
             }
         }
         
-        String[] spNear = nearLiteral.split(" near/[\\d+] ");
+        String[] spNear = nearLiteral.split(" near[\\d+] ");
         
         if (spNear[0].contains("\"")){
             leftList = phraseQuery(spNear[0], posIndex);
