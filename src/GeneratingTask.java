@@ -11,7 +11,7 @@ import javax.swing.*;
  *
  * @author Sandra
  */
-public class GeneratingLabels extends SwingWorker<Void, Void> {
+public class GeneratingTask extends SwingWorker<Void, Void> {
 
     private long timer;
     private ArrayList<JLabel> array = new ArrayList<JLabel>();
@@ -20,16 +20,16 @@ public class GeneratingLabels extends SwingWorker<Void, Void> {
     private String res;
     private ArrayList<String> fileNames;
 
-    GeneratingLabels() {
+    GeneratingTask() {
 
     }
 
-    GeneratingLabels(String[] docNames) {
+    GeneratingTask(String[] docNames) {
         this.docArray = docNames;
         this.docIds = new ArrayList<Integer>();
     }
 
-    GeneratingLabels(ArrayList<Integer> docIds, ArrayList<String> docNames) {
+    GeneratingTask(ArrayList<Integer> docIds, ArrayList<String> docNames) {
         this.docIds = docIds;
         this.fileNames = docNames;
         this.docArray = new String[0];
