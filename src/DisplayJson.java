@@ -41,7 +41,7 @@ public class DisplayJson {
 
                     htmlString = getHTMLString(file);
 
-                    // create a document, set it on the jeditorpane, then add the html
+                    // set document and html on the jeditorpane
                     Document doc = kit.createDefaultDocument();
                     jEditorPane.setDocument(doc);
                     jEditorPane.setText(htmlString);
@@ -54,13 +54,12 @@ public class DisplayJson {
                     System.out.println("File not found!");
                 }
 
-                // now add it all to a frame
+                // format the frame
                 String[] name = file.getName().split("\\.");
                 JFrame j = new JFrame(name[0]);
                 ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png");
                 j.setIconImage(img.getImage());
                 j.getContentPane().add(scrollPane, BorderLayout.CENTER);
-                //j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 j.setSize(new Dimension(400, 600)); // size of frame
 
                 // center the jframe, then make it visible

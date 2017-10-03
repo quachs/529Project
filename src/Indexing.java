@@ -19,7 +19,7 @@ import java.io.FileReader;
 import java.util.Date;
 
 /**
- * this is kind of a thread that works in the background
+ * this is kind of a thread to do the indexing in the background
  *
  * @author Sandra
  */
@@ -123,15 +123,19 @@ class Indexing extends SwingWorker<Void, Void> {
     }
 
     /**
-     * Indexes a file by reading a series of tokens from the file, treating each
-     * token as a term, and then adding the given document's ID to the inverted
-     * index for the term.
-     *
-     * @param file a File object for the document to index.
-     * @param index the current state of the index for the files that have
-     * already been processed.
+     * Index a file by reading a series of tokens from the body of the file. 
+     * Each token is processed and added to a tree of vocabulary types. The
+     * same token is stemmed and added to the positional inverted index with
+     * the given document ID. If the json file contains an author field, 
+     * add the document to the soundex index.
+     * @param file a json file object for the document to index.
+     * @param index the current state of the positional inverted index for the 
+     * files that have been already processed
+     * @param vocabTree the current state of the vocabulary type tree
+     * @param sIndex the current state of the soundex index
      * @param docID the integer ID of the current document, needed when indexing
      * each term from the document.
+     * @throws FileNotFoundException 
      */
     private static void indexFile(File file, PositionalInvertedIndex index,
             SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException {
