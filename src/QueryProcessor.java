@@ -237,7 +237,6 @@ public class QueryProcessor {
         while(nearSearcher.hasNext()){
             String nearCandidate = nearSearcher.next();
             if (nearCandidate.startsWith("near")){
-                System.out.println(nearCandidate);
                 k = Integer.valueOf(nearCandidate.substring(5));
                 break;
             }
