@@ -1,17 +1,12 @@
-//Class includes a call to implementations of the ListMerge algorithm from 
-//"Introduction to Information Retrieval, Online Edition" by
-//Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
-//Cambridge University Press, 2009, p. 11, Figure 1.6
-//https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
+// See README for references
 
-//Sources:
-//https://docs.oracle.com/javase/7/docs/api/java/util/ArrayList.html
-//https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split(java.lang.String)
-//https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
-//https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#startsWith(java.lang.String)
-//https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.lang.String)
 import java.util.*;
 
+/**
+ * Class to parse user query into query literals and
+ * store in a data structure for later evaluation.
+ *
+ */
 class QueryParser {
 
     private PositionalInvertedIndex posIndex;
@@ -36,7 +31,7 @@ class QueryParser {
         while (andReader.hasNextToken()) {
             String pBegCandidate = andReader.nextToken();
 
-            //Phrase candidate must start with a left double quote
+            // Phrase candidate must start with a left double quote
             if (pBegCandidate.startsWith("\"")) {
                 String phrase = getPhrase(andReader, pBegCandidate);
                  
@@ -82,8 +77,8 @@ class QueryParser {
                     andQueries.addLiteral(nearLiteral);
                 } else {
                     /* Add original token, pBegCandidate
-                        //Since reader was advanced past original token in order to
-                        //look for "near," nearCandidate token must be added here */
+                        Since reader was advanced past original token in order to
+                        look for "near," nearCandidate token must be added here */
                     andQueries.addLiteral(pBegCandidate);
                     andQueries.addLiteral(nearCandidate);
                 }
@@ -108,7 +103,7 @@ class QueryParser {
         List<Subquery> allQueries = new ArrayList<Subquery>();
         String qString = "";
 
-        //Constructs a complete AND query Q_i (stops at OR token ("+"));
+        // Constructs a complete AND query Q_i (stops at OR token ("+"));
         while (tReader.hasNext()) {
             String plusCandidate = tReader.next();
 
@@ -120,7 +115,7 @@ class QueryParser {
                 }
             } else {
                 allQueries.add(collectAndQueries(qString));
-                qString = ""; //clears string for later use          
+                qString = ""; // clears string for later use          
             }
         }
         return allQueries;
@@ -141,7 +136,7 @@ class QueryParser {
         if (pBegCandidate.startsWith("\"")) {
             phraseQuery = pBegCandidate;
 
-            if (phraseQuery.endsWith("\"")) { //If phrase if only one token long
+            if (phraseQuery.endsWith("\"")) { // If phrase if only one token long
                 PorterStemmer onePhraseStemmer = new PorterStemmer();
                 phraseQuery = phraseQuery.replaceAll("\"", "");
                 phraseQuery = onePhraseStemmer.getStem(phraseQuery);
@@ -149,7 +144,7 @@ class QueryParser {
             }
 
             nextCandidate = tokenReader.nextToken();
-            while (!nextCandidate.endsWith("\"")) { //build phrase
+            while (!nextCandidate.endsWith("\"")) { // build phrase
                 phraseQuery = phraseQuery + " " + nextCandidate;
 
                 if (tokenReader.hasNextToken()) {
@@ -173,12 +168,12 @@ class QueryParser {
      */
     public List<Integer> getDocumentList(String query) {
 
-        //Parse query, store in a collection, perform the query, return a final postings list.
+        // Parse query, store in a collection, perform the query, return a final postings list.
         List<Subquery> allQueries = collectOrQueries(query);
         List<PositionalPosting> masterPostings = QueryProcessor.orQuery(allQueries, posIndex, kgIndex);
         List<Integer> documentList = new ArrayList<Integer>();
 
-        //Constuct a list of document IDs from this final postings list.
+        // Constuct a list of document IDs from this final postings list.
         if (masterPostings.size() > 0) {
             for (int i = 0; i < masterPostings.size(); i++) {
                 int currentDocID = masterPostings.get(i).getDocumentID();

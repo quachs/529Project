@@ -64,7 +64,7 @@ public class QueryProcessor {
                 }
             }
         }
-        //Add this AND postings list to the collection of AND postings lists
+        // Add this AND postings list to the collection of AND postings lists
         if (masterList != null) {
             AndCollection.add(masterList);
         } else {
@@ -86,12 +86,12 @@ public class QueryProcessor {
      */
     public static List<PositionalPosting> orQuery(List<Subquery> allQueries, PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
 
-        //Add all Q_i positional postings lists to AndCollection
+        // Add all Q_i positional postings lists to AndCollection
         for (int i = 0; i < allQueries.size(); i++) {
             addAndQuery(allQueries.get(i), posIndex, kgIndex);
         }
 
-        //Merge all Q_i postings list into Master List using OR intersection
+        // Merge all Q_i postings list into Master List using OR intersection
         List<PositionalPosting> masterList = AndCollection.get(0);
 
         if (AndCollection.size() > 1) {
@@ -231,7 +231,7 @@ public class QueryProcessor {
         List<PositionalPosting> leftList = new ArrayList<PositionalPosting>();
         List<PositionalPosting> rightList = new ArrayList<PositionalPosting>();
         
-        //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
+        // https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
         int k = 0;
         
         while(nearSearcher.hasNext()){
@@ -370,7 +370,7 @@ public class QueryProcessor {
 
         List<PositionalPosting> result = new ArrayList<PositionalPosting>();
         List<Integer> docs1 = new ArrayList<Integer>(); // term1 documents
-        List<Integer> docs2 = new ArrayList<Integer>(); //term2 documents
+        List<Integer> docs2 = new ArrayList<Integer>(); // term2 documents
         int i = 0; // term1 document index
         int j = 0; // term2 document index
 

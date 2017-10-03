@@ -1,10 +1,5 @@
-//Source:
-//Implementation of the soundex algorithm as described in 
-//"Introduction to Information Retrieval, Online Edition" by
-//Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
-//Cambridge University Press, 2009, p. 64
-//https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
-//https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
+// See README for references
+
 import java.util.ArrayList;
 import java.util.List;
 
