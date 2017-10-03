@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -34,13 +35,13 @@ public class DisplayJson {
                 HTMLEditorKit kit = new HTMLEditorKit();
                 jEditorPane.setEditorKit(kit);
 
-                // create html as a string
+                // create some simple html as a string
                 String htmlString;
                 try {
 
                     htmlString = getHTMLString(file);
 
-                    // set document to pane
+                    // create a document, set it on the jeditorpane, then add the html
                     Document doc = kit.createDefaultDocument();
                     jEditorPane.setDocument(doc);
                     jEditorPane.setText(htmlString);
@@ -53,13 +54,16 @@ public class DisplayJson {
                     System.out.println("File not found!");
                 }
 
+                // now add it all to a frame
                 String[] name = file.getName().split("\\.");
                 JFrame j = new JFrame(name[0]);
+                ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png");
+                j.setIconImage(img.getImage());
                 j.getContentPane().add(scrollPane, BorderLayout.CENTER);
                 //j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 j.setSize(new Dimension(400, 600)); // size of frame
 
-                // center the frame and show
+                // center the jframe, then make it visible
                 j.setLocationRelativeTo(null);
                 j.setVisible(true);
             }
