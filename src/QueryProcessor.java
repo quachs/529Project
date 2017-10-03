@@ -12,7 +12,7 @@ import java.util.Scanner;
  */
 public class QueryProcessor {
 
-    private static List<List<PositionalPosting>> AndCollection = new ArrayList<List<PositionalPosting>>();
+    private static List<List<PositionalPosting>> andCollection = new ArrayList<List<PositionalPosting>>();
 
     /**
      * Add the positional postings list of an AND query to the collection of AND
@@ -64,11 +64,11 @@ public class QueryProcessor {
                 }
             }
         }
-        //Add this AND postings list to the collection of AND postings lists
+        // Add this AND postings list to the collection of AND postings lists
         if (masterList != null) {
-            AndCollection.add(masterList);
+            andCollection.add(masterList);
         } else {
-            AndCollection.add(masterList);
+            andCollection.add(masterList);
             masterList.clear();
         }
     }
@@ -86,20 +86,20 @@ public class QueryProcessor {
      */
     public static List<PositionalPosting> orQuery(List<Subquery> allQueries, PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
 
-        //Add all Q_i positional postings lists to AndCollection
+        // Add all Q_i positional postings lists to AndCollection
         for (int i = 0; i < allQueries.size(); i++) {
             addAndQuery(allQueries.get(i), posIndex, kgIndex);
         }
 
-        //Merge all Q_i postings list into Master List using OR intersection
-        List<PositionalPosting> masterList = AndCollection.get(0);
+        // Merge all Q_i postings list into Master List using OR intersection
+        List<PositionalPosting> masterList = andCollection.get(0);
 
-        if (AndCollection.size() > 1) {
-            for (int i = 1; i < AndCollection.size(); i++) {
-                masterList = unionList(masterList, AndCollection.get(i));
+        if (andCollection.size() > 1) {
+            for (int i = 1; i < andCollection.size(); i++) {
+                masterList = unionList(masterList, andCollection.get(i));
             }
         }
-        AndCollection.clear();
+        andCollection.clear();
         return masterList;
     }
 
@@ -231,18 +231,18 @@ public class QueryProcessor {
         List<PositionalPosting> leftList = new ArrayList<PositionalPosting>();
         List<PositionalPosting> rightList = new ArrayList<PositionalPosting>();
         
-        //https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
+        // https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
         int k = 0;
         
         while(nearSearcher.hasNext()){
             String nearCandidate = nearSearcher.next();
             if (nearCandidate.startsWith("near")){
-                k = Integer.valueOf(nearCandidate.substring(4));
+                k = Integer.valueOf(nearCandidate.substring(5));
                 break;
             }
         }
         
-        String[] spNear = nearLiteral.split(" near[\\d+] ");
+        String[] spNear = nearLiteral.split(" near/[\\d+] ");
         
         if (spNear[0].contains("\"")){
             leftList = phraseQuery(spNear[0], posIndex);
@@ -370,7 +370,7 @@ public class QueryProcessor {
 
         List<PositionalPosting> result = new ArrayList<PositionalPosting>();
         List<Integer> docs1 = new ArrayList<Integer>(); // term1 documents
-        List<Integer> docs2 = new ArrayList<Integer>(); //term2 documents
+        List<Integer> docs2 = new ArrayList<Integer>(); // term2 documents
         int i = 0; // term1 document index
         int j = 0; // term2 document index
 

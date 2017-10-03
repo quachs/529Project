@@ -23,6 +23,7 @@ public class GeneratingTask extends SwingWorker<Void, Void> {
     public GeneratingTask(String[] docArray) {
         this.docArray = docArray;
         this.docIds = new ArrayList<Integer>();
+        this.labels = new ArrayList<JLabel>();
     }
 
     /**
@@ -35,6 +36,7 @@ public class GeneratingTask extends SwingWorker<Void, Void> {
         this.docIds = docIds;
         this.fileNames = docNames;
         this.docArray = new String[0];
+        this.labels = new ArrayList<JLabel>();
     }
 
     /**

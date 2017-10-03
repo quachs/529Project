@@ -19,7 +19,7 @@ import java.io.FileReader;
 import java.util.Date;
 
 /**
- * process for indexing in background
+ * Thread to do the indexing in the background
  *
  * @author Sandra
  */
@@ -46,16 +46,14 @@ class Indexing extends SwingWorker<Void, Void> {
     public Indexing() {
         path = Paths.get(".");
     }
-    /**
-     * this constructor with the path is important to find the directory the user wants to index
-     * @param path 
-     */
+    // this constructor for the directory the user chooses
     public Indexing(Path path) {
         this.path = path;
     }       
 
     /**
-     * Indexing is a process working in the background that the
+     * Walk through all .json files in a directory and subdirectory.
+     * Indexing should be a thread working in the background that the
      * progressbar still can work
      *
      * @return null when the process is finished
@@ -100,7 +98,8 @@ class Indexing extends SwingWorker<Void, Void> {
     }
 
     /**
-     * method is called when doInBackgrond is finished -> process is finished
+     * Method is called when doInBackgrond is finished -> process is finished
+     * Build the k-gram index when all the vocabulary types are collected.
      */
     @Override
     public void done() {
@@ -113,15 +112,19 @@ class Indexing extends SwingWorker<Void, Void> {
     }
 
     /**
-     * Indexes a file by reading a series of tokens from the file, treating each
-     * token as a term, and then adding the given document's ID to the inverted
-     * index for the term.
-     *
-     * @param file a File object for the document to index.
-     * @param index the current state of the index for the files that have
-     * already been processed.
+     * Index a file by reading a series of tokens from the body of the file. 
+     * Each token is processed and added to a tree of vocabulary types. The
+     * same token is stemmed and added to the positional inverted index with
+     * the given document ID. If the json file contains an author field, 
+     * add the document to the soundex index.
+     * @param file a json file object for the document to index.
+     * @param index the current state of the positional inverted index for the 
+     * files that have been already processed
+     * @param vocabTree the current state of the vocabulary type tree
+     * @param sIndex the current state of the soundex index
      * @param docID the integer ID of the current document, needed when indexing
      * each term from the document.
+     * @throws FileNotFoundException 
      */
     private static void indexFile(File file, PositionalInvertedIndex index,
             SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException {

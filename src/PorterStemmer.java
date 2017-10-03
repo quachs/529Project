@@ -1,5 +1,4 @@
-
-// http://snowball.tartarus.org/download.html
+// See README for references
 import org.tartarus.snowball.ext.englishStemmer;
 
 

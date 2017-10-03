@@ -20,22 +20,15 @@ public class KGramIndex extends Index<String> {
      * @param type vocabulary type from the corpus
      */
     public void addType(String type) {
-        if (type.length() > 1) {
-            String modifiedType = "$" + type + "$";
-            for (int i = 0; i < type.length(); i++) {
-                addType(Character.toString(type.charAt(i)), type); // 1-grams
-            }
-            for (int i = 0; i + 2 <= modifiedType.length(); i++) {
-                addType(modifiedType.substring(i, i + 2), type); // 2-grams
-            }
-            for (int i = 0; i + 3 <= modifiedType.length(); i++) {
-                addType(modifiedType.substring(i, i + 3), type); // 3-grams
-            }
-        } else if (type.length() == 1) {
-            // Ignore 3-grams for 1 char types; not useful for wildcard query
-            addType(type, type);
-            addType("$" + type, type);
-            addType(type + "$", type);
+        String modifiedType = "$" + type + "$";
+        for (int i = 0; i < type.length(); i++) {
+            addType(Character.toString(type.charAt(i)), type); // 1-grams
+        }
+        for (int i = 0; i + 2 <= modifiedType.length(); i++) {
+            addType(modifiedType.substring(i, i + 2), type); // 2-grams
+        }
+        for (int i = 0; i + 3 <= modifiedType.length(); i++) {
+            addType(modifiedType.substring(i, i + 3), type); // 3-grams
         }
     }
 

@@ -59,17 +59,26 @@ In other words, wildcard queries can not be embedded within near queries
 
 External software used:
 
-Porter (English) Stemmer available here:  http://snowball.tartarus.org/download.html
-GSON - made available under Apache LICENSE; see private Github repository
+Snowball software - made available under the 3-clause BSD License -
+	http://snowball.tartarus.org/license.html
+Snowball, including Porter2 (English) stemmer, is available at the following:  
+	http://snowball.tartarus.org/download.html
+GSON - made available under Apache LICENSE, which can be found in Git repository 
 
 ----------------------------------------------------------------
 
 References:
  
-"Introduction to Information Retrieval, Online Edition" by
-Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
-Cambridge University Press, 2009, p. 11, Figure 1.6; 
-p. 64;
+C.D. Manning et al., Introduction to Information Retrieval, Online Edition
+Cambridge University Press, 2009, pp. 11, 64;
 https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
 
+https://docs.oracle.com/javase/7/docs/api/java/util/ArrayList.html
+https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split(java.lang.String)
+https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
+https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#startsWith(java.lang.String)
+https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.lang.String)
+https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
 
+[NOTE: This reference list is not exhaustive; 
+additional references can be found within this project's code]
