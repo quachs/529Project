@@ -19,7 +19,7 @@ import java.io.FileReader;
 import java.util.Date;
 
 /**
- * this is kind of a thread that works in the background
+ * process for indexing in background
  *
  * @author Sandra
  */
@@ -35,9 +35,9 @@ class Indexing extends SwingWorker<Void, Void> {
     // the set of vocabulary types in the corpus
     final SortedSet<String> vocabTree = new TreeSet<String>();
     
-    long timer;
+    long timer; // timer to print how long task took
 
-    // saving the path
+    // saving the path of the directory of the corpus
     private Path path;
 
     /**
@@ -46,17 +46,16 @@ class Indexing extends SwingWorker<Void, Void> {
     public Indexing() {
         path = Paths.get(".");
     }
-// this constructor with the path is important to find the directory the user likes
+    /**
+     * this constructor with the path is important to find the directory the user wants to index
+     * @param path 
+     */
     public Indexing(Path path) {
         this.path = path;
-    }    
-
-    public void setPath(Path p) {
-        this.path = p;
-    }
+    }       
 
     /**
-     * Indexing should be a thread working in the background that the
+     * Indexing is a process working in the background that the
      * progressbar still can work
      *
      * @return null when the process is finished
@@ -64,23 +63,14 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public Void doInBackground() throws IOException {
-        //
-        setProgress(0); 
-        timer = new Date().getTime();
+        timer = new Date().getTime(); // start the timer
+        // this is our simple walk though file
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
 
             @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
-                /*
-                // make sure we only process the current working directory
-                if (currentWorkingPath.equals(dir)) {
-                    return FileVisitResult.CONTINUE;
-                }
-                return FileVisitResult.SKIP_SUBTREE;
-                 */
-
                 // process the current working directory and subdirectories
                 return FileVisitResult.CONTINUE;
             }
@@ -114,7 +104,7 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public void done() {
-        System.out.println("Time for indexing: "+ (new Date().getTime()-timer));
+        System.out.println("Time for indexing: "+ (new Date().getTime()-timer)); // print out time that process took
         // iterate the vocab tree to build the kgramindex
         Iterator<String> iter = vocabTree.iterator();
         while (iter.hasNext()) {

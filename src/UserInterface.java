@@ -109,6 +109,21 @@ public class UserInterface implements MouseListener {
     }
 
     /**
+     * Create the Progress Bar
+     */
+    private void createProgressBar() {        
+        JPanel contentPane = new JPanel(); // create a new panel        
+        contentPane.setPreferredSize(new Dimension(300, 100)); // set preferred size
+        // initialize progress bar and add it to the panel
+        JProgressBar bar = new JProgressBar(SwingConstants.HORIZONTAL);
+        bar.setIndeterminate(true);
+        contentPane.add(bar);        
+        progressDialog.setContentPane(contentPane); // add panel to the dialog        
+        progressDialog.pack(); // pack the dialog you minimalize the size of it        
+        progressDialog.setLocationRelativeTo(null); // set the location to the center of the screen
+    }
+
+    /**
      * While Indexing processes show a progress bar
      */
     private void indexing() {
@@ -122,19 +137,7 @@ public class UserInterface implements MouseListener {
         saveIndecies(); // save all created indecis        
         createUI(); // creat the view
     }
-
-    private void createProgressBar() {        
-        JPanel contentPane = new JPanel(); // create a new panel        
-        contentPane.setPreferredSize(new Dimension(300, 100)); // set preferred size
-        // initialize progress bar and add it to the panel
-        JProgressBar bar = new JProgressBar(SwingConstants.HORIZONTAL);
-        bar.setIndeterminate(true);
-        contentPane.add(bar);        
-        progressDialog.setContentPane(contentPane); // add panel to the dialog        
-        progressDialog.pack(); // pack the dialog you minimalize the size of it        
-        progressDialog.setLocationRelativeTo(null); // set the location to the center of the screen
-    }
-
+    
     /**
      * Save all indexis created in the background task indexing
      */
