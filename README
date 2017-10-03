@@ -78,8 +78,7 @@ https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split(java.lang.
 https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#startsWith(java.lang.String)
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.lang.String)
-https://docs.oracle.com/javase/7/docs/api/java/lang
-/String.html#replaceAll(java.lang.String,%20java.lang.String)
+https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
 
 [NOTE: This reference list is not exhaustive; 
 additional references can be found within this project's code]
