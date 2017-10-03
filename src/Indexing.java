@@ -74,14 +74,6 @@ class Indexing extends SwingWorker<Void, Void> {
             @Override
             public FileVisitResult preVisitDirectory(Path dir,
                     BasicFileAttributes attrs) {
-                /*
-                // make sure we only process the current working directory
-                if (currentWorkingPath.equals(dir)) {
-                    return FileVisitResult.CONTINUE;
-                }
-                return FileVisitResult.SKIP_SUBTREE;
-                 */
-
                 // process the current working directory and subdirectories
                 return FileVisitResult.CONTINUE;
             }
