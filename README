@@ -1,0 +1,75 @@
+CECS 429/529 Project Milestone 1
+
+Team Members:
+Sandra Kramlich
+Sylvia Quach
+Sean Vidal
+
+Goal: Index a corpus provided by user, then 
+present the user with a GUI that allows them to query corpus
+
+----------------------------------------------------------------
+
+General Program Flow:
+1. User selects a directory containing a corpus
+2. Program indexes all terms in a corpus, building a dictionary that maps
+	terms to positional posting lists
+3. Program displays GUI to user
+
+4a. User enters query in text box
+5a. Program displays a list of documents that match query
+6a. User double-clicks on one of the document titles
+7a. Program displays document in its entirety
+8a. Return to step 3 or click [X] in top-right corner of window to terminate program
+
+4b. User enters token in text box and clicks "Stem" button
+5b. Program displays stemmed term in a dialog box
+6b. User clicks "OK" button
+7b. Return to step 3
+
+4c. User clicks "Index new directory" button
+5c. Return to step 1
+
+4d. User clicks "Print Vocabulary" button
+5d. Program displays all terms stored in index in alphabetical order
+
+----------------------------------------------------------------
+
+Types of user queries that will work:
+AND queries -> [query literal | wildcard query | near query | phrase query]+
+OR queries -> [AND query]+
+AUTHOR queries -> [query literal]
+	NOTE: "author query" option must be selected from drop down menu
+
+Literals/Queries:
+query literal - a standard, one-word term
+wildcard query - a one-word term with leading, trailing, or embedded * characters
+near query - a literal of the form [term1] near\[k] [term2]
+phrase query - a sequence of terms enclosed in double quotes
+
+Types of user queries that will not work:
+
+... [wildcard literal] near\[k] [query literal] ...
+... [query literal] near\[k] [wildcard literal] ...
+... [wildcard literal] near\[k] [wildcard literal] ...
+
+In other words, wildcard queries can not be embedded within near queries
+
+----------------------------------------------------------------
+
+External software used:
+
+Porter (English) Stemmer available here:  http://snowball.tartarus.org/download.html
+GSON - made available under Apache LICENSE; see private Github repository
+
+----------------------------------------------------------------
+
+References:
+ 
+"Introduction to Information Retrieval, Online Edition" by
+Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze
+Cambridge University Press, 2009, p. 11, Figure 1.6; 
+p. 64;
+https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
+
+
