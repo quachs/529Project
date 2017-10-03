@@ -129,10 +129,12 @@ class Indexing extends SwingWorker<Void, Void> {
     private static void indexFile(File file, PositionalInvertedIndex index,
             SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException {
 
+        // Gson object to read json file
         Gson gson = new Gson();
         JsonDocument doc;
         String docBody, docAuthor;
 
+        // reader to parse the relevent parts of the document
         JsonReader reader = new JsonReader(new FileReader(file));
         doc = gson.fromJson(reader, JsonDocument.class);
         docBody = doc.getBody();
