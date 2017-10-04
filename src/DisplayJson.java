@@ -16,7 +16,7 @@ import javax.swing.text.html.HTMLEditorKit;
 
 /**
  * Class to display a json file in html format
- *
+ * Reference: https://alvinalexander.com/blog/post/jfc-swing/how-create-simple-swing-html-viewer-browser-java
  */
 public class DisplayJson {
 
@@ -32,6 +32,7 @@ public class DisplayJson {
                 jEditorPane.setEditable(false); // read-only
                 JScrollPane scrollPane = new JScrollPane(jEditorPane);
 
+                // set html editor kit on the jeditorpane
                 HTMLEditorKit kit = new HTMLEditorKit();
                 jEditorPane.setEditorKit(kit);
 
@@ -55,7 +56,7 @@ public class DisplayJson {
                 }
 
                 // format the frame
-                String[] name = file.getName().split("\\.");
+                String[] name = file.getName().split("\\."); // get the file name
                 JFrame j = new JFrame(name[0]);
                 ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png");
                 j.setIconImage(img.getImage());
