@@ -60,36 +60,36 @@ public class DiskInvertedIndex {
             //
             // repeat until all postings are read.
             int lastDocId = 0;
-            for (int docIdIndex = 0; docIdIndex < documentFrequency; docIdIndex++) {
+            for (int postingIndex = 0; postingIndex < documentFrequency; postingIndex++) {
 
                 // read the 4 bytes for the docId; add lastDocId to decode gap
                 postings.read(buffer, 0, buffer.length);
                 int docId = ByteBuffer.wrap(buffer).getInt() + lastDocId;
                 lastDocId = docId;
-                
+
                 // read the 4 bytes for the term frequency
                 postings.read(buffer, 0, buffer.length);
                 int termFrequency = ByteBuffer.wrap(buffer).getInt();
-                
+
                 if (withPositions) {
                     // the positions for the document
                     int[] positions = new int[termFrequency];
                     int lastPosition = 0;
-                    for (int posIndex = 0; posIndex < termFrequency; posIndex++) {
+                    for (int positionIndex = 0; positionIndex < termFrequency; positionIndex++) {
 
                         // read the 4 bytes for the positions; add lastPosition to decode gap
                         postings.read(buffer, 0, buffer.length);
                         int position = ByteBuffer.wrap(buffer).getInt() + lastPosition;
-                        positions[posIndex] = position;
+                        positions[positionIndex] = position;
                         lastPosition = position;
                     }
-                    diskPostings[docIdIndex] = new DiskPosting(docId, termFrequency, positions);
+                    diskPostings[postingIndex] = new DiskPosting(docId, termFrequency, positions);
                 } else {
                     postings.skipBytes(4 * termFrequency); // skip over the positions
-                    diskPostings[docIdIndex] = new DiskPosting(docId, termFrequency);
+                    diskPostings[postingIndex] = new DiskPosting(docId, termFrequency);
                 }
             }
-            
+
             return diskPostings;
         } catch (IOException ex) {
             System.out.println(ex.toString());
@@ -184,24 +184,25 @@ public class DiskInvertedIndex {
     public int getTermCount() {
         return mVocabTable.length / 2;
     }
-    
+
     /**
      * Walk the file tree to get the names of the files
+     *
      * @param path directory path
      * @return array of file names
      */
     private static String[] readFileNames(String path) {
         List<String> fileNames = new ArrayList<String>();
         try {
-            
+
             Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
-                
+
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                     // process the current working directory and subdirectories
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 @Override
                 public FileVisitResult visitFile(Path file,
                         BasicFileAttributes attrs) throws FileNotFoundException {
@@ -211,23 +212,21 @@ public class DiskInvertedIndex {
                     }
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 // don't throw exceptions if files are locked/other errors occur
                 @Override
-                public FileVisitResult visitFileFailed(Path file,
-                        IOException e) {
-                    
+                public FileVisitResult visitFileFailed(Path file, IOException e) {
                     return FileVisitResult.CONTINUE;
-                }             
-            });           
+                }
+            });
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
-        
+
         return fileNames.toArray(new String[0]);
     }
-    
-    public String[] getFileNames(){
+
+    public String[] getFileNames() {
         return mFileNames;
     }
 }

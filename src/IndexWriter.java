@@ -188,8 +188,7 @@ public class IndexWriter {
                     byte[] docIdBytes = ByteBuffer.allocate(4).putInt(p.getDocumentID() - lastDocId).array();
                     postingsFile.write(docIdBytes, 0, docIdBytes.length);
                     lastDocId = p.getDocumentID();
-
-                    
+                  
                     // write the term frequency
                     int termFrequency = p.getTermPositions().size();
                     byte[] termFreqBytes = ByteBuffer.allocate(4).putInt(termFrequency).array();
