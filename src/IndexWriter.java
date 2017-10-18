@@ -17,6 +17,9 @@ import java.util.*;
 public class IndexWriter {
 
     private String mFolderPath;
+    private List<Map<String, Integer>> docTermFrequency; // term frequencies for a document
+    private List<Integer> docLength; // the number of tokens in each document
+    private List<Double> docByteSize; // byte size of each document
 
     /**
      * Constructs an IndexWriter object which is prepared to index the given
@@ -24,6 +27,9 @@ public class IndexWriter {
      */
     public IndexWriter(String folderPath) {
         mFolderPath = folderPath;
+        docTermFrequency = new ArrayList<Map<String, Integer>>();
+        docLength = new ArrayList<Integer>();
+        docByteSize = new ArrayList<Double>();
     }
 
     /**
@@ -32,48 +38,52 @@ public class IndexWriter {
      * containing the postings list of document IDs; vocabTable.bin, containing
      * a table that maps vocab terms to postings locations
      */
-    public void buildIndex() {     
+    public void buildIndex() {
         PositionalInvertedIndex index = new PositionalInvertedIndex();
         indexFile(Paths.get(mFolderPath), index);
         buildIndexForDirectory(index, mFolderPath);
+        buildWeightFile(mFolderPath);
     }
-    
+
     /**
-     * Walk through all .json files in a directory and subdirectory and
-     * call a helper method to do the indexing.
+     * Walk through all .json files in a directory and subdirectory and call a
+     * helper method to do the indexing.
+     *
      * @param path path of the directory
      * @param index the positional inverted index
      */
-    private static void indexFile(Path path, PositionalInvertedIndex index) {
+    private void indexFile(Path path, PositionalInvertedIndex index) {
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 int mDocumentID = 0;
-                
+
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir,
                         BasicFileAttributes attrs) {
                     // process the current working directory and subdirectories
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 @Override
                 public FileVisitResult visitFile(Path file,
                         BasicFileAttributes attrs) throws IOException {
                     // only process .json files
                     if (file.toString().endsWith(".json")) {
-                        //System.out.println("Indexing file " + file.getFileName());
-                        //fileNames.add(file.getFileName().toString());
+                        // get the number of bytes in the file and add to list
+                        double size = file.toFile().length();
+                        docByteSize.add(size);
+                        // do the indexing
                         indexFile(file.toFile(), index, mDocumentID);
                         mDocumentID++;
                     }
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 // don't throw exceptions if files are locked/other errors occur
                 @Override
                 public FileVisitResult visitFileFailed(Path file,
                         IOException e) {
-                    
+
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -81,26 +91,31 @@ public class IndexWriter {
             System.out.println(ex.toString());
         }
     }
-    
+
     /**
      * Index a file by reading a series of tokens from the body of the file.
+     *
      * @param file the file to be indexed
      * @param index the positional inverted index
-     * @param docID document ID 
+     * @param docID document ID
      */
-    private static void indexFile(File file, PositionalInvertedIndex index, int docID) {  
+    private void indexFile(File file, PositionalInvertedIndex index, int docID) {
         try {
+
             // Gson object to read json file
             Gson gson = new Gson();
             JsonDocument doc;
             String docBody, docAuthor;
-            
+
             // reader to parse the relevent parts of the document
             JsonReader reader = new JsonReader(new FileReader(file));
             doc = gson.fromJson(reader, JsonDocument.class);
             docBody = doc.getBody();
             docAuthor = doc.getAuthor();
-            
+
+            // add the document to the list for tracking terms
+            docTermFrequency.add(new HashMap<String, Integer>());
+
             // process the body field of the document
             SimpleTokenStream s = new SimpleTokenStream(docBody);
             int positionNumber = 0;
@@ -112,15 +127,26 @@ public class IndexWriter {
                         // add the processed and stemmed token to the inverted index
                         index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
                         // add the processed token to the vocab tree
-                        //vocabTree.add(proToken);
-                    }                
+                        // vocabTree.add(proToken);
+                        
+                        // get the frequency of the term and increment it
+                        int termFrequency = docTermFrequency.get(docID).containsKey(proToken)
+                                ? docTermFrequency.get(docID).get(proToken) : 0;
+                        docTermFrequency.get(docID).put(proToken, termFrequency + 1);
+                        
+                        
+                    }
                 }
                 positionNumber++;
             }
+            
+            // add the number of tokens in the document to list
+            docLength.add(positionNumber);
+            
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
-        
+
     }
 
     /**
@@ -188,20 +214,20 @@ public class IndexWriter {
                     byte[] docIdBytes = ByteBuffer.allocate(4).putInt(p.getDocumentID() - lastDocId).array();
                     postingsFile.write(docIdBytes, 0, docIdBytes.length);
                     lastDocId = p.getDocumentID();
-                  
+
                     // write the term frequency
                     int termFrequency = p.getTermPositions().size();
                     byte[] termFreqBytes = ByteBuffer.allocate(4).putInt(termFrequency).array();
                     postingsFile.write(termFreqBytes, 0, termFreqBytes.length);
 
                     // write the positions (encode a gap, not a position)
-                    int lastPos = 0;  
+                    int lastPos = 0;
                     for (Integer position : p.getTermPositions()) {
                         byte[] positionBytes = ByteBuffer.allocate(4).putInt(position - lastPos).array();
                         postingsFile.write(positionBytes, 0, positionBytes.length);
                         lastPos = position;
                     }
-                    
+
                 }
                 vocabI++;
             }
@@ -247,5 +273,58 @@ public class IndexWriter {
                 System.out.println(ex.toString());
             }
         }
+    }
+
+    private void buildWeightFile(String folder) {
+        FileOutputStream weightsFile = null;
+        try {
+
+            weightsFile = new FileOutputStream(new File(folder, "docWeights.bin"));
+            for(int docId = 0; docId < docTermFrequency.size(); docId++) {
+
+                double docWeight = 0; // L_d
+                double aveTermFrequency = 0; // the average tf for the doc
+                
+                for (Integer termFrequency : docTermFrequency.get(docId).values()) {
+                    double termWeight = 1 + (Math.log(termFrequency)); // w_d,t
+                    docWeight += Math.pow(termWeight, 2); // increment by the term weight squared
+                    aveTermFrequency += termFrequency;
+                }
+                
+                // write the doc weight to file
+                docWeight = Math.sqrt(docWeight);
+                byte[] docWeightByte = ByteBuffer.allocate(8).putDouble(docWeight).array();
+                weightsFile.write(docWeightByte, 0, docWeightByte.length);
+                
+                // **************************************************************
+                // NEED FOR VARIANT FORMULAS
+                // not written to file yet
+                int length = docLength.get(docId); // number of tokens in the doc
+                double byteSize = docByteSize.get(docId); // number of bytes in the doc
+                aveTermFrequency /= length; // the average tf for the doc
+                // **************************************************************
+                
+                /*
+                byte[] docLengthByte = ByteBuffer.allocate(8).putDouble(docLength).array();
+                weightsFile.write(docLengthByte, 0, docLengthByte.length);
+                byte[] docSizeByte = ByteBuffer.allocate(8).putDouble(byteSize).array();
+                weightsFile.write(docSizeByte, 0, docSizeByte.length);
+                byte[] aveTfByte = ByteBuffer.allocate(8).putDouble(aveTermFrequency).array();
+                weightsFile.write(aveTfByte, 0, aveTfByte.length);
+                */
+            }
+            
+            weightsFile.close();
+        } catch (FileNotFoundException ex) {
+        } catch (UnsupportedEncodingException ex) {
+            System.out.println(ex.toString());
+        } catch (IOException ex) {
+        } finally {
+            try {
+                weightsFile.close();
+            } catch (IOException ex) {
+            }
+        }
+
     }
 }

@@ -17,8 +17,9 @@ public class DiskInvertedIndex {
     private String mPath;
     private RandomAccessFile mVocabList;
     private RandomAccessFile mPostings;
+    private RandomAccessFile mWeightList;
     private long[] mVocabTable;
-    private String[] mFileNames;
+    private List<String> mFileNames;
 
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
@@ -26,6 +27,7 @@ public class DiskInvertedIndex {
             mPath = path;
             mVocabList = new RandomAccessFile(new File(path, "vocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(path, "postings.bin"), "r");
+            mWeightList = new RandomAccessFile(new File(path, "docWeights.bin"), "r");
             mVocabTable = readVocabTable(path);
             mFileNames = readFileNames(path);
         } catch (FileNotFoundException ex) {
@@ -191,7 +193,7 @@ public class DiskInvertedIndex {
      * @param path directory path
      * @return array of file names
      */
-    private static String[] readFileNames(String path) {
+    private static List<String> readFileNames(String path) {
         List<String> fileNames = new ArrayList<String>();
         try {
 
@@ -222,11 +224,26 @@ public class DiskInvertedIndex {
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
-
-        return fileNames.toArray(new String[0]);
+        return fileNames;
     }
 
-    public String[] getFileNames() {
+    public List<String> getFileNames() {
         return mFileNames;
+    }
+    
+    public Double getDocWeight(int docId) {
+        try {
+            /*
+            The file contains 8 bytes per document weights only.
+            Will need to accomodate for other values later on.
+            */
+            mWeightList.seek(docId * 8);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
     }
 }

@@ -47,7 +47,7 @@ public class DiskEngine {
                     } else {
                         System.out.println("Docs: ");
                         for (DiskPosting post : postingsList) {
-                            System.out.println("Doc# " + index.getFileNames()[post.getDocumentID()]);
+                            System.out.println("Doc# " + index.getFileNames().get(post.getDocumentID()));
                         }
                         System.out.println();
                         System.out.println();
