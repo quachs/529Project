@@ -124,15 +124,16 @@ public class IndexWriter {
                 while (t.hasNextToken()) {
                     String proToken = t.nextToken(); // the processed token
                     if (proToken != null) {
-                        // add the processed and stemmed token to the inverted index
-                        index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                        String term = PorterStemmer.getStem(proToken);
+                        // add the term to the inverted index
+                        index.addTerm(term, docID, positionNumber);
                         // add the processed token to the vocab tree
                         // vocabTree.add(proToken);
                         
                         // get the frequency of the term and increment it
-                        int termFrequency = docTermFrequency.get(docID).containsKey(proToken)
-                                ? docTermFrequency.get(docID).get(proToken) : 0;
-                        docTermFrequency.get(docID).put(proToken, termFrequency + 1);
+                        int termFrequency = docTermFrequency.get(docID).containsKey(term)
+                                ? docTermFrequency.get(docID).get(term) : 0;
+                        docTermFrequency.get(docID).put(term, termFrequency + 1);
                         
                         
                     }
