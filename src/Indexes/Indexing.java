@@ -1,3 +1,10 @@
+package Indexes;
+
+import Indexes.diskPart.IndexWriter;
+import Helper.SimpleTokenStream;
+import Helper.TokenProcessorStream;
+import Helper.PorterStemmer;
+import Helper.JsonDocument;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -52,48 +59,16 @@ class Indexing extends SwingWorker<Void, Void> {
     }       
 
     /**
-     * Walk through all .json files in a directory and subdirectory.
-     * Indexing should be a thread working in the background that the
-     * progressbar still can work
+     * Create Positional Inverted Index on disk
      *
      * @return null when the process is finished
      * @throws IOException for file problems
      */
     @Override
     public Void doInBackground() throws IOException {
-        timer = new Date().getTime(); // start the timer
-        // this is our simple walk though file
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-            int mDocumentID = 0;
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) {
-                // process the current working directory and subdirectories
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws FileNotFoundException {
-                // only process .json files
-                if (file.toString().endsWith(".json")) {
-                    //System.out.println("Indexing file " + file.getFileName());
-                    fileNames.add(file.getFileName().toString());
-                    indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID);
-                    mDocumentID++;
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            // don't throw exceptions if files are locked/other errors occur
-            @Override
-            public FileVisitResult visitFileFailed(Path file,
-                    IOException e) {
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        timer = new Date().getTime(); // start the timer        
+        IndexWriter writer = new IndexWriter(path.toString());
+        writer.buildIndex();
         return null;
     }
 
@@ -103,12 +78,7 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public void done() {
-        System.out.println("Time for indexing: "+ (new Date().getTime()-timer)); // print out time that process took
-        // iterate the vocab tree to build the kgramindex
-        Iterator<String> iter = vocabTree.iterator();
-        while (iter.hasNext()) {
-            kgIndex.addType(iter.next());
-        }
+        System.out.println("Time for indexing: "+ (new Date().getTime()-timer)); // print out time that process took        
     }
 
     /**
@@ -126,52 +96,7 @@ class Indexing extends SwingWorker<Void, Void> {
      * each term from the document.
      * @throws FileNotFoundException 
      */
-    private static void indexFile(File file, PositionalInvertedIndex index,
-            SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException {
-
-        // Gson object to read json file
-        Gson gson = new Gson();
-        JsonDocument doc;
-        String docBody, docAuthor;
-
-        // reader to parse the relevent parts of the document
-        JsonReader reader = new JsonReader(new FileReader(file));
-        doc = gson.fromJson(reader, JsonDocument.class);
-        docBody = doc.getBody();
-        docAuthor = doc.getAuthor();
-
-        // process the body field of the document
-        SimpleTokenStream s = new SimpleTokenStream(docBody);
-        int positionNumber = 0;
-        while (s.hasNextToken()) {
-            TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
-            while (t.hasNextToken()) {
-                String proToken = t.nextToken(); // the processed token
-                if (proToken != null) {
-                    // add the processed and stemmed token to the inverted index
-                    index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
-                    // add the processed token to the vocab tree
-                    vocabTree.add(proToken);
-                }
-
-            }
-            positionNumber++;
-        }
-
-        // process the author field of the document and add to soundex
-        if (docAuthor != null) {
-            s = new SimpleTokenStream(docAuthor);
-            while (s.hasNextToken()) {
-                TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
-                while (t.hasNextToken()) { // process the author's name
-                    String name = t.nextToken();
-                    if (name != null) {
-                        sIndex.addToSoundex(name, docID);
-                    }
-                }
-            }
-        }
-    }
+    
     
     // Getter
     public KGramIndex getKgIndex() {

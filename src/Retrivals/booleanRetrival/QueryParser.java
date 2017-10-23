@@ -1,5 +1,12 @@
+package Retrivals.booleanRetrival;
+
 // See README for references
 
+import Helper.Subquery;
+import Helper.PorterStemmer;
+import Indexes.PositionalPosting;
+import Indexes.PositionalInvertedIndex;
+import Indexes.KGramIndex;
 import java.util.*;
 
 /**
@@ -7,12 +14,12 @@ import java.util.*;
  * store in a data structure for later evaluation.
  *
  */
-class QueryParser {
+public class QueryParser {
 
     private PositionalInvertedIndex posIndex;
     private KGramIndex kgIndex;
 
-    QueryParser(PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
+    public QueryParser(PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
         this.posIndex = posIndex;
         this.kgIndex = kgIndex;
     }
