@@ -1,8 +1,9 @@
+
 /**
  * Class to represent a positional posting on disk.
- * 
+ *
  */
-public class DiskPosting {
+public class DiskPosting implements Comparable<DiskPosting> {
 
     private int documentID;
     private int termFrequency;
@@ -60,6 +61,11 @@ public class DiskPosting {
      */
     public void setPositions(int[] positions) {
         this.positions = positions;
+    }
+
+    @Override
+    public int compareTo(DiskPosting d) {
+        return documentID - d.getDocumentID();
     }
 
 }
