@@ -1,5 +1,7 @@
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Scanner;
 
 public class DiskEngine {
@@ -32,6 +34,18 @@ public class DiskEngine {
 
                 DiskInvertedIndex index = new DiskInvertedIndex(indexName);
 
+                // Read KGramIndex from file
+                KGramIndex kIndex = null;
+                try {
+                    FileInputStream fileIn = new FileInputStream(indexName + "\\kGramIndex.bin");
+                    ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+                    kIndex = (KGramIndex) objectIn.readObject();
+                    objectIn.close();
+                    fileIn.close();
+                } catch (IOException | ClassNotFoundException ex) {
+                    System.out.println(ex.toString());
+                }
+
                 while (true) {
                     System.out.println("Enter one or more search terms, separated by spaces:");
                     String input = scan.nextLine();
@@ -52,9 +66,17 @@ public class DiskEngine {
                         System.out.println();
                         System.out.println();
                     }
-                }
 
-                break;
+                    if (postingsList == null || postingsList.length < 5) {
+                        SpellingCorrection spellCorrect = new SpellingCorrection();
+                        String correction = spellCorrect.getCorrection(input, index, kIndex);
+                        System.out.println("Did you mean " + correction.toUpperCase() + "?");
+                        
+                        // TODO : ASK IF USER WANTS TO RERUN QUERY WITH CORRECTION
+                    }
+
+                    //break;
+                }
         }
     }
 }

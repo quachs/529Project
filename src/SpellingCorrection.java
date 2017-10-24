@@ -5,16 +5,18 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 public class SpellingCorrection {
+    
+    private static final double JACCARD_THRESHOLD = 0.35;
 
     /**
      * Generate a spelling correction for the given query type
      *
      * @param query mispelled query
      * @param kIndex k-gram index
-     * @param index positional inverted index
+     * @param diIndex positional inverted index
      * @return spelling correction of the given mispelled query
      */
-    public String getCorrection(String query, KGramIndex kIndex, PositionalInvertedIndex index) {
+    public String getCorrection(String query, DiskInvertedIndex diIndex, KGramIndex kIndex) {
 
         // Get the k-grams for the query type
         List<String> qKGrams = getKGrams(query);
@@ -45,19 +47,32 @@ public class SpellingCorrection {
             int unionSize = qKGrams.size() + cKGrams.size() - intersection.size();
             double jCoefficient = (double) intersection.size() / unionSize;
 
+            // System.out.println(candidate + " (jco)" + jCoefficient); // TESTING 
+
             // Keep the candidates that exceed the threshold
-            if (jCoefficient > 0.75) {
+            if (jCoefficient > JACCARD_THRESHOLD) { 
                 editDistanceCandidates.add(candidate);
             }
+        }
+        
+        // System.out.println("edit: "+editDistanceCandidates); // TESTING 
+
+        // Return if no further filtering is necessary
+        if (editDistanceCandidates.isEmpty()) {
+            return null;
+        } else if (editDistanceCandidates.size() == 1) {
+            return editDistanceCandidates.get(0);
         }
 
         // Select the candidate(s) with the lowest edit distance
         List<String> finalCandidates = new ArrayList<String>();
         finalCandidates.add(editDistanceCandidates.get(0)); // set the first candidate as the min
         int minDistance = editDistance(query, editDistanceCandidates.get(0));
+        // System.out.println(editDistanceCandidates.get(0) + " (edit)" + minDistance); // TESTING 
         for (int i = 1; i < editDistanceCandidates.size(); i++) {
             int distance = editDistance(query, editDistanceCandidates.get(i));
-            if (distance < minDistance) { 
+            // System.out.println(editDistanceCandidates.get(i) + " (edit)" + distance); // TESTING 
+            if (distance < minDistance) {
                 minDistance = distance; // update the lowest distance and candidate
                 finalCandidates.clear(); // update the candidates list
                 finalCandidates.add(editDistanceCandidates.get(i));
@@ -70,11 +85,11 @@ public class SpellingCorrection {
         if (finalCandidates.size() > 1) {
             String type = finalCandidates.get(0); // set the first candidate as the max
             String term = PorterStemmer.getStem(type);
-            int maxDocFrequency = index.getPostingsList(term).size();
+            int maxDocFrequency = diIndex.getPostings(term).length;
             for (int i = 1; i < finalCandidates.size(); i++) {
                 term = PorterStemmer.getStem(finalCandidates.get(i));
-                int docFrequency = index.getPostingsList(term).size();
-                if (docFrequency > maxDocFrequency) { 
+                int docFrequency = diIndex.getPostings(term).length;
+                if (docFrequency > maxDocFrequency) {
                     maxDocFrequency = docFrequency; // update the highest df
                     type = finalCandidates.get(i); // update the type to be returned
                 }
@@ -109,6 +124,7 @@ public class SpellingCorrection {
 
     /**
      * Start the edit distance algorithm for 2 given strings
+     *
      * @param string1
      * @param string2
      * @return edit distance between two strings
@@ -119,6 +135,7 @@ public class SpellingCorrection {
 
     /**
      * Helper method for edit distance algorithm
+     *
      * @param string1
      * @param string2
      * @param i length of string1
@@ -135,13 +152,14 @@ public class SpellingCorrection {
         if (string1.charAt(i - 1) == string2.charAt(j - 1)) {
             return editDistance(string1, string2, i - 1, j - 1);
         }
-        return min(1 + editDistance(string1, string2, i - 1, j),
-                1 + editDistance(string1, string2, i, j - 1),
-                1 + editDistance(string1, string2, i - 1, j - 1));
+        return 1 + min(editDistance(string1, string2, i - 1, j),
+                editDistance(string1, string2, i, j - 1),
+                editDistance(string1, string2, i - 1, j - 1));
     }
-    
+
     /**
      * Get the minimum of three integers
+     *
      * @param a
      * @param b
      * @param c
