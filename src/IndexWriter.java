@@ -41,9 +41,12 @@ public class IndexWriter {
      */
     public void buildIndex() {
         PositionalInvertedIndex index = new PositionalInvertedIndex();
-        indexFile(Paths.get(mFolderPath), index);
+        KGramIndex kIndex = new KGramIndex(); 
+        SortedSet<String> vocabTree = new TreeSet<String>();
+        indexFile(Paths.get(mFolderPath), index, vocabTree);
         buildIndexForDirectory(index, mFolderPath);
         buildCorpusSizeFile(mFolderPath);
+        buildKgramFile(mFolderPath, vocabTree, kIndex);
         buildWeightFile(mFolderPath);
     }
 
@@ -54,7 +57,7 @@ public class IndexWriter {
      * @param path path of the directory
      * @param index the positional inverted index
      */
-    private void indexFile(Path path, PositionalInvertedIndex index) {
+    private void indexFile(Path path, PositionalInvertedIndex index, SortedSet vocabTree) {
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 int mDocumentID = 0;
@@ -75,7 +78,7 @@ public class IndexWriter {
                         double size = file.toFile().length();
                         docByteSize.add(size);
                         // do the indexing
-                        indexFile(file.toFile(), index, mDocumentID);
+                        indexFile(file.toFile(), index, vocabTree, mDocumentID);
                         mDocumentID++;
                     }
                     return FileVisitResult.CONTINUE;
@@ -101,7 +104,7 @@ public class IndexWriter {
      * @param index the positional inverted index
      * @param docID document ID
      */
-    private double indexFile(File file, PositionalInvertedIndex index, int docID) {
+    private int indexFile(File file, PositionalInvertedIndex index, SortedSet vocabTree, int docID) {
         try {
 
             // Gson object to read json file
@@ -126,15 +129,15 @@ public class IndexWriter {
                 while (t.hasNextToken()) {
                     String proToken = t.nextToken(); // the processed token
                     if (proToken != null) {
-                        // add the processed and stemmed token to the inverted index
-                        index.addTerm(PorterStemmer.getStem(proToken), docID, positionNumber);
+                        String term = PorterStemmer.getStem(proToken);
+                        // add the term to the inverted index
+                        index.addTerm(term, docID, positionNumber);
                         // add the processed token to the vocab tree
-                        // vocabTree.add(proToken);
-                        
+                        vocabTree.add(proToken);
                         // get the frequency of the term and increment it
-                        int termFrequency = docTermFrequency.get(docID).containsKey(proToken)
-                                ? docTermFrequency.get(docID).get(proToken) : 0;
-                        docTermFrequency.get(docID).put(proToken, termFrequency + 1);
+                        int termFrequency = docTermFrequency.get(docID).containsKey(term)
+                                ? docTermFrequency.get(docID).get(term) : 0;
+                        docTermFrequency.get(docID).put(term, termFrequency + 1);
                         
                         
                     }
@@ -345,6 +348,33 @@ public class IndexWriter {
             corpusFile.close();
         }
         catch(Exception e){
+            
+        }
+    }
+    
+    /**
+     * Builds the k-gram and serialize to file
+     * @param folder string path to where to store the k-gram file
+     * @param vocabTree tree of the vocabulary types
+     * @param kIndex in-memory k-gram index
+     */
+    private static void buildKgramFile(String folder, SortedSet vocabTree, KGramIndex kIndex) {
+        
+        // Build the KGramIndex using the types from vocabTree
+        Iterator<String> iter = vocabTree.iterator();
+        while (iter.hasNext()) {
+            kIndex.addType(iter.next());
+        }
+        
+        // Write the k-gram index to file
+        try {
+            FileOutputStream fileOut = new FileOutputStream(new File(folder, "kGramIndex.bin"));
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            objectOut.writeObject(kIndex);
+            objectOut.close();
+            fileOut.close();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
         }
         
     }
