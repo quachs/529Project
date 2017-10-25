@@ -8,7 +8,7 @@ import java.util.List;
  * Abstract superclass for an inverted index
  * @param <T>
  */
-public abstract class Index<T> {
+public abstract class Index<T> implements java.io.Serializable {
 
     protected HashMap<String, List<T>> mIndex;
 
