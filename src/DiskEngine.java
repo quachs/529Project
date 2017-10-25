@@ -47,18 +47,6 @@ public class DiskEngine {
                     System.out.println(ex.toString());
                 }
 
-                // Read KGramIndex from file
-                KGramIndex kIndex = null;
-                try {
-                    FileInputStream fileIn = new FileInputStream(indexName + "\\kGramIndex.bin");
-                    ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-                    kIndex = (KGramIndex) objectIn.readObject();
-                    objectIn.close();
-                    fileIn.close();
-                } catch (IOException | ClassNotFoundException ex) {
-                    System.out.println(ex.toString());
-                }
-
                 while (true) {
                     System.out.println("Enter one or more search terms, separated by spaces:");
                     String input = scan.nextLine();
