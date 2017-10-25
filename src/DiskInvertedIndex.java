@@ -20,6 +20,7 @@ public class DiskInvertedIndex {
     private RandomAccessFile mWeightList;
     private long[] mVocabTable;
     private List<String> mFileNames;
+    private int mCorpusSize;
 
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
@@ -30,6 +31,8 @@ public class DiskInvertedIndex {
             mWeightList = new RandomAccessFile(new File(path, "docWeights.bin"), "r");
             mVocabTable = readVocabTable(path);
             mFileNames = readFileNames(path);
+            mCorpusSize = readCorpusSize(path);
+            
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
@@ -183,6 +186,30 @@ public class DiskInvertedIndex {
         return null;
     }
 
+     // Reads the file corpusSize.bin into memory.
+    private static int readCorpusSize(String indexName) {
+        
+        int corpusSize = 0;
+        
+        try {
+            RandomAccessFile corpusFile = new RandomAccessFile(new File(indexName, "corpusSize.bin"), "r");
+            byte[] byteBuffer = new byte[4];
+            
+            corpusFile.read(byteBuffer);
+            corpusSize = ByteBuffer.wrap(byteBuffer).getInt();
+            corpusFile.close();
+        } 
+        catch (FileNotFoundException ex) {
+            System.out.println(ex.toString());
+        } 
+        catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        finally{
+            return corpusSize;
+        }
+    }
+    
     public int getTermCount() {
         return mVocabTable.length / 2;
     }
@@ -245,5 +272,9 @@ public class DiskInvertedIndex {
             System.out.println(ex.toString());
         }
         return null;
+    }
+    
+    public int getCorpusSize(){
+        return mCorpusSize;
     }
 }

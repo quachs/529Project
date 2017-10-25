@@ -20,6 +20,7 @@ public class IndexWriter {
     private List<Map<String, Integer>> docTermFrequency; // term frequencies for a document
     private List<Integer> docLength; // the number of tokens in each document
     private List<Double> docByteSize; // byte size of each document
+    private int corpusSize;
 
     /**
      * Constructs an IndexWriter object which is prepared to index the given
@@ -42,6 +43,7 @@ public class IndexWriter {
         PositionalInvertedIndex index = new PositionalInvertedIndex();
         indexFile(Paths.get(mFolderPath), index);
         buildIndexForDirectory(index, mFolderPath);
+        buildCorpusSizeFile(mFolderPath);
         buildWeightFile(mFolderPath);
     }
 
@@ -99,7 +101,7 @@ public class IndexWriter {
      * @param index the positional inverted index
      * @param docID document ID
      */
-    private void indexFile(File file, PositionalInvertedIndex index, int docID) {
+    private double indexFile(File file, PositionalInvertedIndex index, int docID) {
         try {
 
             // Gson object to read json file
@@ -140,13 +142,16 @@ public class IndexWriter {
                 positionNumber++;
             }
             
+            // increment the corpus size
+            corpusSize++;
+            
             // add the number of tokens in the document to list
             docLength.add(positionNumber);
             
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
-
+        return corpusSize;
     }
 
     /**
@@ -326,5 +331,21 @@ public class IndexWriter {
             }
         }
 
+    }
+    
+    private void buildCorpusSizeFile(String folder){
+        FileOutputStream corpusFile = null;
+        
+        try{
+            corpusFile = new FileOutputStream(new File(folder, "corpusSize.bin"));
+            
+            System.out.println("corpus size: " + corpusSize);
+            byte[] cSize = ByteBuffer.allocate(4).putInt(corpusSize).array();          
+            corpusFile.write(cSize);
+            corpusFile.close();
+        }
+        catch(Exception e){
+        }
+        
     }
 }

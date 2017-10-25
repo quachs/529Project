@@ -31,6 +31,7 @@ public class DiskEngine {
                 String indexName = scan.nextLine();
 
                 DiskInvertedIndex index = new DiskInvertedIndex(indexName);
+                KGramIndex kgIndex = new KGramIndex();
 
                 while (true) {
                     System.out.println("Enter one or more search terms, separated by spaces:");
@@ -40,14 +41,20 @@ public class DiskEngine {
                         break;
                     }
 
-                    DiskPosting[] postingsList = index.getPostings(input.toLowerCase());
-
+                    RankedParser rParser = new RankedParser(index);
+                    Subquery query = rParser.collectAndQueries(input);
+                    System.out.println(query.getLiterals());
+                    
+                    //DiskPosting[] postingsList = index.getPostings(input.toLowerCase());
+                    RankedItem[] postingsList = RankedRetrieval.rankedQuery(index, kgIndex, query, 10);
+                    
                     if (postingsList == null) {
                         System.out.println("Term not found");
                     } else {
                         System.out.println("Docs: ");
-                        for (DiskPosting post : postingsList) {
-                            System.out.println("Doc# " + index.getFileNames().get(post.getDocumentID()));
+                        for (RankedItem ri : postingsList) {
+                            System.out.println("Doc# " + index.getFileNames().get(ri.getPosting().getDocumentID()));
+                            System.out.println("A_d score: " + ri.getA_d());
                         }
                         System.out.println();
                         System.out.println();

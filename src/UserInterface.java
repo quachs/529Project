@@ -38,7 +38,7 @@ public class UserInterface implements MouseListener {
     private SoundexIndex sIndex;
 
     // Parser
-    private QueryParser parser;
+    private BooleanParser parser;
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
@@ -277,7 +277,7 @@ public class UserInterface implements MouseListener {
                 this.foundDocArea.removeAll();
                 this.foundDocArea.repaint();
                 
-                parser = new QueryParser(index, kIndex); // create the parser                
+                parser = new BooleanParser(index, kIndex); // create the parser                
                 String query = this.tQuery.getText(); // save the query
                 if (query.length() > 0) {                   
                     List<Integer> foundDocs; // create a list to save found documents                    
