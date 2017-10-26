@@ -42,8 +42,8 @@ public class IndexWriter {
      * folder.
      */
     public IndexWriter(String folderPath) {
-        mFolderPath = folderPath + "\\Indexes";
-        File dir = new File(mFolderPath);
+        mFolderPath = folderPath;
+        File dir = new File(folderPath + "\\Indexes");
         // if the directory does not exist, create it
         if (!dir.exists()) {
             try {
@@ -201,7 +201,7 @@ public class IndexWriter {
         String[] dictionary = index.getDictionary();
         // an array of positions in the vocabulary file
         long[] vocabPositions = new long[dictionary.length];
-
+        folder = folder + "\\Indexes";
         buildVocabFile(folder, dictionary, vocabPositions);
         buildPostingsFile(folder, index, dictionary, vocabPositions);
     }
