@@ -41,7 +41,7 @@ public class IndexWriter {
      */
     public void buildIndex() {
         PositionalInvertedIndex index = new PositionalInvertedIndex();
-        KGramIndex kIndex = new KGramIndex(); 
+        KGramIndex kIndex = new KGramIndex();
         SortedSet<String> vocabTree = new TreeSet<String>();
         indexFile(Paths.get(mFolderPath), index, vocabTree);
         buildIndexForDirectory(index, mFolderPath);
@@ -138,19 +138,18 @@ public class IndexWriter {
                         int termFrequency = docTermFrequency.get(docID).containsKey(term)
                                 ? docTermFrequency.get(docID).get(term) : 0;
                         docTermFrequency.get(docID).put(term, termFrequency + 1);
-                        
-                        
+
                     }
                 }
                 positionNumber++;
             }
-            
+
             // increment the corpus size
             corpusSize++;
-            
+
             // add the number of tokens in the document to list
             docLength.add(positionNumber);
-            
+
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
@@ -288,40 +287,48 @@ public class IndexWriter {
         try {
 
             weightsFile = new FileOutputStream(new File(folder, "docWeights.bin"));
-            for(int docId = 0; docId < docTermFrequency.size(); docId++) {
+            for (int docId = 0; docId < docTermFrequency.size(); docId++) {
 
                 double docWeight = 0; // L_d
-                double aveTermFrequency = 0; // the average tf for the doc
-                
+                double avgTermFrequency = 0; // the average tf for the doc
+
                 for (Integer termFrequency : docTermFrequency.get(docId).values()) {
                     double termWeight = 1 + (Math.log(termFrequency)); // w_d,t
                     docWeight += Math.pow(termWeight, 2); // increment by the term weight squared
-                    aveTermFrequency += termFrequency;
+                    avgTermFrequency += termFrequency;
                 }
-                
+
                 // write the doc weight to file
                 docWeight = Math.sqrt(docWeight);
                 byte[] docWeightByte = ByteBuffer.allocate(8).putDouble(docWeight).array();
                 weightsFile.write(docWeightByte, 0, docWeightByte.length);
-                
-                // **************************************************************
-                // NEED FOR VARIANT FORMULAS
-                // not written to file yet
-                int length = docLength.get(docId); // number of tokens in the doc
-                double byteSize = docByteSize.get(docId); // number of bytes in the doc
-                aveTermFrequency /= length; // the average tf for the doc
-                // **************************************************************
-                
-                /*
-                byte[] docLengthByte = ByteBuffer.allocate(8).putDouble(docLength).array();
+
+                // write the doc length to file
+                double length = docLength.get(docId); // number of tokens in the doc
+                byte[] docLengthByte = ByteBuffer.allocate(8).putDouble(length).array();
                 weightsFile.write(docLengthByte, 0, docLengthByte.length);
+
+                // write the doc size to file
+                double byteSize = docByteSize.get(docId); // number of bytes in the doc
                 byte[] docSizeByte = ByteBuffer.allocate(8).putDouble(byteSize).array();
                 weightsFile.write(docSizeByte, 0, docSizeByte.length);
-                byte[] aveTfByte = ByteBuffer.allocate(8).putDouble(aveTermFrequency).array();
+
+                // write the average tf count to file
+                avgTermFrequency /= docTermFrequency.get(docId).keySet().size(); // the average tf for the doc
+                byte[] aveTfByte = ByteBuffer.allocate(8).putDouble(avgTermFrequency).array();
                 weightsFile.write(aveTfByte, 0, aveTfByte.length);
-                */
+
             }
-            
+
+            // write the avg doc length for the corpus at the end of the file
+            double avgDocLength = 0;
+            for (int dLength : docLength) {
+                avgDocLength += dLength;
+            }
+            avgDocLength /= corpusSize;
+            byte[] aveDocLengthByte = ByteBuffer.allocate(8).putDouble(avgDocLength).array();
+            weightsFile.write(aveDocLengthByte, 0, aveDocLengthByte.length);
+
             weightsFile.close();
         } catch (FileNotFoundException ex) {
         } catch (UnsupportedEncodingException ex) {
@@ -335,37 +342,37 @@ public class IndexWriter {
         }
 
     }
-    
-    private void buildCorpusSizeFile(String folder){
+
+    private void buildCorpusSizeFile(String folder) {
         FileOutputStream corpusFile = null;
-        
-        try{
+
+        try {
             corpusFile = new FileOutputStream(new File(folder, "corpusSize.bin"));
-            
+
             System.out.println("corpus size: " + corpusSize);
-            byte[] cSize = ByteBuffer.allocate(4).putInt(corpusSize).array();          
+            byte[] cSize = ByteBuffer.allocate(4).putInt(corpusSize).array();
             corpusFile.write(cSize);
             corpusFile.close();
-        }
-        catch(Exception e){
-            
+        } catch (Exception e) {
+
         }
     }
-    
+
     /**
      * Builds the k-gram and serialize to file
+     *
      * @param folder string path to where to store the k-gram file
      * @param vocabTree tree of the vocabulary types
      * @param kIndex in-memory k-gram index
      */
     private static void buildKgramFile(String folder, SortedSet vocabTree, KGramIndex kIndex) {
-        
+
         // Build the KGramIndex using the types from vocabTree
         Iterator<String> iter = vocabTree.iterator();
         while (iter.hasNext()) {
             kIndex.addType(iter.next());
         }
-        
+
         // Write the k-gram index to file
         try {
             FileOutputStream fileOut = new FileOutputStream(new File(folder, "kGramIndex.bin"));
@@ -376,6 +383,6 @@ public class IndexWriter {
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
-        
+
     }
 }

@@ -260,11 +260,55 @@ public class DiskInvertedIndex {
     
     public Double getDocWeight(int docId) {
         try {
-            /*
-            The file contains 8 bytes per document weights only.
-            Will need to accomodate for other values later on.
-            */
-            mWeightList.seek(docId * 8);
+            mWeightList.seek(docId * 32);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getDocLength(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 8);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getDocSize(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 16);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getAvgTermFrequency(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 24);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getAvgDocLength(){
+        try {
+            mWeightList.seek(mCorpusSize * 32);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
             return ByteBuffer.wrap(buffer).getDouble();          
