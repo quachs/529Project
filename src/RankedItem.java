@@ -10,10 +10,11 @@ public class RankedItem implements Comparable<RankedItem>{
     
     private double A_d;
     private DiskPosting dPosting;
+    private int docID;
     
-    public RankedItem(double A_d, DiskPosting dPosting){
+    public RankedItem(double A_d, int docID){
         this.A_d = A_d;
-        this.dPosting = dPosting;
+        this.docID = docID;
     }
     
     public void setA_d(double A_d){
@@ -30,6 +31,10 @@ public class RankedItem implements Comparable<RankedItem>{
     
     public DiskPosting getPosting(){
         return dPosting;
+    }
+    
+    public int getDocID(){
+        return docID;
     }
     
     @Override

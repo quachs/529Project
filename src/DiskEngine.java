@@ -33,7 +33,6 @@ public class DiskEngine {
                 String indexName = scan.nextLine();
 
                 DiskInvertedIndex index = new DiskInvertedIndex(indexName);
-                KGramIndex kgIndex = new KGramIndex();
 
                 // Read KGramIndex from file
                 KGramIndex kIndex = null;
@@ -57,17 +56,16 @@ public class DiskEngine {
 
                     RankedParser rParser = new RankedParser(index);
                     Subquery query = rParser.collectAndQueries(input);
-                    System.out.println(query.getLiterals());
                     
                     //DiskPosting[] postingsList = index.getPostings(input.toLowerCase());
-                    RankedItem[] postingsList = RankedRetrieval.rankedQuery(index, kgIndex, query, 10);
+                    RankedItem[] postingsList = RankedRetrieval.rankedQuery(index, kIndex, query, 10);
                     
                     if (postingsList == null) {
                         System.out.println("Term not found");
                     } else {
                         System.out.println("Docs: ");
                         for (RankedItem ri : postingsList) {
-                            System.out.println("Doc# " + index.getFileNames().get(ri.getPosting().getDocumentID()));
+                            System.out.println("Doc# " + index.getFileNames().get(ri.getDocID()));
                             System.out.println("A_d score: " + ri.getA_d());
                         }
                         System.out.println();

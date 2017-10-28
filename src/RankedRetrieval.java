@@ -9,76 +9,86 @@ class RankedRetrieval{
     private String mFolderPath;
     private static int mCorpusSize;
     
-    public RankedRetrieval(){}
-    
     public RankedRetrieval(String folderPath){
         this.mFolderPath = folderPath;
     }
     
     private static double calcWQT(DiskPosting[] tDocIDs){
-        return (Math.log(1 + (mCorpusSize / tDocIDs.length)));
+        return (Math.log(1 + ((double)(mCorpusSize / tDocIDs.length))));
     }
     
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
     private static double calcWDT(DiskPosting dPosting){
-        return (1 + (Math.log(dPosting.getTermFrequency())));
+        return (1 + (Math.log((double)dPosting.getTermFrequency())));
     }
     
-    private static double calcL_D(DiskInvertedIndex dIndex, DiskPosting dPosting){
-        return dIndex.getDocWeight(dPosting.getDocumentID());
+    private static double getL_D(DiskInvertedIndex dIndex, int docID){
+        return dIndex.getDocWeight(docID);
+    }
+    
+    private static void accumulate(HashMap<Integer, Double> acc, int docID, double A_d){
+ 
+        if(acc.containsKey(docID)){
+            double newA_d = acc.get(docID) + A_d;
+            acc.replace(docID, newA_d);
+        }
+        else{
+            acc.put(docID, A_d);
+        }   
     }
        
-    public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k){
+    public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kIndex, Subquery query, int k){
         
-        mCorpusSize = dIndex.getCorpusSize();
-        
+        mCorpusSize = dIndex.getCorpusSize();      
         DiskPosting[] dPostings;
+        HashMap<Integer, Double> acc = new HashMap<Integer, Double>();
         PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
-        //List<Integer> returnedDocs = new ArrayList<Integer>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
-        
-        
-        
+                
         for (String queryLit : query.getLiterals()){
 
             //Collect A_d values for each document, add to priority queue
             if (queryLit.contains("*")){
-                List<DiskPosting> wcResults = wildcardQuery(queryLit, dIndex, kgIndex);
+                List<DiskPosting> wcResults = wildcardQuery(queryLit, dIndex, kIndex);
                 dPostings = new DiskPosting[wcResults.size()];
                 wcResults.toArray(dPostings);
             }
-            
-            dPostings = dIndex.getPostings(queryLit);
-            double WQT = calcWQT(dPostings);
-            
-            double A_d = 0.0;
-            for (int i = 0; i < dPostings.length; i++){
-                
-                double newA_d = calcWDT(dPostings[i]) * WQT;
-                A_d = A_d + newA_d;
-
-                if (A_d > 0.0) {
-                    
-                       // Obtain docWeight L_d, divide A_d by L_d, then
-                       // place docID and doc weight in PQ, which is 
-                       // ordered by doc weight.
-                       double docWeight = calcL_D(dIndex, dPostings[i]);
-                       double rank = A_d / docWeight;
-                       RankedItem newRI = new RankedItem(rank, dPostings[i]);
-                       A_dQueue.add(newRI);
-                }
+            else{
+                dPostings = dIndex.getPostings(queryLit);
             }
-        }
+            
+            if (dPostings != null){
                 
+                double wqt = calcWQT(dPostings);
+                double accumulator = 0.0;
+             
+                for (DiskPosting dPosting : dPostings){
+                    double newAccumulator = calcWDT(dPosting) * wqt;
+                    accumulate(acc, dPosting.getDocumentID(), newAccumulator);
+                }
+            }           
+        }
+        
+        Integer[] relevantDocuments = new Integer[acc.size()];
+        acc.keySet().toArray(relevantDocuments);
+
+        for (int relevantDocument : relevantDocuments){
+            
+                double accumulator = acc.get(relevantDocument);
+                if (accumulator > 0.0){
+                    double docWeight = getL_D(dIndex, relevantDocument);
+                    double rank = accumulator / docWeight;
+                    A_dQueue.add(new RankedItem(rank, relevantDocument));
+                }
+        }
+                       
         for (int i = 0; i < k; i++){
             RankedItem ri = A_dQueue.poll();
-            //returnedDocs.add(ri.getPosting().getDocumentID());
             returnedRIs.add(ri);
         }
         
         RankedItem[] results = new RankedItem[returnedRIs.size()];
-        returnedRIs.toArray(results);
-        
+        returnedRIs.toArray(results);     
         return results;
     }
     
@@ -152,7 +162,14 @@ class RankedRetrieval{
             while (t.hasNextToken()) {
                 String term = PorterStemmer.getStem(t.nextToken());
                 if (index.getPostings(term) != null) {
-                    //results = QueryProcessor.unionList(results, index.getPostings(term));
+                    DiskPosting[] tempArray = index.getPostings(term);
+                    List<DiskPosting> tempList = new ArrayList<DiskPosting>();
+                    
+                    for (DiskPosting dPosting : tempArray){
+                        tempList.add(dPosting);
+                    }
+                    
+                    results = QueryProcessor.unionList(results, tempList);
                 }
 
             }
