@@ -58,7 +58,7 @@ class RankedParser implements QueryParser{
         // Constuct a list of document IDs from this final postings list.
         if (masterPostings.length > 0) {
             for (int i = 0; i < masterPostings.length; i++) {
-                int currentDocID = masterPostings[i].getPosting().getDocumentID();
+                int currentDocID = masterPostings[i].getDocumentID();
                 documentList.add(currentDocID);
             }
         }
