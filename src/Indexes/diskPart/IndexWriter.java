@@ -26,16 +26,10 @@ import Indexes.SoundexIndex;
 public class IndexWriter {
 
     private String mFolderPath;
-    // the indices
-    final static PositionalInvertedIndex index = new PositionalInvertedIndex();
-    final static KGramIndex kgIndex = new KGramIndex();
-    final static SoundexIndex sIndex = new SoundexIndex();
-    // the set of vocabulary types in the corpus
-    final static SortedSet<String> vocabTree = new TreeSet<String>();
-
-    private static List<Map<String, Integer>> docTermFrequency; // term frequencies for a document
-    private static List<Integer> docLength; // the number of tokens in each document
-    private static List<Double> docByteSize; // byte size of each document
+    private List<Map<String, Integer>> docTermFrequency; // term frequencies for a document
+    private List<Integer> docLength; // the number of tokens in each document
+    private List<Double> docByteSize; // byte size of each document
+    private int corpusSize;
 
     /**
      * Constructs an IndexWriter object which is prepared to index the given
@@ -64,18 +58,14 @@ public class IndexWriter {
      * a table that maps vocab terms to postings locations
      */
     public void buildIndex() {
-        indexFile(Paths.get(mFolderPath), index);
-        buildKGram(vocabTree, kgIndex);
-        buildIndexForDirectory(index, mFolderPath);
-        buildWeightFile(mFolderPath);
-    }
-
-    private static void buildKGram(SortedSet<String> vocabTree, KGramIndex kgIndex) {
-        // iterate the vocab tree to build the kgramindex
-        Iterator<String> iter = vocabTree.iterator();
-        while (iter.hasNext()) {
-            kgIndex.addType(iter.next());
-        }
+        PositionalInvertedIndex index = new PositionalInvertedIndex();
+        KGramIndex kIndex = new KGramIndex();
+        SortedSet<String> vocabTree = new TreeSet<String>();
+        indexFile(Paths.get(mFolderPath), index, vocabTree);
+        buildIndexForDirectory(index, mFolderPath + "//Indexes");
+        buildCorpusSizeFile(mFolderPath + "//Indexes");
+        buildKgramFile(mFolderPath + "//Indexes", vocabTree, kIndex);
+        buildWeightFile(mFolderPath + "//Indexes");
     }
 
     /**
@@ -85,7 +75,7 @@ public class IndexWriter {
      * @param path path of the directory
      * @param index the positional inverted index
      */
-    private static void indexFile(Path path, PositionalInvertedIndex index) {
+    private void indexFile(Path path, PositionalInvertedIndex index, SortedSet vocabTree) {
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 int mDocumentID = 0;
@@ -106,7 +96,7 @@ public class IndexWriter {
                         double size = file.toFile().length();
                         docByteSize.add(size);
                         // do the indexing
-                        indexFile(file.toFile(), index, vocabTree, sIndex, mDocumentID);
+                        indexFile(file.toFile(), index, vocabTree, mDocumentID);
                         mDocumentID++;
                     }
                     return FileVisitResult.CONTINUE;
@@ -132,9 +122,9 @@ public class IndexWriter {
      * @param index the positional inverted index
      * @param docID document ID
      */
-    private static void indexFile(File file, PositionalInvertedIndex index,
-            SortedSet vocabTree, SoundexIndex sIndex, int docID) throws FileNotFoundException {
+    private int indexFile(File file, PositionalInvertedIndex index, SortedSet vocabTree, int docID) {
         try {
+
             // Gson object to read json file
             Gson gson = new Gson();
             JsonDocument doc;
@@ -146,6 +136,9 @@ public class IndexWriter {
             docBody = doc.getBody();
             docAuthor = doc.getAuthor();
 
+            // add the document to the list for tracking terms
+            docTermFrequency.add(new HashMap<String, Integer>());
+
             // process the body field of the document
             SimpleTokenStream s = new SimpleTokenStream(docBody);
             int positionNumber = 0;
@@ -155,38 +148,30 @@ public class IndexWriter {
                     String proToken = t.nextToken(); // the processed token
                     if (proToken != null) {
                         String term = PorterStemmer.getStem(proToken);
-                        // add the processed and stemmed token to the inverted index
+                        // add the term to the inverted index
                         index.addTerm(term, docID, positionNumber);
                         // add the processed token to the vocab tree
                         vocabTree.add(proToken);
                         // get the frequency of the term and increment it
-                        int termFrequency = docTermFrequency.get(docID).containsKey(term) ? docTermFrequency.get(docID).get(term) : 0;
+                        int termFrequency = docTermFrequency.get(docID).containsKey(term)
+                                ? docTermFrequency.get(docID).get(term) : 0;
                         docTermFrequency.get(docID).put(term, termFrequency + 1);
-                    }
 
+                    }
                 }
                 positionNumber++;
             }
 
-            // process the author field of the document and add to soundex
-            if (docAuthor != null) {
-                s = new SimpleTokenStream(docAuthor);
-                while (s.hasNextToken()) {
-                    TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
-                    while (t.hasNextToken()) { // process the author's name
-                        String name = t.nextToken();
-                        if (name != null) {
-                            sIndex.addToSoundex(name, docID);
-                        }
-                    }
-                }
-            }// add the number of tokens in the document to list
+            // increment the corpus size
+            corpusSize++;
+
+            // add the number of tokens in the document to list
             docLength.add(positionNumber);
 
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
-
+        return corpusSize;
     }
 
     /**
@@ -201,7 +186,7 @@ public class IndexWriter {
         String[] dictionary = index.getDictionary();
         // an array of positions in the vocabulary file
         long[] vocabPositions = new long[dictionary.length];
-        folder = folder + "\\Indexes";
+
         buildVocabFile(folder, dictionary, vocabPositions);
         buildPostingsFile(folder, index, dictionary, vocabPositions);
     }
@@ -230,7 +215,7 @@ public class IndexWriter {
             for (String s : dictionary) {
                 // for each String in dictionary, retrieve its postings.
                 List<PositionalPosting> postings = index.getPostingsList(s);
-                System.out.println("Term: " + s);
+
                 // write the vocab table entry for this term: the byte location of the term in the vocab list file,
                 // and the byte location of the postings for the term in the postings file.
                 byte[] vPositionBytes = ByteBuffer.allocate(8).putLong(vocabPositions[vocabI]).array();
@@ -254,19 +239,18 @@ public class IndexWriter {
                     byte[] docIdBytes = ByteBuffer.allocate(4).putInt(p.getDocumentID() - lastDocId).array();
                     postingsFile.write(docIdBytes, 0, docIdBytes.length);
                     lastDocId = p.getDocumentID();
-                    System.out.println("Found Doc ID: " + lastDocId);
+
                     // write the term frequency
                     int termFrequency = p.getTermPositions().size();
                     byte[] termFreqBytes = ByteBuffer.allocate(4).putInt(termFrequency).array();
                     postingsFile.write(termFreqBytes, 0, termFreqBytes.length);
-                    System.out.println("Found Term Frequency: " + termFrequency);
+
                     // write the positions (encode a gap, not a position)
                     int lastPos = 0;
                     for (Integer position : p.getTermPositions()) {
                         byte[] positionBytes = ByteBuffer.allocate(4).putInt(position - lastPos).array();
                         postingsFile.write(positionBytes, 0, positionBytes.length);
                         lastPos = position;
-                        System.out.println("Found Position: " + lastPos);
                     }
 
                 }
@@ -321,40 +305,48 @@ public class IndexWriter {
         try {
 
             weightsFile = new FileOutputStream(new File(folder, "docWeights.bin"));
-            for(int docId = 0; docId < docTermFrequency.size(); docId++) {
+            for (int docId = 0; docId < docTermFrequency.size(); docId++) {
 
                 double docWeight = 0; // L_d
-                double aveTermFrequency = 0; // the average tf for the doc
-                
+                double avgTermFrequency = 0; // the average tf for the doc
+
                 for (Integer termFrequency : docTermFrequency.get(docId).values()) {
                     double termWeight = 1 + (Math.log(termFrequency)); // w_d,t
                     docWeight += Math.pow(termWeight, 2); // increment by the term weight squared
-                    aveTermFrequency += termFrequency;
+                    avgTermFrequency += termFrequency;
                 }
-                
+
                 // write the doc weight to file
                 docWeight = Math.sqrt(docWeight);
                 byte[] docWeightByte = ByteBuffer.allocate(8).putDouble(docWeight).array();
                 weightsFile.write(docWeightByte, 0, docWeightByte.length);
-                
-                // **************************************************************
-                // NEED FOR VARIANT FORMULAS
-                // not written to file yet
-                int length = docLength.get(docId); // number of tokens in the doc
-                double byteSize = docByteSize.get(docId); // number of bytes in the doc
-                aveTermFrequency /= length; // the average tf for the doc
-                // **************************************************************
-                
-                /*
-                byte[] docLengthByte = ByteBuffer.allocate(8).putDouble(docLength).array();
+
+                // write the doc length to file
+                double length = docLength.get(docId); // number of tokens in the doc
+                byte[] docLengthByte = ByteBuffer.allocate(8).putDouble(length).array();
                 weightsFile.write(docLengthByte, 0, docLengthByte.length);
+
+                // write the doc size to file
+                double byteSize = docByteSize.get(docId); // number of bytes in the doc
                 byte[] docSizeByte = ByteBuffer.allocate(8).putDouble(byteSize).array();
                 weightsFile.write(docSizeByte, 0, docSizeByte.length);
-                byte[] aveTfByte = ByteBuffer.allocate(8).putDouble(aveTermFrequency).array();
+
+                // write the average tf count to file
+                avgTermFrequency /= docTermFrequency.get(docId).keySet().size(); // the average tf for the doc
+                byte[] aveTfByte = ByteBuffer.allocate(8).putDouble(avgTermFrequency).array();
                 weightsFile.write(aveTfByte, 0, aveTfByte.length);
-                */
+
             }
-            
+
+            // write the avg doc length for the corpus at the end of the file
+            double avgDocLength = 0;
+            for (int dLength : docLength) {
+                avgDocLength += dLength;
+            }
+            avgDocLength /= corpusSize;
+            byte[] aveDocLengthByte = ByteBuffer.allocate(8).putDouble(avgDocLength).array();
+            weightsFile.write(aveDocLengthByte, 0, aveDocLengthByte.length);
+
             weightsFile.close();
         } catch (FileNotFoundException ex) {
         } catch (UnsupportedEncodingException ex) {
@@ -368,13 +360,47 @@ public class IndexWriter {
         }
 
     }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static void buildSoundexFile() {
 
+    private void buildCorpusSizeFile(String folder) {
+        FileOutputStream corpusFile = null;
+
+        try {
+            corpusFile = new FileOutputStream(new File(folder, "corpusSize.bin"));
+
+            System.out.println("corpus size: " + corpusSize);
+            byte[] cSize = ByteBuffer.allocate(4).putInt(corpusSize).array();
+            corpusFile.write(cSize);
+            corpusFile.close();
+        } catch (Exception e) {
+
+        }
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static void buildKgramFile() {
+    /**
+     * Builds the k-gram and serialize to file
+     *
+     * @param folder string path to where to store the k-gram file
+     * @param vocabTree tree of the vocabulary types
+     * @param kIndex in-memory k-gram index
+     */
+    private static void buildKgramFile(String folder, SortedSet vocabTree, KGramIndex kIndex) {
+
+        // Build the KGramIndex using the types from vocabTree
+        Iterator<String> iter = vocabTree.iterator();
+        while (iter.hasNext()) {
+            kIndex.addType(iter.next());
+        }
+
+        // Write the k-gram index to file
+        try {
+            FileOutputStream fileOut = new FileOutputStream(new File(folder, "kGramIndex.bin"));
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            objectOut.writeObject(kIndex);
+            objectOut.close();
+            fileOut.close();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
 
     }
 }
