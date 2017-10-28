@@ -378,4 +378,34 @@ public class IndexWriter {
         }
         
     }
+    
+    private static void buildSoundexFile(String folder, SoundexIndex sIndex){
+    
+        try{
+            FileOutputStream soundex = new FileOutputStream(new File(folder, "soundex.bin"));
+            FileOutputStream sVocabTable = new FileOutputStream(new File(folder, "sVocabTable.bin"));
+            
+            byte[] sBuff; 
+            
+            String[] authors = sIndex.getDictionary();
+                    
+            for (String author : authors) {
+                                
+                //soundex.write(sBuff);
+                
+                List<Integer> authorPostings = sIndex.getPostingsList(author);
+                for (int posting : authorPostings){
+                
+                    sBuff = ByteBuffer.allocate(4).putInt(posting).array();
+                    soundex.write(sBuff);
+                    
+                }
+                
+            }
+        }
+        catch (Exception e) {
+            
+        }
+        
+    }
 }
