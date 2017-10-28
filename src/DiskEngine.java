@@ -46,7 +46,7 @@ public class DiskEngine {
                 } catch (IOException | ClassNotFoundException ex) {
                     System.out.println(ex.toString());
                 }
-
+                
                 while (true) {
                     System.out.println("Enter one or more search terms, separated by spaces:");
                     String input = scan.nextLine();
@@ -67,7 +67,7 @@ public class DiskEngine {
                     } else {
                         System.out.println("Docs: ");
                         for (RankedItem ri : postingsList) {
-                            System.out.println("Doc# " + index.getFileNames().get(ri.getPosting().getDocumentID()));
+                            System.out.println("Doc# " + index.getFileNames().get(ri.getDocumentID()));
                             System.out.println("A_d score: " + ri.getA_d());
                         }
                         System.out.println();
