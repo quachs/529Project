@@ -1,7 +1,7 @@
 package Retrivals;
 
 import Retrivals.booleanRetrival.QueryProcessor;
-import Helper.GeneratingTask;
+import Threads.GeneratingTask;
 import Helper.DisplayJson;
 import Helper.Formulars;
 import Helper.PorterStemmer;
@@ -10,6 +10,7 @@ import Indexes.KGramIndex;
 import Indexes.PositionalInvertedIndex;
 import Indexes.SoundexIndex;
 import Retrivals.booleanRetrival.QueryParser;
+import Threads.ThreadFinishedCallBack;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -41,7 +42,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-public class RetrievalGUI implements MouseListener, ActionListener {
+public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
     private JFrame frame; // frame of the search engine, saved for restarting it
     private Path path; // for saving the path
@@ -423,5 +424,10 @@ public class RetrievalGUI implements MouseListener, ActionListener {
             this.comboSearchOrForms.addItem("Okapi BM25");
             this.comboSearchOrForms.addItem("Wacky");
         }
+    }
+
+    @Override
+    public void notifyThreadFinished() {
+       
     }
 }
