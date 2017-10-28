@@ -1,4 +1,5 @@
 import java.io.*;
+import javax.swing.SwingUtilities;
 
 /**
  * A very simple engine to launch the user interface.
@@ -7,6 +8,12 @@ import java.io.*;
 public class SimpleEngine {
 
     public static void main(String[] args) throws IOException {
-        UserInterface a = new UserInterface();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                UserInterface a = new UserInterface();
+            }
+        });
+        
     }
 }
