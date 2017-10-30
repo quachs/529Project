@@ -23,7 +23,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,6 +102,18 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         // get the soundex index for creating the combo box right
         sIndex = new SoundexIndex();
         createUI(retr, form);
+        
+        // deserialize the k-gram index
+        this.kIndex = new KGramIndex();
+        try {
+            FileInputStream fileIn = new FileInputStream(path + "\\Indexes\\kGramIndex.bin");
+            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+            this.kIndex = (KGramIndex) objectIn.readObject();
+            objectIn.close();
+            fileIn.close();
+        } catch (IOException | ClassNotFoundException ex) {
+            System.out.println(ex.toString());
+        }
     }
 
     /**
