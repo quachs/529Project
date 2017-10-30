@@ -20,16 +20,22 @@ public class DiskInvertedIndex {
     private RandomAccessFile mPostings;
     private RandomAccessFile mWeightList;
     private long[] mVocabTable;
-    private String[] mFileNames;
+    private List<String> mFileNames;
+    private int mCorpusSize;
+    private List<String> terms = null;
 
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
         try {
+            if(!path.contains("Indexes")){
+                path = path+"//Indexes";
+            }            
             mVocabList = new RandomAccessFile(new File(path, "vocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(path, "postings.bin"), "r");
             mWeightList = new RandomAccessFile(new File(path, "docWeights.bin"), "r");
             mVocabTable = readVocabTable(path);
             mFileNames = readFileNames(path);
+            mCorpusSize = readCorpusSize(path);
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
@@ -68,12 +74,11 @@ public class DiskInvertedIndex {
                 postings.read(buffer, 0, buffer.length);
                 int docId = ByteBuffer.wrap(buffer).getInt() + lastDocId;
                 lastDocId = docId;
-                System.out.println("Found Doc ID: "+docId);
 
                 // read the 4 bytes for the term frequency
                 postings.read(buffer, 0, buffer.length);
                 int termFrequency = ByteBuffer.wrap(buffer).getInt();
-                System.out.println("Term Frequency: "+termFrequency);
+
                 if (withPositions) {
                     // the positions for the document
                     int[] positions = new int[termFrequency];
@@ -84,7 +89,6 @@ public class DiskInvertedIndex {
                         postings.read(buffer, 0, buffer.length);
                         int position = ByteBuffer.wrap(buffer).getInt() + lastPosition;
                         positions[positionIndex] = position;
-                        System.out.println("Position: "+position);
                         lastPosition = position;
                     }
                     diskPostings[postingIndex] = new DiskPosting(docId, termFrequency, positions);
@@ -118,14 +122,6 @@ public class DiskInvertedIndex {
             return readPostingsFromFile(mPostings, postingsPosition, true);
         }
         return null;
-    }
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void getKgrams(){
-        
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void getSoundex(){
-        
     }
 
     // Locates the byte position of the postings for the given term.
@@ -192,7 +188,38 @@ public class DiskInvertedIndex {
         }
         return null;
     }
+    
+    public static ArrayList<String> getTerms(){
+        // get everySinge entry of vocabFile
+        ArrayList<String> result = new ArrayList<String>();
+        result.add("Test");
+        return result;
+    }
 
+     // Reads the file corpusSize.bin into memory.
+    private static int readCorpusSize(String indexName) {
+        
+        int corpusSize = 0;
+        
+        try {
+            RandomAccessFile corpusFile = new RandomAccessFile(new File(indexName, "corpusSize.bin"), "r");
+            byte[] byteBuffer = new byte[4];
+            
+            corpusFile.read(byteBuffer);
+            corpusSize = ByteBuffer.wrap(byteBuffer).getInt();
+            corpusFile.close();
+        } 
+        catch (FileNotFoundException ex) {
+            System.out.println(ex.toString());
+        } 
+        catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        finally{
+            return corpusSize;
+        }
+    }
+    
     public int getTermCount() {
         return mVocabTable.length / 2;
     }
@@ -203,7 +230,7 @@ public class DiskInvertedIndex {
      * @param path directory path
      * @return array of file names
      */
-    private static String[] readFileNames(String path) {
+    private static List<String> readFileNames(String path) {
         List<String> fileNames = new ArrayList<String>();
         try {
 
@@ -234,20 +261,16 @@ public class DiskInvertedIndex {
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
-
-        return fileNames.toArray(new String[0]);
+        return fileNames;
     }
 
-    public String[] getFileNames() {
+    public List<String> getFileNames() {
         return mFileNames;
     }
+    
     public Double getDocWeight(int docId) {
         try {
-            /*
-            The file contains 8 bytes per document weights only.
-            Will need to accomodate for other values later on.
-            */
-            mWeightList.seek(docId * 8);
+            mWeightList.seek(docId * 32);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
             return ByteBuffer.wrap(buffer).getDouble();          
@@ -255,5 +278,57 @@ public class DiskInvertedIndex {
             System.out.println(ex.toString());
         }
         return null;
+    }
+    
+    public Double getDocLength(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 8);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getDocSize(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 16);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getAvgTermFrequency(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 24);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public Double getAvgDocLength(){
+        try {
+            mWeightList.seek(mCorpusSize * 32);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();          
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+    
+    public int getCorpusSize(){
+        return mCorpusSize;
     }
 }
