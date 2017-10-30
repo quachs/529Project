@@ -1,6 +1,5 @@
 package Indexes.diskPart;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,9 +26,9 @@ public class DiskInvertedIndex {
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
         try {
-            if(!path.contains("Indexes")){
-                path = path+"//Indexes";
-            }            
+            if (!path.contains("Indexes")) {
+                path = path + "//Indexes";
+            }
             mVocabList = new RandomAccessFile(new File(path, "vocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(path, "postings.bin"), "r");
             mWeightList = new RandomAccessFile(new File(path, "docWeights.bin"), "r");
@@ -188,38 +187,52 @@ public class DiskInvertedIndex {
         }
         return null;
     }
-    
-    public static ArrayList<String> getTerms(){
-        // get everySinge entry of vocabFile
-        ArrayList<String> result = new ArrayList<String>();
-        result.add("Test");
-        return result;
+
+    public String[] getDictionary() {
+        List<String> vocabList = new ArrayList<String>();
+        int i = 0, j = mVocabTable.length / 2 - 1;
+        while (i <= j) {
+            try {
+                int termLength;
+                if (i == j) {
+                    termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
+                } else {
+                    termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
+                }
+
+                byte[] buffer = new byte[termLength];
+                mVocabList.read(buffer, 0, termLength);
+                String term = new String(buffer, "ASCII");
+                vocabList.add(term);
+            } catch (IOException ex) {
+                System.out.println(ex.toString());
+            }
+            i++;
+        }
+        return vocabList.toArray(new String[0]);
     }
 
-     // Reads the file corpusSize.bin into memory.
+    // Reads the file corpusSize.bin into memory.
     private static int readCorpusSize(String indexName) {
-        
+
         int corpusSize = 0;
-        
+
         try {
             RandomAccessFile corpusFile = new RandomAccessFile(new File(indexName, "corpusSize.bin"), "r");
             byte[] byteBuffer = new byte[4];
-            
+
             corpusFile.read(byteBuffer);
             corpusSize = ByteBuffer.wrap(byteBuffer).getInt();
             corpusFile.close();
-        } 
-        catch (FileNotFoundException ex) {
+        } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
-        } 
-        catch (IOException ex) {
+        } catch (IOException ex) {
             System.out.println(ex.toString());
-        }
-        finally{
+        } finally {
             return corpusSize;
         }
     }
-    
+
     public int getTermCount() {
         return mVocabTable.length / 2;
     }
@@ -267,68 +280,68 @@ public class DiskInvertedIndex {
     public List<String> getFileNames() {
         return mFileNames;
     }
-    
+
     public Double getDocWeight(int docId) {
         try {
             mWeightList.seek(docId * 32);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
-    
+
     public Double getDocLength(int docId) {
         try {
             mWeightList.seek((docId * 32) + 8);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
-    
+
     public Double getDocSize(int docId) {
         try {
             mWeightList.seek((docId * 32) + 16);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
-    
+
     public Double getAvgTermFrequency(int docId) {
         try {
             mWeightList.seek((docId * 32) + 24);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
-    
-    public Double getAvgDocLength(){
+
+    public Double getAvgDocLength() {
         try {
             mWeightList.seek(mCorpusSize * 32);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
-    
-    public int getCorpusSize(){
+
+    public int getCorpusSize() {
         return mCorpusSize;
     }
 }

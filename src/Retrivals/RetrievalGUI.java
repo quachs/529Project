@@ -267,7 +267,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 ///////////////////////////////////////////////////////////////////////////////////////////
                 // create generating task for printing all terms
                 //generatingLabels(index.getDictionary(), null);
-                task = new GeneratingTask((String[]) dIndex.getTerms().toArray(), this);
+                task = new GeneratingTask(dIndex.getDictionary(), this);
             }
         }
 
