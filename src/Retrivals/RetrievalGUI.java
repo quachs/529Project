@@ -6,9 +6,12 @@ import Helper.DisplayJson;
 import Helper.Formulars;
 import Helper.PorterStemmer;
 import Helper.ProgressDialog;
+import Helper.Subquery;
 import Indexes.KGramIndex;
 import Indexes.PositionalInvertedIndex;
 import Indexes.SoundexIndex;
+import Indexes.diskPart.DiskInvertedIndex;
+import Retrivals.booleanRetrival.BooleanRetrival;
 import Retrivals.booleanRetrival.QueryParser;
 import Threads.ThreadFinishedCallBack;
 import java.awt.Component;
@@ -39,8 +42,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
@@ -50,17 +51,13 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
 
     private ProgressDialog progressDialog = new ProgressDialog("Generating...");
 
-    // background tasks
-    private GeneratingTask gen; // task for generating label/ string    
-
     // indecis
-    private PositionalInvertedIndex index;
+    private DiskInvertedIndex dIndex;
     private KGramIndex kIndex;
     private SoundexIndex sIndex;
 
     // Parser
-    private QueryParser parser;
-
+    //private QueryParser parser;
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
     private final String voc = "Number of Vocabulary found in corpus: ";
@@ -84,11 +81,13 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
 
     private Formulars form;
+    private GeneratingTask task;
 
     /**
      * Constructor for new User Interface for the search engine
      */
-    public RetrievalGUI(char retr, Formulars form) {
+    public RetrievalGUI(char retr, Formulars form, String path) {
+        this.dIndex = new DiskInvertedIndex(path);
         this.labels = new ArrayList<>(); // initialize labels array
         this.frame = new JFrame(); // initialize frame
         this.form = form;
@@ -188,52 +187,6 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     }
 
     /**
-     * Checks if there are found documents
-     *
-     * @param foundDocs List of documents found after query process
-     */
-    private void checkResults(List foundDocs) {
-        if (foundDocs != null && foundDocs.size() > 0) {
-            generatingLabels(null, (ArrayList<Integer>) foundDocs); // if yes, than generate the labels
-        } else {
-            this.foundDocArea.add(new JLabel("No document found.")); // if no, print that there are no documents
-        }
-    }
-
-    /**
-     * Create a String if we only get a list of vocabulary that should be
-     * printed or create labels for showing the query results
-     *
-     * @param docsArray Array for vocabulary
-     * @param docIDList List for labels
-     */
-    private void generatingLabels(String[] docsArray, ArrayList<Integer> docIDList) {
-        if (docIDList == null) {
-            this.gen = new GeneratingTask(docsArray); // create new task with array
-        } else {
-            // create new task with docIds and names
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // find a way to get the file names that must be shown
-            //this.gen = new GeneratingTask(docIDList, (ArrayList<String>) indexedCorpus.getFileNames()); 
-        }
-        progressDialog.setVisible(true); // show the dialog        
-        gen.execute(); // start the task
-        // wait till the task is finished -> set true when done() is finished
-        while (!gen.isDone()) {
-        }
-
-        // save created labels and add all of them to the area for found docs, 
-        // by creating only a string the arraylist will be empty - no elements to add to the area
-        this.labels = gen.getArray();
-        for (JLabel a : this.labels) {
-            this.foundDocArea.add(a);
-        }
-        this.frame.repaint();
-        this.frame.pack();
-        progressDialog.setVisible(false); // close the dialog
-    }
-
-    /**
      * Handles the click event
      *
      * @param e: is the Mouse Event. with getSource() you know which button
@@ -251,13 +204,14 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 // if this is not done and submit the query twice, this would return the results twice too
                 this.foundDocArea.removeAll();
                 this.foundDocArea.repaint();
+
+                // Put all the calculation into the background thread.
+                //GeneratingTask t = new GeneratingTask();
                 if (this.comboRetrivalType.getSelectedIndex() == 0) {
                     booleanRetrival();
                 } else {
                     rankedRetrival();
                 }
-                this.foundDocArea.setVisible(true); // show panel where buttons are in
-                this.frame.pack(); // reload the view again by packing the frame         
             }
             if (e.getSource() == stem) { // stemming is clicked
                 // Stem the word that is input in the textfield and show it in a dialog
@@ -296,20 +250,10 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 this.foundDocArea.removeAll();
                 this.labels = new ArrayList<>();
                 this.num.setVisible(true);
-                generatingLabels(index.getDictionary(), null);
-                JTextArea label = new JTextArea();
-                label.setEditable(false);
-                String res = gen.getRes();
-                label.setText(res);
-                label.setCaretPosition(0);
-                this.foundDocArea.add(label);
-                this.number.setText(this.voc);
-                this.numberRes.setText(index.getTermCount() + "");
-                // show panel where buttons are in
-                this.foundDocArea.setVisible(true);
-                // reload the view again by packing the frame
-                this.frame.pack();
-
+                ///////////////////////////////////////////////////////////////////////////////////////////
+                // create generating task for printing all terms
+                //generatingLabels(index.getDictionary(), null);
+                task = new GeneratingTask((String[]) dIndex.getTerms().toArray(), this);
             }
         }
 
@@ -346,38 +290,45 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     }
 
     private void booleanRetrival() {
-        parser = new QueryParser(index, kIndex); // create the parser                
+        progressDialog.setVisible(false); // close the dialog
         String query = this.tQuery.getText(); // save the query
         if (query.length() > 0) {
-            List<Integer> foundDocs; // create a list to save found documents                    
-
-            // initialize new list of labels - important for more than one submit action
-            this.labels = new ArrayList<>();
-
-            // check if combobox is selected for normal search
-            if ("Normal search".equals(comboSearchOrForms.getSelectedItem().toString())) {
-                foundDocs = parser.getDocumentList(query);// if yes, parse query, save docID results                        
-                checkResults(foundDocs); // check if there are any results
-            } else { // run an author query
-                foundDocs = QueryProcessor.authorQuery(query, sIndex); // save DocIds for author query                                   
-                checkResults(foundDocs); // check if there are any results        
+            if (this.comboSearchOrForms.getSelectedIndex() == 0) {
+                task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
+            } else {
+                task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
             }
-            this.number.setText(this.docs); // set text for found documents
-            this.numberRes.setText(labels.size() + ""); // save size of documents
-            this.num.setVisible(true); // make num panel visible
-            // add a listener for mouseclicks for every single button saved in the list 
-            for (JLabel b : labels) {
-                b.addMouseListener(this);
-            }
+            Thread t = new Thread(task);
+            t.start();
         } else { // there is no query entered - let the user know
             labels = new ArrayList<JLabel>();
             this.num.setVisible(false);
             this.foundDocArea.add(new JLabel("Please enter a term!"));
+            // show panel where buttons are in
+            this.foundDocArea.setVisible(true);
+            // reload the view again by packing the frame
+            this.frame.pack();
         }
     }
 
     private void rankedRetrival() {
-
+        progressDialog.setVisible(false); // close the dialog
+        String query = this.tQuery.getText(); // save the query
+        if (query.length() > 0) {
+            Subquery s = new Subquery();
+            s.addLiteral(query);
+            task = new GeneratingTask(dIndex, kIndex, s, 10, this);
+            Thread t = new Thread(task);
+            t.start();
+        } else { // there is no query entered - let the user know
+            labels = new ArrayList<JLabel>();
+            this.num.setVisible(false);
+            this.foundDocArea.add(new JLabel("Please enter a term!"));
+            // show panel where buttons are in
+            this.foundDocArea.setVisible(true);
+            // reload the view again by packing the frame
+            this.frame.pack();
+        }
     }
 
     /**
@@ -428,6 +379,50 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
 
     @Override
     public void notifyThreadFinished() {
-       
+        switch (task.getOpportunities()) {
+            case ALL:
+                JTextArea label = new JTextArea();
+                label.setText(task.getAllTerms());
+                label.setEditable(false);
+                label.setCaretPosition(0);
+                this.foundDocArea.add(label);
+                this.number.setText(this.voc);
+                this.numberRes.setText(dIndex.getTermCount() + "");
+                break;
+            case BOOLEAN:
+                ArrayList<String> results = task.getResults();
+                boolean num = true;
+                for (String s : results) {
+                    JLabel l = new JLabel(s);
+                    if (l.getText().equals("No document found.")) {
+                        this.foundDocArea.add(l);
+                        num = false;
+                        break;
+                    }
+                    l.addMouseListener(this);
+                    this.labels.add(l);
+                    this.foundDocArea.add(l);
+                }
+                this.number.setText(this.docs);
+                this.numberRes.setText(this.labels.size() + "");
+                this.num.setVisible(num);
+                break;
+            default:
+                ArrayList<String> res = task.getResults();
+                for (String s : res) {
+                    JLabel l = new JLabel(s);
+                    l.addMouseListener(this);
+                    this.labels.add(l);
+                    this.foundDocArea.add(l);
+                }
+                this.number.setText("Ranking for the best 10 documents");
+                this.numberRes.setText("");
+                this.num.setVisible(true);
+                break;
+        }
+        // show panel where buttons are in
+        this.foundDocArea.setVisible(true);
+        // reload the view again by packing the frame
+        this.frame.pack();
     }
 }
