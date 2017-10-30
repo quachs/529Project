@@ -1,27 +1,92 @@
 package Threads;
 
+import Helper.Subquery;
+import Indexes.KGramIndex;
+import Indexes.PositionalInvertedIndex;
+import Indexes.SoundexIndex;
+import Indexes.diskPart.DiskInvertedIndex;
+import Retrivals.booleanRetrival.BooleanRetrival;
+import Retrivals.rankedRetrival.RankedItem;
+import Retrivals.rankedRetrival.RankedRetrieval;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.swing.*;
+
 /**
  * Task to process in backround the walking trough all vocabulary of the corpus.
+ * There are three ways that generating task is needed: 1. Boolean retrival
+ * results 2. Print all vocabulary 3. Ranked retrival results
+ *
  * @author Sandra
  */
-public class GeneratingTask extends SwingWorker<Void, Void> {
+public class GeneratingTask implements Runnable {
 
     private long timer; // time for printing how long task took
+    private GeneratingOpportunities opportunities;
     private ArrayList<JLabel> labels; // arraylist of labels
-    private ArrayList<Integer> docIds; // list of doc IDs
-    private String[] docArray; 
-    private String res; // result string for all voc
-    private ArrayList<String> fileNames; // array of names of documents
+    private String allTerms; // result string for all voc
 
+    private String[] dic;
+    private PositionalInvertedIndex posIndex;
+    private boolean searchType;
+    private KGramIndex kgIndex;
+    private SoundexIndex sIndex;
+    private String query;
+    private DiskInvertedIndex dIndex;
+    private ArrayList<String> results;
+    private Subquery q;
+    private int k;
+    private ThreadFinishedCallBack callback;
+
+    /**
+     * Constructor for making a ranked retrival
+     *
+     * @param dIndex
+     * @param kgIndex
+     * @param query
+     * @param k
+     */
+    public GeneratingTask(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k, ThreadFinishedCallBack finish) {
+        opportunities = GeneratingOpportunities.RANKED;
+        this.dIndex = dIndex;
+        this.kgIndex = kgIndex;
+        this.q = query;
+        this.k = k;
+        this.callback = finish;
+    }
+
+    /**
+     * Constructor for making boolean retrival
+     */
+    public GeneratingTask(String query, DiskInvertedIndex dIndex, boolean searchType, KGramIndex kIndex, SoundexIndex sIndex, ThreadFinishedCallBack finish) {
+        opportunities = GeneratingOpportunities.BOOLEAN;
+        this.query = query;
+        this.kgIndex = kIndex;
+        this.dIndex = dIndex;
+        this.sIndex = sIndex;
+        this.searchType = searchType;
+        this.callback = finish;
+    }
+
+    /**
+     * Constructor for getting all terms of a corpus and print them.
+     *
+     * @param elements
+     */
+    public GeneratingTask(String[] dictionary, ThreadFinishedCallBack finish) {
+        opportunities = GeneratingOpportunities.ALL;
+        this.dic = dictionary;
+        this.callback = finish;
+    }
+
+    /*
     /**
      * With this parameter we know that we don´t have to create labels.
      * A string for representing it in an text area is enough.
      * This saves time!
      * @param docNames Array of vocabulary
-     */
+     *
     public GeneratingTask(String[] docArray) {
         this.docArray = docArray;
         this.docIds = new ArrayList<Integer>();
@@ -33,51 +98,53 @@ public class GeneratingTask extends SwingWorker<Void, Void> {
      * Documents can be open
      * @param docIds List of document IDs
      * @param docNames List of all names of all documents
-     */
+     *
     public GeneratingTask(ArrayList<Integer> docIds, ArrayList<String> docNames) {
         this.docIds = docIds;
         this.fileNames = docNames;
         this.docArray = new String[0];
         this.labels = new ArrayList<JLabel>();
     }
-
-    /**
-     * Do in Background process
-     * @return nothing
-     * @throws Exception 
      */
-    @Override
-    protected Void doInBackground() throws Exception {
-        timer = new Date().getTime(); // start timer for printing out how long process took
-        if (this.docArray.length > 0 && this.docIds.size() == 0) { // check if we only need to create a String
-            res = "";
-            for (String s : docArray) { 
-                res = res + s + "\n"; // add every single voc with a linebreak to the result string
-            }
-        } else { // otherwhise we have to create the labels
-            for (int i = 0; i < this.docIds.size(); i++) { // go through all found doc IDs
-                JLabel lab = new JLabel(this.fileNames.get(docIds.get(i))); // create new label with name of found doc
-                labels.add(lab); // add it to our list
-            }
-        }
-        return null; // return null to show that we are done
-    }
-
-    /**
-     * method is called when doInBackgrond is finished -> process is finished
-     */
-    @Override
-    public void done() {
-        System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
-    }
-
     // Getter
     public ArrayList<JLabel> getArray() {
         return labels;
     }
 
-    public String getRes() {
-        return res;
+    public String getAllTerms() {
+        return allTerms;
     }
-    
+
+    @Override
+    public void run() {
+        timer = new Date().getTime(); // start timer for printing out how long process took
+        switch (opportunities) {
+            case ALL:
+                String res = "";
+                for (String s : this.dic) {
+                    res = res + s + "\n"; // add every single voc with a linebreak to the result string
+                }
+                this.allTerms = res;
+                break;
+            case BOOLEAN:
+                PositionalInvertedIndex p = new PositionalInvertedIndex();
+                this.results = (ArrayList<String>) BooleanRetrival.booleanQuery(query, p, searchType, kgIndex, sIndex, (ArrayList<String>) dIndex.getFileNames());
+                break;
+            default: 
+                RankedItem[] temp = RankedRetrieval.rankedQuery(dIndex, kgIndex, q, k);
+                System.out.println("Threads.GeneratingTask.run()");
+                break;
+        }
+        System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
+        callback.notifyThreadFinished();
+    }
+
+    public GeneratingOpportunities getOpportunities() {
+        return opportunities;
+    }
+
+    public ArrayList<String> getResults() {
+        return results;
+    }
+
 }
