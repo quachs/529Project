@@ -441,7 +441,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 } else {
                     for (RankedItem item : res) {
                         //int a = max - dIndex.getFileNames().get(item.getDocumentID()).length();
-                        String output = String.format("%.2f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocumentID()));
+                        String output = String.format("%.2f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocID()));
                         JLabel l = new JLabel(output);
                         l.addMouseListener(this);
                         this.labels.add(l);
