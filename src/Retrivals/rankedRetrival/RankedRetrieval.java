@@ -12,47 +12,46 @@ import java.lang.*;
 
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
 //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
+public class RankedRetrieval {
 
-public class RankedRetrieval{
-    
     //private String mFolderPath;
     private static int mCorpusSize;
-    
-    public RankedRetrieval(){}
-    
-    public RankedRetrieval(String folderPath){
+
+    public RankedRetrieval() {
+    }
+
+    public RankedRetrieval(String folderPath) {
         //this.mFolderPath = folderPath;
     }
-    
+
     // this is ok
-    private static float calcWqt(DiskPosting[] tDocIDs){
-        System.out.println("wqt: "+(float)(Math.log(1 + ((float)mCorpusSize / tDocIDs.length))));
-        return (float)(Math.log(1 + ((float)mCorpusSize / tDocIDs.length)));
+    private static float calcWqt(DiskPosting[] tDocIDs) {
+        System.out.println("wqt: " + (float) (Math.log(1 + ((float) mCorpusSize / tDocIDs.length))));
+        return (float) (Math.log(1 + ((float) mCorpusSize / tDocIDs.length)));
     }
-    
+
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
-    private static float calcWdt(DiskPosting dPosting){
-        return (1 + (float)Math.log(dPosting.getTermFrequency()));
+    private static float calcWdt(DiskPosting dPosting) {
+        return (1 + (float) Math.log(dPosting.getTermFrequency()));
     }
-    
-    private static double calcLd(DiskInvertedIndex dIndex, DiskPosting dPosting){
+
+    private static double calcLd(DiskInvertedIndex dIndex, DiskPosting dPosting) {
         return dIndex.getDocWeight(dPosting.getDocumentID());
     }
-       
-    public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k){
-        
+
+    public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k) {
+
         mCorpusSize = dIndex.getCorpusSize();
-        
+
         //DiskPosting[] dPostings;
         PriorityQueue<RankedItem> riQueue = new PriorityQueue<RankedItem>();
         //List<Integer> returnedDocs = new ArrayList<Integer>();
         //List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
-        
+
         // Map of documentID to its score
         Map<Integer, Float> docScores = new HashMap<Integer, Float>();
-        
-        
-        for (String queryLit : query.getLiterals()){
+
+        for (String queryLit : query.getLiterals()) {
 
             /*
             if (queryLit.contains("*")){
@@ -60,30 +59,28 @@ public class RankedRetrieval{
                 dPostings = new DiskPosting[wcResults.size()];
                 wcResults.toArray(dPostings);
             }
-            */
-            
+             */
             DiskPosting[] dPostings = dIndex.getPostings(queryLit);
-            float wqt = calcWqt(dPostings);
-            
-            //float A_d = 0;
-            for (DiskPosting posting : dPostings){
-                
-                // TODO: check for null
-                
-                if(docScores.containsKey(posting.getDocumentID())){
-                    // Increment the accumulator score for the document
-                    float accumulator = docScores.get(posting.getDocumentID());
-                    accumulator += (calcWdt(posting) * wqt);
-                    docScores.put(posting.getDocumentID(), accumulator);
-                }
-                else {
-                    // Add a new document/score pair to the map
-                    docScores.put(posting.getDocumentID(), calcWdt(posting) * wqt);
-                }
-                //float newA_d = calcWDT(dPostings[i]) * WQT;
-                //A_d = A_d + newA_d;
+            if (dPostings != null) {
+                float wqt = calcWqt(dPostings);
 
-                /*
+                //float A_d = 0;
+                for (DiskPosting posting : dPostings) {
+
+                    // TODO: check for null
+                    if (docScores.containsKey(posting.getDocumentID())) {
+                        // Increment the accumulator score for the document
+                        float accumulator = docScores.get(posting.getDocumentID());
+                        accumulator += (calcWdt(posting) * wqt);
+                        docScores.put(posting.getDocumentID(), accumulator);
+                    } else {
+                        // Add a new document/score pair to the map
+                        docScores.put(posting.getDocumentID(), calcWdt(posting) * wqt);
+                    }
+                    //float newA_d = calcWDT(dPostings[i]) * WQT;
+                    //A_d = A_d + newA_d;
+
+                    /*
                 if (A_d > 0.0) {
                     
                        // Obtain docWeight L_d, divide A_d by L_d, then
@@ -94,28 +91,33 @@ public class RankedRetrieval{
                        RankedItem newRI = new RankedItem(rank, dPostings[i]);
                        A_dQueue.add(newRI);
                 }
-                */
+                     */
+                }
+            } else {
+                return null;
             }
         }
-        
+
         // Divide each A_d by L_d for any non-zero A_d
         for (Integer docId : docScores.keySet()) {
-            if(docScores.get(docId) > 0){
-                double a = (double)docScores.get(docId) / dIndex.getDocWeight(docId);
+            if (docScores.get(docId) > 0) {
+                double a = (double) docScores.get(docId) / dIndex.getDocWeight(docId);
                 RankedItem ri = new RankedItem(a, docId);
                 riQueue.add(ri);
             }
-            
+
         }
-        
-        RankedItem[] results = new RankedItem[k];        
-        for (int i = 0; i < k; i++){
+        if(docScores.keySet().size()<k){
+            k = docScores.keySet().size();
+        }
+        RankedItem[] results = new RankedItem[k];
+        for (int i = 0; i < k; i++) {
             results[i] = riQueue.poll();
         }
-        
+
         return results;
     }
-    
+
     /**
      * Retrieve a list of positional postings that match the wildcard query
      *
@@ -192,5 +194,5 @@ public class RankedRetrieval{
             }
         }
         return results;
-    }   
+    }
 }
