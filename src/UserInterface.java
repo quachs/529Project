@@ -1,7 +1,7 @@
 
-import Helper.Formulars;
-import Indexes.IndexingGUI;
-import Retrivals.RetrievalGUI;
+import helper.Formulars;
+import indexes.IndexingGUI;
+import retrivals.RetrievalGUI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.swing.ImageIcon;

@@ -1,8 +1,8 @@
-package Indexes.diskPart;
+package indexes.diskPart;
 
 /**
  * Class to represent a positional posting on disk.
- * 
+ *
  */
 public class DiskPosting {
 

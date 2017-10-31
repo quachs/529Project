@@ -1,12 +1,13 @@
-package Retrivals.rankedRetrival;
+package retrivals.rankedRetrival;
 
-import Helper.PorterStemmer;
-import Helper.Subquery;
-import Helper.TokenProcessorStream;
-import Indexes.KGramIndex;
-import Indexes.diskPart.DiskInvertedIndex;
-import Indexes.diskPart.DiskPosting;
-import Retrivals.booleanRetrival.QueryProcessor;
+import helper.PorterStemmer;
+import query.Subquery;
+import query.processor.TokenProcessorStream;
+import indexes.KGramIndex;
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.diskPart.DiskPosting;
+import query.processor.DiskQueryProcessor;
+import query.processor.QueryProcessor;
 import java.util.*;
 import java.lang.*;
 

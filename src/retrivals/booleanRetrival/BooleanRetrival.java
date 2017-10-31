@@ -1,19 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package Retrivals.booleanRetrival;
+package retrivals.booleanRetrival;
 
-import Indexes.KGramIndex;
-import Indexes.PositionalInvertedIndex;
-import Indexes.SoundexIndex;
-import Indexes.diskPart.DiskInvertedIndex;
-import Indexes.diskPart.DiskPosting;
-import Threads.GeneratingTask;
+import query.processor.QueryProcessor;
+import query.parser.BooleanParser;
+import query.parser.QueryParser;
+import indexes.KGramIndex;
+import indexes.PositionalInvertedIndex;
+import indexes.SoundexIndex;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JLabel;
 
 /**
  *

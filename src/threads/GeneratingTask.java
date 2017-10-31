@@ -1,17 +1,15 @@
-package Threads;
+package threads;
 
-import Helper.Subquery;
-import Indexes.KGramIndex;
-import Indexes.PositionalInvertedIndex;
-import Indexes.SoundexIndex;
-import Indexes.diskPart.DiskInvertedIndex;
-import Indexes.diskPart.DiskPosting;
-import Retrivals.booleanRetrival.BooleanRetrival;
-import Retrivals.rankedRetrival.RankedItem;
-import Retrivals.rankedRetrival.RankedRetrieval;
+import query.Subquery;
+import indexes.KGramIndex;
+import indexes.PositionalInvertedIndex;
+import indexes.SoundexIndex;
+import indexes.diskPart.DiskInvertedIndex;
+import retrivals.booleanRetrival.BooleanRetrival;
+import retrivals.rankedRetrival.RankedItem;
+import retrivals.rankedRetrival.RankedRetrieval;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import javax.swing.*;
 
 /**

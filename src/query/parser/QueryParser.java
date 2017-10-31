@@ -1,12 +1,8 @@
-package Retrivals.booleanRetrival;
+package query.parser;
 
 // See README for references
 
-import Helper.Subquery;
-import Helper.PorterStemmer;
-import Indexes.PositionalPosting;
-import Indexes.PositionalInvertedIndex;
-import Indexes.KGramIndex;
+import query.Subquery;
 import java.util.*;
 
 /**

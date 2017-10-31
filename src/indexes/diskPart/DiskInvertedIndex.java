@@ -1,4 +1,4 @@
-package Indexes.diskPart;
+package indexes.diskPart;
 
 import java.io.File;
 import java.io.FileNotFoundException;

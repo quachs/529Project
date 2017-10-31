@@ -1,5 +1,5 @@
 
-package Helper;
+package helper;
 
 import java.awt.Dimension;
 import javax.swing.JDialog;

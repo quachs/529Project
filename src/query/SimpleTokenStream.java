@@ -1,7 +1,6 @@
-package Helper;
+package query;
 
 
-import Helper.TokenStream;
 import java.io.*;
 import java.util.*;
 

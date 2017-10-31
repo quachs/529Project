@@ -1,8 +1,8 @@
-package Indexes;
+package indexes;
 
 // See README for references
 
-import Indexes.Index;
+import indexes.Index;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,8 +1,8 @@
-package Indexes;
+package indexes;
 
-import Threads.Indexing;
-import Helper.ProgressDialog;
-import Threads.ThreadFinishedCallBack;
+import threads.Indexing;
+import helper.ProgressDialog;
+import threads.ThreadFinishedCallBack;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.swing.*;

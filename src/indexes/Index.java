@@ -1,4 +1,4 @@
-package Indexes;
+package indexes;
 
 
 import java.util.Arrays;

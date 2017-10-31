@@ -1,7 +1,7 @@
-package Indexes;
+package indexes;
 
 
-import Indexes.Index;
+import indexes.Index;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

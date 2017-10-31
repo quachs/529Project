@@ -1,8 +1,7 @@
-package Retrivals.booleanRetrival;
+package query;
 
 
-import Helper.TokenStream;
-import Helper.PorterStemmer;
+import helper.PorterStemmer;
 import java.io.*;
 import java.util.*;
 
