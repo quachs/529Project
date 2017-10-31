@@ -15,8 +15,101 @@ import Retrivals.booleanRetrival.*;
  * Class to process various types of queries
  *
  */
-public class DiskQueryProcessor {
+public class Disk {
 
+        private static List<List<DiskPosting>> andCollection = new ArrayList<List<DiskPosting>>();
+
+    /**
+     * Add the positional postings list of an AND query to the collection of AND
+     * query positional postings lists.
+     *
+     * @param andQueryLiterals
+     * @param dIndex Positional inverted index of selected corpus
+     * @param kgIndex KGram index of all types in corpus
+     */
+    private static void addAndQuery(Subquery andQueryLiterals, DiskInvertedIndex dIndex,
+            KGramIndex kgIndex) {
+
+        List<DiskPosting> masterList = new ArrayList<DiskPosting>();
+        String preLiteral = andQueryLiterals.getLiterals().get(0);
+        List<DiskPosting> intermediateList = new ArrayList<DiskPosting>();
+
+        if (preLiteral.contains("\"") && !preLiteral.contains("near")) {
+            masterList = phraseQuery(preLiteral, dIndex);
+        } else if (preLiteral.contains("*")) {
+            System.out.println("preliteral: " + preLiteral);
+            masterList = wildcardQuery(preLiteral, dIndex, kgIndex);
+        } else if (preLiteral.contains("near")) {
+            masterList = nearQuery(preLiteral, dIndex);
+        } else if (dIndex.getPostings(preLiteral) != null) {
+            masterList = dIndex.getPostings(preLiteral);
+        }
+
+        /* Merge all of the postings lists of each query literal
+        of a given AND query into one master postings list. */
+        if (andQueryLiterals.getSize() > 1) {
+
+            for (int i = 1; i < andQueryLiterals.getSize(); i++) {
+                String currentLiteral = andQueryLiterals.getLiterals().get(i);
+
+                if (currentLiteral.contains("\"")) {
+                    System.out.println("current literal: " + currentLiteral);
+                    intermediateList = phraseQuery(currentLiteral, dIndex);
+                    if (masterList != null && intermediateList != null) {
+                        masterList = intersectList(masterList, intermediateList);
+                    }
+                } else if (currentLiteral.contains("*")) {
+                    intermediateList = wildcardQuery(currentLiteral, dIndex, kgIndex);
+                    masterList = intersectList(masterList, intermediateList);
+                } else if (currentLiteral.contains("near")) {
+                    intermediateList = nearQuery(currentLiteral, dIndex);
+                    masterList = intersectList(masterList, intermediateList);
+                } else if (dIndex.getPostings(currentLiteral) != null) {
+                    masterList = intersectList(masterList, dIndex.getPostings(currentLiteral));
+                } else {
+                    masterList.clear();
+                }
+            }
+        }
+        // Add this AND postings list to the collection of AND postings lists
+        if (masterList != null) {
+            andCollection.add(masterList);
+        } else {
+            andCollection.add(masterList);
+            masterList.clear();
+        }
+    }
+    
+    /**
+     * Run all AND Queries Q_i, store results in collection of positional
+     * postings lists, then run an OR query that merges all postings lists into
+     * one master positional postings list representing the entire query.
+     *
+     * @param allQueries List of subqueries that represents user query
+     * @param dIndex Positional inverted index of selected corpus
+     * @param kgIndex KGram index of all types in corpus
+     * @return Positional Posting list representing all AND queries merged
+     * together using OR logic.
+     */
+    public static List<DiskPosting> orQuery(List<Subquery> allQueries, DiskInvertedIndex dIndex, KGramIndex kgIndex) {
+
+        // Add all Q_i positional postings lists to AndCollection
+        for (int i = 0; i < allQueries.size(); i++) {
+            addAndQuery(allQueries.get(i), dIndex, kgIndex);
+        }
+
+        // Merge all Q_i postings list into Master List using OR intersection
+        List<DiskPosting> masterList = andCollection.get(0);
+
+        if (andCollection.size() > 1) {
+            for (int i = 1; i < andCollection.size(); i++) {
+                masterList = unionList(masterList, andCollection.get(i));
+            }
+        }
+        andCollection.clear();
+        return masterList;
+    }
+    
   /**
      * Retrieve a list of positional postings that match the wildcard query
      *
@@ -63,7 +156,7 @@ public class DiskQueryProcessor {
             candidates = kGramIndex.getPostingsList(kgrams[0]);
             for (int i = 1; i < kgrams.length; i++) {
                 if (kGramIndex.getPostingsList(kgrams[i]) != null) {
-                    candidates = QueryProcessor.intersectList(candidates, kGramIndex.getPostingsList(kgrams[i]));
+                    candidates = intersectList(candidates, kGramIndex.getPostingsList(kgrams[i]));
                 } else { // return if no matches
                     return results;
                 }
@@ -94,7 +187,7 @@ public class DiskQueryProcessor {
                         tempList.add(dPosting);
                     }
                     
-                    results = QueryProcessor.unionList(results, tempList);
+                    results = unionList(results, tempList);
                 }
 
             }
@@ -107,13 +200,13 @@ public class DiskQueryProcessor {
      * final list representing the results for the entire phrase.
      *
      * @param phraseLiteral A sequential set of terms enclosed in double quotes
-     * @param posIndex Positional inverted index of selected corpus
-     * @return A PositionalPosting list of the results of the phrase query.
+     * @param dIndex Positional inverted index of selected corpus
+     * @return A DiskPosting list of the results of the phrase query.
      */
     public static DiskPosting[] phraseQuery(String phraseLiteral, DiskInvertedIndex dIndex) {
         phraseLiteral = phraseLiteral.replaceAll("\"", "");
         String[] spPhrase = phraseLiteral.split(" ");
-        DiskPosting[] phraseList = new DiskPosting[0]; //= new ArrayList<PositionalPosting>();
+        DiskPosting[] phraseList = new DiskPosting[0]; //= new ArrayList<DiskPosting>();
 
         for (int i = 0; i < spPhrase.length; i++) {
             spPhrase[i] = PorterStemmer.getStem(spPhrase[i]);
@@ -290,7 +383,7 @@ public class DiskQueryProcessor {
      */
     public static DiskPosting[] positionalIntersect(DiskPosting[] term1, DiskPosting[] term2, int k) {
 
-        List<PositionalPosting> result = new ArrayList<PositionalPosting>();
+        List<DiskPosting> result = new ArrayList<DiskPosting>();
         int[] docs1 = new int[term1.length]; // term1 documents
         int[] docs2 = new int[term2.length]; // term2 documents
         int i = 0; // term1 document index
@@ -338,7 +431,7 @@ public class DiskQueryProcessor {
                             // add the position to existing posting
                             result.get(currentIndex).addPosition(pos);
                         } else { // add a new posting to the result 
-                            result.add(new PositionalPosting(docs1[i], pos));
+                            result.add(new DiskPosting(docs1[i], pos));
                         }
                     }
                     ii++;

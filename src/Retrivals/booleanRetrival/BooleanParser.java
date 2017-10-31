@@ -6,6 +6,7 @@ package Retrivals.booleanRetrival;
 import java.util.*;
 import Indexes.*;
 import Helper.*;
+import Indexes.diskPart.*;
 
 /**
  * Class to parse user query into query literals and
@@ -186,7 +187,7 @@ public class BooleanParser implements QueryParser{
 
         // Parse query, store in a collection, perform the query, return a final postings list.
         List<Subquery> allQueries = collectOrQueries(query);
-        List<PositionalPosting> masterPostings = QueryProcessor.orQuery(allQueries, posIndex, kgIndex);
+        List<PositionalPosting> masterPostings = DiskQueryProcessor.orQuery(allQueries, posIndex, kgIndex);
         List<Integer> documentList = new ArrayList<Integer>();
 
         // Constuct a list of document IDs from this final postings list.
