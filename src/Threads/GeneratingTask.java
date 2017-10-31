@@ -5,6 +5,7 @@ import Indexes.KGramIndex;
 import Indexes.PositionalInvertedIndex;
 import Indexes.SoundexIndex;
 import Indexes.diskPart.DiskInvertedIndex;
+import Indexes.diskPart.DiskPosting;
 import Retrivals.booleanRetrival.BooleanRetrival;
 import Retrivals.rankedRetrival.RankedItem;
 import Retrivals.rankedRetrival.RankedRetrieval;
@@ -28,16 +29,17 @@ public class GeneratingTask implements Runnable {
     private String allTerms; // result string for all voc
 
     private String[] dic;
-    private PositionalInvertedIndex posIndex;
+
     private boolean searchType;
     private KGramIndex kgIndex;
     private SoundexIndex sIndex;
     private String query;
     private DiskInvertedIndex dIndex;
-    private ArrayList<String> results;
+    private ArrayList<String> resultsBool;
     private Subquery q;
     private int k;
     private ThreadFinishedCallBack callback;
+    private RankedItem[] resultsRank;
 
     /**
      * Constructor for making a ranked retrival
@@ -127,12 +129,17 @@ public class GeneratingTask implements Runnable {
                 this.allTerms = res;
                 break;
             case BOOLEAN:
+                //DiskPosting[] array = dIndex.getPostingsWithPositions(query);
                 PositionalInvertedIndex p = new PositionalInvertedIndex();
-                this.results = (ArrayList<String>) BooleanRetrival.booleanQuery(query, p, searchType, kgIndex, sIndex, (ArrayList<String>) dIndex.getFileNames());
+                /*for(DiskPosting posting: array){
+                    for(int position: posting.getPositions()){
+                        p.addTerm(query, posting.getDocumentID(), position);
+                    }
+                }*/
+                this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, p, searchType, kgIndex, sIndex, (ArrayList<String>) dIndex.getFileNames());
                 break;
             default: 
-                RankedItem[] temp = RankedRetrieval.rankedQuery(dIndex, kgIndex, q, k);
-                System.out.println("Threads.GeneratingTask.run()");
+                resultsRank = RankedRetrieval.rankedQuery(dIndex, kgIndex, q, k);
                 break;
         }
         System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
@@ -143,8 +150,11 @@ public class GeneratingTask implements Runnable {
         return opportunities;
     }
 
-    public ArrayList<String> getResults() {
-        return results;
+    public RankedItem[] getResultsRank(){
+        return resultsRank;
+    }
+    public ArrayList<String> getResultsBool() {
+        return resultsBool;
     }
 
 }
