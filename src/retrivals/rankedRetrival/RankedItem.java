@@ -11,19 +11,32 @@ import java.lang.*;
 public class RankedItem implements Comparable<RankedItem>{
     
     private double A_d;
-    private int documentID;
+    private DiskPosting dPosting;
+    private int docID;
     
-    public RankedItem(double A_d, int documentID){
+    public RankedItem(double A_d, int docID){
         this.A_d = A_d;
-        this.documentID = documentID;
+        this.docID = docID;
+    }
+    
+    public void setA_d(double A_d){
+        this.A_d = A_d;
     }
     
     public double getA_d(){
         return A_d;
     } 
     
-    public int getDocumentID(){
-        return documentID;
+    public void setDPosting(DiskPosting dPosting){
+        this.dPosting = dPosting;
+    }
+    
+    public DiskPosting getPosting(){
+        return dPosting;
+    }
+    
+    public int getDocID(){
+        return docID;
     }
     
     @Override
