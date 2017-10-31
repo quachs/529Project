@@ -4,19 +4,19 @@ package indexes.diskPart;
  * Class to represent a positional posting on disk.
  *
  */
-public class DiskPosting {
+public class DiskPosting implements Comparable<DiskPosting> {
 
     private int documentID;
     private int termFrequency;
     private int[] positions;
 
-    DiskPosting(int documentID, int termFrequency, int[] positions) {
+    public DiskPosting(int documentID, int termFrequency, int[] positions) {
         this.documentID = documentID;
         this.termFrequency = termFrequency;
         this.positions = positions;
     }
 
-    DiskPosting(int documentID, int termFrequency) {
+    public DiskPosting(int documentID, int termFrequency) {
         this.documentID = documentID;
         this.termFrequency = termFrequency;
         positions = null;
@@ -62,6 +62,11 @@ public class DiskPosting {
      */
     public void setPositions(int[] positions) {
         this.positions = positions;
+    }
+    
+    @Override
+    public int compareTo(DiskPosting d) {
+        return documentID - d.getDocumentID();
     }
 
 }
