@@ -22,6 +22,7 @@ public class DiskInvertedIndex {
     private List<String> mFileNames;
     private int mCorpusSize;
     private List<String> terms = null;
+    private String[] dic;
 
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
@@ -188,6 +189,7 @@ public class DiskInvertedIndex {
     }
 
     public String[] getDictionary() {
+        if(this.dic == null){
         List<String> vocabList = new ArrayList<String>();
         int i = 0, j = mVocabTable.length / 2 - 1;
         while (i <= j) {
@@ -208,7 +210,9 @@ public class DiskInvertedIndex {
             }
             i++;
         }
-        return vocabList.toArray(new String[0]);
+        dic = vocabList.toArray(new String[0]);
+        }
+        return dic;
     }
 
     // Reads the file corpusSize.bin into memory.
