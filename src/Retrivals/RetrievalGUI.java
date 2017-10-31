@@ -43,8 +43,7 @@ import javax.swing.ScrollPaneConstants;
 public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
     private JFrame frame; // frame of the search engine, saved for restarting it
-    private Path path; // for saving the path
-    private String pathString; // saving result of recrusive search for file
+    private String path; // for saving the path
 
     private ProgressDialog progressDialog = new ProgressDialog("Generating...");
 
@@ -86,6 +85,8 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         this.labels = new ArrayList<>(); // initialize labels array
         this.frame = new JFrame(); // initialize frame
         this.form = form;
+        this.path = path;
+
         // add mouseListener for the buttons
         bSubmit.addMouseListener(this);
         stem.addMouseListener(this);
@@ -268,8 +269,13 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
             int indx = labels.indexOf(e.getSource());
             // this shows that there is really an entry found -> double click submit can´t go in this
             if (indx >= 0) {
-                findFile(labels.get(indx).getText(), new File(path.toUri()));
-                String p = pathString + "/" + labels.get(indx).getText();
+                findFile(labels.get(indx).getText(), new File(path));
+                String text = labels.get(indx).getText();
+                if (text.contains(":")) {
+                    String[] array = text.split(" ");
+                    text = array[1];
+                }
+                String p = path + "/" + text;
                 File file = new File(p);
                 try {
                     new DisplayJson(file);
@@ -288,7 +294,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                     findFile(name, fil);
                 } else if (name.equalsIgnoreCase(fil.getName())) {
                     File p = fil.getParentFile();
-                    pathString = p.getAbsolutePath();
+                    //pathString = p.getAbsolutePath();
                 }
             }
         }
