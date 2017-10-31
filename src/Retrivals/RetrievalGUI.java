@@ -95,12 +95,16 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // get the soundex index for creating the combo box right
         sIndex = new SoundexIndex();
-        createUI(retr, form);
-        
         // deserialize the k-gram index
         this.kIndex = new KGramIndex();
+        createKGramIndex();
+        createUI(retr, form);
+
+    }
+
+    private void createKGramIndex() {
         try {
-            FileInputStream fileIn = new FileInputStream(path + "\\Indexes\\kGramIndex.bin");
+            FileInputStream fileIn = new FileInputStream(path + "/Indexes/kGramIndex.bin");
             ObjectInputStream objectIn = new ObjectInputStream(fileIn);
             this.kIndex = (KGramIndex) objectIn.readObject();
             objectIn.close();
