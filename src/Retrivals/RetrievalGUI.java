@@ -1,6 +1,5 @@
 package Retrivals;
 
-import Retrivals.booleanRetrival.QueryProcessor;
 import Threads.GeneratingTask;
 import Helper.DisplayJson;
 import Helper.Formulars;
@@ -8,11 +7,9 @@ import Helper.PorterStemmer;
 import Helper.ProgressDialog;
 import Helper.Subquery;
 import Indexes.KGramIndex;
-import Indexes.PositionalInvertedIndex;
 import Indexes.SoundexIndex;
 import Indexes.diskPart.DiskInvertedIndex;
-import Retrivals.booleanRetrival.BooleanRetrival;
-import Retrivals.booleanRetrival.QueryParser;
+import Retrivals.rankedRetrival.RankedItem;
 import Threads.ThreadFinishedCallBack;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -26,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -35,7 +31,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -58,8 +53,6 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     private KGramIndex kIndex;
     private SoundexIndex sIndex;
 
-    // Parser
-    //private QueryParser parser;
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
     private final String voc = "Number of Vocabulary found in corpus: ";
@@ -132,8 +125,6 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         this.foundDocArea = new JPanel(new GridLayout(0, 1)); // initialize foundDocArea with one doc per line
 
         // Modify components
-        //lComboSearch.setAlignmentX(Component.CENTER_ALIGNMENT); // component in the center
-        //lComboRetrival.setAlignmentX(Component.CENTER_ALIGNMENT); // component in the center
         lQuery.setAlignmentX(Component.CENTER_ALIGNMENT); // component in the center
 
         this.comboRetrivalType.addItem("Boolean Retrival");
