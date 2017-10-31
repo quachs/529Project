@@ -49,7 +49,7 @@ class RankedRetrieval{
 
             //Collect A_d values for each document, add to priority queue
             if (queryLit.contains("*")){
-                List<DiskPosting> wcResults = wildcardQuery(queryLit, dIndex, kIndex);
+                List<DiskPosting> wcResults = DiskQueryProcessor.wildcardQuery(queryLit, dIndex, kIndex);
                 dPostings = new DiskPosting[wcResults.size()];
                 wcResults.toArray(dPostings);
             }
@@ -91,89 +91,4 @@ class RankedRetrieval{
         returnedRIs.toArray(results);     
         return results;
     }
-    
-    /**
-     * Retrieve a list of positional postings that match the wildcard query
-     *
-     * @param wcQuery the wildcard query from user input
-     * @param index positional inverted index of the corpus
-     * @param kGramIndex K-Gram index of the vocabulary type
-     * @return list of resulting Positional Postings
-     */
-    public static List<DiskPosting> wildcardQuery(String wcQuery, DiskInvertedIndex index, KGramIndex kGramIndex) {
-
-        // Generate all the k-grams for the wildcard
-        SortedSet<String> wcKGrams = new TreeSet<String>();
-        List<DiskPosting> results = new ArrayList<DiskPosting>();
-
-        // Append '$' if the beginning or end of the wildcard
-        String modifiedQuery = wcQuery;
-        if (modifiedQuery.charAt(0) != '*') {
-            modifiedQuery = "$" + modifiedQuery;
-        }
-        if (modifiedQuery.charAt(modifiedQuery.length() - 1) != '*') {
-            modifiedQuery = modifiedQuery + "$";
-        }
-
-        // Split the query at the '*' and generate the largest k-grams
-        String[] fragments = modifiedQuery.split("\\*");
-        for (String fragment : fragments) {
-            if (fragment.length() > 3) {
-                // Iterate the length of the fragment to generate 3-grams
-                for (int i = 0; i + 3 <= fragment.length(); i++) {
-                    wcKGrams.add(fragment.substring(i, i + 3));
-                }
-            } else if (fragment.length() > 0) {
-                wcKGrams.add(fragment); // 1-,2-, or 3-grams
-            }
-        }
-
-        // Convert treeset to array to make iterating easier
-        String[] kgrams = new String[wcKGrams.size()];
-        kgrams = wcKGrams.toArray(kgrams);
-
-        // Merge the postings list of each k-gram
-        List<String> candidates = new ArrayList<String>();
-        if (kGramIndex.getPostingsList(kgrams[0]) != null) {
-            candidates = kGramIndex.getPostingsList(kgrams[0]);
-            for (int i = 1; i < kgrams.length; i++) {
-                if (kGramIndex.getPostingsList(kgrams[i]) != null) {
-                    candidates = QueryProcessor.intersectList(candidates, kGramIndex.getPostingsList(kgrams[i]));
-                } else { // return if no matches
-                    return results;
-                }
-            }
-        } else { // return if no matches
-            return results;
-        }
-
-        // Remove candidates that do not match the original query
-        Iterator<String> iter = candidates.iterator();
-        while (iter.hasNext()) {
-            if (!iter.next().matches(wcQuery.replace("*", ".*"))) {
-                iter.remove();
-            }
-        }
-
-        // OR together the postings for the processed/stemmed term from each candidate    
-        for (String candidate : candidates) { // will skip if candidates is empty
-            // process and stem the token
-            TokenProcessorStream t = new TokenProcessorStream(candidate);
-            while (t.hasNextToken()) {
-                String term = PorterStemmer.getStem(t.nextToken());
-                if (index.getPostings(term) != null) {
-                    DiskPosting[] tempArray = index.getPostings(term);
-                    List<DiskPosting> tempList = new ArrayList<DiskPosting>();
-                    
-                    for (DiskPosting dPosting : tempArray){
-                        tempList.add(dPosting);
-                    }
-                    
-                    results = QueryProcessor.unionList(results, tempList);
-                }
-
-            }
-        }
-        return results;
-    }   
 }

@@ -62,7 +62,7 @@ public class DiskPosting implements Comparable<DiskPosting> {
     public void setPositions(int[] positions) {
         this.positions = positions;
     }
-
+    
     @Override
     public int compareTo(DiskPosting d) {
         return documentID - d.getDocumentID();
