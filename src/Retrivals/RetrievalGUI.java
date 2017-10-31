@@ -258,12 +258,11 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
             }*/
             if (e.getSource() == all) {
                 this.foundDocArea.removeAll();
-                this.labels = new ArrayList<>();
-                this.num.setVisible(true);
-                ///////////////////////////////////////////////////////////////////////////////////////////
-                // create generating task for printing all terms
-                //generatingLabels(index.getDictionary(), null);
+                this.num.setVisible(false);
+                this.progressDialog.setVisible(true);
                 task = new GeneratingTask(dIndex.getDictionary(), this);
+                Thread thread = new Thread(task);
+                thread.start();
             }
         }
 
@@ -305,7 +304,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     }
 
     private void booleanRetrival() {
-        progressDialog.setVisible(false); // close the dialog
+        progressDialog.setVisible(true); // close the dialog
         String query = this.tQuery.getText(); // save the query
         if (query.length() > 0) {
             if (this.comboSearchOrForms.getSelectedIndex() == 0) {
@@ -323,6 +322,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
             this.foundDocArea.setVisible(true);
             // reload the view again by packing the frame
             this.frame.pack();
+            this.progressDialog.setVisible(false);
         }
     }
 
@@ -332,7 +332,11 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         if (query.length() > 0) {
             Subquery s = new Subquery();
             s.addLiteral(query);
-            task = new GeneratingTask(dIndex, kIndex, s, 10, this);
+            if (dIndex.getFileNames().size() < 10) {
+                task = new GeneratingTask(dIndex, kIndex, s, dIndex.getFileNames().size(), this);
+            } else {
+                task = new GeneratingTask(dIndex, kIndex, s, 10, this);
+            }
             Thread t = new Thread(task);
             t.start();
         } else { // there is no query entered - let the user know
@@ -403,9 +407,10 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 this.foundDocArea.add(label);
                 this.number.setText(this.voc);
                 this.numberRes.setText(dIndex.getTermCount() + "");
+                num.setVisible(true);
                 break;
             case BOOLEAN:
-                ArrayList<String> results = task.getResults();
+                ArrayList<String> results = task.getResultsBool();
                 boolean num = true;
                 for (String s : results) {
                     JLabel l = new JLabel(s);
@@ -423,18 +428,32 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 this.num.setVisible(num);
                 break;
             default:
-                ArrayList<String> res = task.getResults();
-                for (String s : res) {
-                    JLabel l = new JLabel(s);
-                    l.addMouseListener(this);
-                    this.labels.add(l);
+                RankedItem[] res = task.getResultsRank();
+                /*int max = 0;
+                for(String s : dIndex.getFileNames()){
+                    if(s.length() > max){
+                        max=s.length();
+                    }
+                }*/
+                if (res == null) {
+                    JLabel l = new JLabel("No document found!");
                     this.foundDocArea.add(l);
+                } else {
+                    for (RankedItem item : res) {
+                        //int a = max - dIndex.getFileNames().get(item.getDocumentID()).length();
+                        String output = String.format("%.2f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocumentID()));
+                        JLabel l = new JLabel(output);
+                        l.addMouseListener(this);
+                        this.labels.add(l);
+                        this.foundDocArea.add(l);
+                    }
+                    this.number.setText("Ranking for the best 10 documents");
+                    this.numberRes.setText("");
+                    this.num.setVisible(true);
                 }
-                this.number.setText("Ranking for the best 10 documents");
-                this.numberRes.setText("");
-                this.num.setVisible(true);
                 break;
         }
+        this.progressDialog.setVisible(false);
         // show panel where buttons are in
         this.foundDocArea.setVisible(true);
         // reload the view again by packing the frame
