@@ -26,15 +26,14 @@ public class DiskInvertedIndex {
     // Opens a disk inverted index that was constructed in the given path.
     public DiskInvertedIndex(String path) {
         try {
-            if (!path.contains("Indexes")) {
-                path = path + "//Indexes";
-            }
-            mVocabList = new RandomAccessFile(new File(path, "vocab.bin"), "r");
-            mPostings = new RandomAccessFile(new File(path, "postings.bin"), "r");
-            mWeightList = new RandomAccessFile(new File(path, "docWeights.bin"), "r");
-            mVocabTable = readVocabTable(path);
+            String pathIndexes = path + "//Indexes";
+            
+            mVocabList = new RandomAccessFile(new File(pathIndexes, "vocab.bin"), "r");
+            mPostings = new RandomAccessFile(new File(pathIndexes, "postings.bin"), "r");
+            mWeightList = new RandomAccessFile(new File(pathIndexes, "docWeights.bin"), "r");
+            mVocabTable = readVocabTable(pathIndexes);
             mFileNames = readFileNames(path);
-            mCorpusSize = readCorpusSize(path);
+            mCorpusSize = readCorpusSize(pathIndexes);
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
