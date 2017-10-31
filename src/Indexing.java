@@ -35,9 +35,9 @@ class Indexing extends SwingWorker<Void, Void> {
     // the set of vocabulary types in the corpus
     final SortedSet<String> vocabTree = new TreeSet<String>();
     
-    long timer; // timer to print how long task took
+    long timer;
 
-    // saving the path of the directory of the corpus
+    // saving the path
     private Path path;
 
     /**
@@ -49,7 +49,11 @@ class Indexing extends SwingWorker<Void, Void> {
     // this constructor for the directory the user chooses
     public Indexing(Path path) {
         this.path = path;
-    }       
+    }    
+
+    public void setPath(Path p) {
+        this.path = p;
+    }
 
     /**
      * Walk through all .json files in a directory and subdirectory.
@@ -61,8 +65,9 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public Void doInBackground() throws IOException {
-        timer = new Date().getTime(); // start the timer
-        // this is our simple walk though file
+        //
+        setProgress(0); 
+        timer = new Date().getTime();
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             int mDocumentID = 0;
 
@@ -103,7 +108,7 @@ class Indexing extends SwingWorker<Void, Void> {
      */
     @Override
     public void done() {
-        System.out.println("Time for indexing: "+ (new Date().getTime()-timer)); // print out time that process took
+        System.out.println("Time for indexing: "+ (new Date().getTime()-timer));
         // iterate the vocab tree to build the kgramindex
         Iterator<String> iter = vocabTree.iterator();
         while (iter.hasNext()) {

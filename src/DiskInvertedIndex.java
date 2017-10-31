@@ -260,21 +260,89 @@ public class DiskInvertedIndex {
     
     public Double getDocWeight(int docId) {
         try {
-            /*
-            The file contains 8 bytes per document weights only.
-            Will need to accomodate for other values later on.
-            */
-            mWeightList.seek(docId * 8);
+            mWeightList.seek(docId * 32);
             byte[] buffer = new byte[8];
             mWeightList.read(buffer, 0, buffer.length);
-            return ByteBuffer.wrap(buffer).getDouble();          
+            return ByteBuffer.wrap(buffer).getDouble();
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
         return null;
     }
+
+    public Double getDocLength(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 8);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+
+    public Double getDocSize(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 16);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+
+    public Double getAvgTermFrequency(int docId) {
+        try {
+            mWeightList.seek((docId * 32) + 24);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+    }
+
+    public Double getAvgDocLength() {
+        try {
+            mWeightList.seek(mCorpusSize * 32);
+            byte[] buffer = new byte[8];
+            mWeightList.read(buffer, 0, buffer.length);
+            return ByteBuffer.wrap(buffer).getDouble();
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+        }
+        return null;
+}
     
     public int getCorpusSize(){
         return mCorpusSize;
+    }
+    
+    public String[] getDictionary() {
+        List<String> vocabList = new ArrayList<String>();
+        int i = 0, j = mVocabTable.length / 2 - 1;
+        while (i <= j) {
+            try {
+                int termLength;
+                if (i == j) {
+                    termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
+                } else {
+                    termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
+                }
+
+                byte[] buffer = new byte[termLength];
+                mVocabList.read(buffer, 0, termLength);
+                String term = new String(buffer, "ASCII");
+                vocabList.add(term);
+            } catch (IOException ex) {
+                System.out.println(ex.toString());
+            }
+            i++;
+        }
+        return vocabList.toArray(new String[0]);
     }
 }

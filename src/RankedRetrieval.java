@@ -14,12 +14,12 @@ class RankedRetrieval{
     }
     
     private static double calcWQT(DiskPosting[] tDocIDs){
-        return (Math.log(1 + ((double)(mCorpusSize / tDocIDs.length))));
+        return (Math.log(1 + (mCorpusSize / tDocIDs.length)));
     }
     
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
     private static double calcWDT(DiskPosting dPosting){
-        return (1 + (Math.log((double)dPosting.getTermFrequency())));
+        return (1 + (Math.log(dPosting.getTermFrequency())));
     }
     
     private static double getL_D(DiskInvertedIndex dIndex, int docID){
@@ -30,7 +30,7 @@ class RankedRetrieval{
  
         if(acc.containsKey(docID)){
             double newA_d = acc.get(docID) + A_d;
-            acc.replace(docID, newA_d);
+            acc.put(docID, newA_d);
         }
         else{
             acc.put(docID, A_d);
@@ -59,11 +59,11 @@ class RankedRetrieval{
             
             if (dPostings != null){
                 
-                double wqt = calcWQT(dPostings);
-                double accumulator = 0.0;
+                double WQT = calcWQT(dPostings);
+                double A_d = 0.0;
              
                 for (DiskPosting dPosting : dPostings){
-                    double newAccumulator = calcWDT(dPosting) * wqt;
+                    double newAccumulator = calcWDT(dPosting) * WQT;
                     accumulate(acc, dPosting.getDocumentID(), newAccumulator);
                 }
             }           
