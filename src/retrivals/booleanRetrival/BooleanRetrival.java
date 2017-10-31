@@ -21,7 +21,7 @@ public class BooleanRetrival {
 
     public static List<String> booleanQuery(String query, PositionalInvertedIndex posIndex, boolean searchType, KGramIndex kIndex, SoundexIndex sIndex, ArrayList<String> fileNames) {
 
-        QueryParser parser = new QueryParser(posIndex, kIndex); // create the parser                
+        BooleanParser parser = new BooleanParser(posIndex, kIndex); // create the parser
         List<Integer> foundDocs; // create a list to save found documents  
         if (searchType) {
             foundDocs = QueryProcessor.authorQuery(query, sIndex); // save DocIds for author query
