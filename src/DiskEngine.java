@@ -3,6 +3,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Scanner;
+import Helper.*;
+import Indexes.*;
+import Indexes.diskPart.*;
+import Retrievals.rankedRetrieval.*;
 
 public class DiskEngine {
 
