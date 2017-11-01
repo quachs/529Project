@@ -1,5 +1,11 @@
 package retrivals.rankedRetrival;
 
+import formulas.DefaultForm;
+import formulas.FormEnum;
+import formulas.Formular;
+import formulas.OkapiForm;
+import formulas.TfidfForm;
+import formulas.WackyForm;
 import helper.PorterStemmer;
 import query.Subquery;
 import query.processor.TokenProcessorStream;
@@ -15,24 +21,40 @@ import java.lang.*;
 //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
 public class RankedRetrieval {
 
-    private String mFolderPath;
-    private static int mCorpusSize;
+    private DiskInvertedIndex dIndex;
+    private FormEnum formEnum;
+    private Formular form;
 
-    public RankedRetrieval(String folderPath) {
-        this.mFolderPath = folderPath;
+    public RankedRetrieval(DiskInvertedIndex dIndex, FormEnum formEnum) {
+        this.dIndex = dIndex;
+        this.formEnum = formEnum;
+        switch (formEnum) {
+            case OKAPI:
+                form = new OkapiForm(dIndex);
+                break;
+            case TFIDF:
+                form = new TfidfForm(dIndex);
+                break;
+            case WACKY:
+                form = new WackyForm(dIndex);
+                break;
+            default:
+                form = new DefaultForm(dIndex);
+                break;
+        }
     }
 
-    private static double calcWQT(DiskPosting[] tDocIDs) {
-        return (Math.log(1 + (mCorpusSize / tDocIDs.length)));
+    private double calcWQT(DiskPosting[] tDocIDs) {
+        return form.calcWQT(tDocIDs);
     }
 
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
-    private static double calcWDT(DiskPosting dPosting) {
-        return (1 + (Math.log(dPosting.getTermFrequency())));
+    private double calcWDT(DiskPosting dPosting) {
+        return form.calcWDT(dPosting);
     }
 
-    private static double getL_D(DiskInvertedIndex dIndex, int docID) {
-        return dIndex.getDocWeight(docID);
+    private double getL_D(int docID) {
+        return form.getL_D(docID);
     }
 
     private static void accumulate(HashMap<Integer, Double> acc, int docID, double A_d) {
@@ -45,10 +67,8 @@ public class RankedRetrieval {
         }
     }
 
-    public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kIndex, Subquery query, int k) {
-
-        mCorpusSize = dIndex.getCorpusSize();
-        DiskPosting[] dPostings;
+    public RankedItem[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
+        DiskPosting[] dPostings = null;
         HashMap<Integer, Double> acc = new HashMap<Integer, Double>();
         PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
@@ -83,13 +103,20 @@ public class RankedRetrieval {
 
             double accumulator = acc.get(relevantDocument);
             if (accumulator > 0.0) {
-                double docWeight = getL_D(dIndex, relevantDocument);
+                if (form instanceof OkapiForm) {
+                    for (DiskPosting dPosting : dPostings) {
+                        if (acc.containsKey(dPosting.getDocumentID())) {
+                            ((OkapiForm) form).setdPosting(dPosting);
+                        }
+                    }
+                }
+                double docWeight = getL_D(relevantDocument);
                 double rank = accumulator / docWeight;
                 A_dQueue.add(new RankedItem(rank, relevantDocument));
             }
         }
 
-        if(acc.size()<k){
+        if (acc.size() < k) {
             k = acc.size();
         }
         for (int i = 0; i < k; i++) {

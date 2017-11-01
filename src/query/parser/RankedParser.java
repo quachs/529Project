@@ -2,6 +2,7 @@ package query.parser;
 
 // See README for references
 
+import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
@@ -61,7 +62,8 @@ class RankedParser implements QueryParser{
 
         // Parse query, store in a collection, perform the query, return a final postings list.
         Subquery allQueryLiterals = collectAndQueries(query);
-        RankedItem[] masterPostings = RankedRetrieval.rankedQuery(dIndex, kgIndex, allQueryLiterals, 10);
+        RankedRetrieval rank = new RankedRetrieval(dIndex, FormEnum.DEFAULT);
+        RankedItem[] masterPostings = rank.rankedQuery(kgIndex, allQueryLiterals, 10);
         List<Integer> documentList = new ArrayList<Integer>();
 
         // Constuct a list of document IDs from this final postings list.

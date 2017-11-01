@@ -1,5 +1,6 @@
 package threads;
 
+import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.PositionalInvertedIndex;
@@ -38,6 +39,7 @@ public class GeneratingTask implements Runnable {
     private int k;
     private ThreadFinishedCallBack callback;
     private RankedItem[] resultsRank;
+    private FormEnum form;
 
     /**
      * Constructor for making a ranked retrival
@@ -47,13 +49,14 @@ public class GeneratingTask implements Runnable {
      * @param query
      * @param k
      */
-    public GeneratingTask(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k, ThreadFinishedCallBack finish) {
+    public GeneratingTask(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k, ThreadFinishedCallBack finish, FormEnum form) {
         opportunities = GeneratingOpportunities.RANKED;
         this.dIndex = dIndex;
         this.kgIndex = kgIndex;
         this.q = query;
         this.k = k;
         this.callback = finish;
+        this.form = form;
     }
 
     /**
@@ -136,8 +139,9 @@ public class GeneratingTask implements Runnable {
                 }*/
                 this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, p, searchType, kgIndex, sIndex, (ArrayList<String>) dIndex.getFileNames());
                 break;
-            default: 
-                resultsRank = RankedRetrieval.rankedQuery(dIndex, kgIndex, q, k);
+            default:
+                RankedRetrieval rank = new RankedRetrieval(dIndex, form);
+                resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;
         }
         System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
@@ -148,9 +152,10 @@ public class GeneratingTask implements Runnable {
         return opportunities;
     }
 
-    public RankedItem[] getResultsRank(){
+    public RankedItem[] getResultsRank() {
         return resultsRank;
     }
+
     public ArrayList<String> getResultsBool() {
         return resultsBool;
     }

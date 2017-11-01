@@ -2,7 +2,7 @@ package retrivals;
 
 import threads.GeneratingTask;
 import helper.DisplayJson;
-import helper.Formulars;
+import formulas.FormEnum;
 import helper.PorterStemmer;
 import helper.ProgressDialog;
 import query.Subquery;
@@ -74,13 +74,13 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     private List<JLabel> labels; // List of results that are shown in the foundDocArea
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
 
-    private Formulars form;
+    private FormEnum form;
     private GeneratingTask task;
 
     /**
      * Constructor for new User Interface for the search engine
      */
-    public RetrievalGUI(char retr, Formulars form, String path) {
+    public RetrievalGUI(char retr, FormEnum form, String path) {
         this.dIndex = new DiskInvertedIndex(path);
         this.labels = new ArrayList<>(); // initialize labels array
         this.frame = new JFrame(); // initialize frame
@@ -117,7 +117,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     /**
      * Create the UI for processing queries and other user wishes
      */
-    private void createUI(char retr, Formulars form) {
+    private void createUI(char retr, FormEnum form) {
 
         // Set Layout to box Layout - vertical orientation of objects
         this.frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
@@ -146,10 +146,10 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
             this.comboRetrivalType.setSelectedIndex(1);
             this.lComboTitel.setText("Choose formular for ranked retrival");
             this.comboSearchOrForms.removeAllItems(); // clear combo
-            this.comboSearchOrForms.addItem("Dafault");
-            this.comboSearchOrForms.addItem("tf-idf");
-            this.comboSearchOrForms.addItem("Okapi BM25");
-            this.comboSearchOrForms.addItem("Wacky");
+            this.comboSearchOrForms.addItem(FormEnum.DEFAULT);
+            this.comboSearchOrForms.addItem(FormEnum.OKAPI);
+            this.comboSearchOrForms.addItem(FormEnum.TFIDF);
+            this.comboSearchOrForms.addItem(FormEnum.WACKY);
             this.comboSearchOrForms.setSelectedIndex(form.getID());
         }
         this.comboRetrivalType.addActionListener(this);
@@ -327,15 +327,16 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     }
 
     private void rankedRetrival() {
-        progressDialog.setVisible(false); // close the dialog
+        progressDialog.setVisible(true); 
+        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
         String query = this.tQuery.getText(); // save the query
         if (query.length() > 0) {
             Subquery s = new Subquery();
             s.addLiteral(query);
             if (dIndex.getFileNames().size() < 10) {
-                task = new GeneratingTask(dIndex, kIndex, s, dIndex.getFileNames().size(), this);
+                task = new GeneratingTask(dIndex, kIndex, s, dIndex.getFileNames().size(), this, form);
             } else {
-                task = new GeneratingTask(dIndex, kIndex, s, 10, this);
+                task = new GeneratingTask(dIndex, kIndex, s, 10, this, form);
             }
             Thread t = new Thread(task);
             t.start();
@@ -429,19 +430,12 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 break;
             default:
                 RankedItem[] res = task.getResultsRank();
-                /*int max = 0;
-                for(String s : dIndex.getFileNames()){
-                    if(s.length() > max){
-                        max=s.length();
-                    }
-                }*/
                 if (res == null) {
                     JLabel l = new JLabel("No document found!");
                     this.foundDocArea.add(l);
                 } else {
                     for (RankedItem item : res) {
-                        //int a = max - dIndex.getFileNames().get(item.getDocumentID()).length();
-                        String output = String.format("%.2f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocID()));
+                        String output = String.format("%.6f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocID()));
                         JLabel l = new JLabel(output);
                         l.addMouseListener(this);
                         this.labels.add(l);
