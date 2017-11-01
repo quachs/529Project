@@ -6,14 +6,11 @@ import formulas.Formular;
 import formulas.OkapiForm;
 import formulas.TfidfForm;
 import formulas.WackyForm;
-import helper.PorterStemmer;
 import query.Subquery;
-import query.processor.TokenProcessorStream;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import query.processor.DiskQueryProcessor;
-import query.processor.QueryProcessor;
 import java.util.*;
 import java.lang.*;
 
@@ -116,6 +113,9 @@ public class RankedRetrieval {
             }
         }
 
+        if(A_dQueue.isEmpty()){
+            return null;
+        }
         if (acc.size() < k) {
             k = acc.size();
         }
