@@ -1,5 +1,5 @@
 
-import helper.Formulars;
+import formulas.FormEnum;
 import indexes.IndexingGUI;
 import retrivals.RetrievalGUI;
 import java.nio.file.Path;
@@ -74,7 +74,7 @@ public class UserInterface extends JFrame {
                         img,
                         optionsForm,
                         optionsForm[1]);
-                new RetrievalGUI('r', Formulars.getFormByID(resultFormular), path.toString());
+                new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString());
             }
         }
     }
