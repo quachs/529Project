@@ -15,7 +15,7 @@ import Retrivals.booleanRetrival.*;
  * Class to process various types of queries
  *
  */
-public class Disk {
+public class DiskQueryProcessor {
 
         private static List<List<DiskPosting>> andCollection = new ArrayList<List<DiskPosting>>();
 
@@ -33,7 +33,7 @@ public class Disk {
         List<DiskPosting> masterList = new ArrayList<DiskPosting>();
         String preLiteral = andQueryLiterals.getLiterals().get(0);
         List<DiskPosting> intermediateList = new ArrayList<DiskPosting>();
-
+     
         if (preLiteral.contains("\"") && !preLiteral.contains("near")) {
             masterList = phraseQuery(preLiteral, dIndex);
         } else if (preLiteral.contains("*")) {
@@ -180,14 +180,7 @@ public class Disk {
             while (t.hasNextToken()) {
                 String term = PorterStemmer.getStem(t.nextToken());
                 if (index.getPostings(term) != null) {
-                    DiskPosting[] tempArray = index.getPostings(term);
-                    List<DiskPosting> tempList = new ArrayList<DiskPosting>();
-                    
-                    for (DiskPosting dPosting : tempArray){
-                        tempList.add(dPosting);
-                    }
-                    
-                    results = unionList(results, tempList);
+                    results = unionList(results, index.getPostings(term));
                 }
 
             }
@@ -203,31 +196,31 @@ public class Disk {
      * @param dIndex Positional inverted index of selected corpus
      * @return A DiskPosting list of the results of the phrase query.
      */
-    public static DiskPosting[] phraseQuery(String phraseLiteral, DiskInvertedIndex dIndex) {
+    public static List<DiskPosting> phraseQuery(String phraseLiteral, DiskInvertedIndex dIndex) {
         phraseLiteral = phraseLiteral.replaceAll("\"", "");
         String[] spPhrase = phraseLiteral.split(" ");
-        DiskPosting[] phraseList = new DiskPosting[0]; //= new ArrayList<DiskPosting>();
+        List<DiskPosting> phraseList = new ArrayList<DiskPosting>(); //= new ArrayList<DiskPosting>();
 
         for (int i = 0; i < spPhrase.length; i++) {
             spPhrase[i] = PorterStemmer.getStem(spPhrase[i]);
         }
 
-        if (dIndex.getPostings(spPhrase[0]) != null) {
-            phraseList = dIndex.getPostings(spPhrase[0]);
+        if (dIndex.getPostingsWithPositions(spPhrase[0]) != null) {
+            phraseList = dIndex.getPostingsWithPositions(spPhrase[0]);
             for (int j = 1; j < spPhrase.length; j++) {
-                if (dIndex.getPostings(spPhrase[j]) != null) {
+                if (dIndex.getPostingsWithPositions(spPhrase[j]) != null) {               
                     phraseList = positionalIntersect(phraseList,
-                            dIndex.getPostings(spPhrase[j]), 1);
+                            dIndex.getPostingsWithPositions(spPhrase[j]), 1);
                 } else { // return empty list
-                    //phraseList.clear();
+                    phraseList.clear();
                     return phraseList;
 
                 }
             }
         } else { // return empty list
-            phraseList = new DiskPosting[0];
             return phraseList;
         }
+        System.out.println("returned phrase list size: " + phraseList.size());
         return phraseList;
     }
     
@@ -239,12 +232,12 @@ public class Disk {
      * @param dIndex Positional inverted index of selected corpus
      * @return List resulting from the disk intersect of term1 and term2
      */
-    public static DiskPosting[] nearQuery(String nearLiteral, DiskInvertedIndex dIndex) {
+    public static List<DiskPosting> nearQuery(String nearLiteral, DiskInvertedIndex dIndex) {
         
         Scanner nearSearcher = new Scanner(nearLiteral);
-        DiskPosting[] nearList = new DiskPosting[0]; // = new ArrayList<DiskPosting>();
-        DiskPosting[] leftList = new DiskPosting[0]; // = new ArrayList<DiskPosting>();
-        DiskPosting[] rightList = new DiskPosting[0]; // = new ArrayList<DiskPosting>();
+        List<DiskPosting> nearList = new ArrayList<DiskPosting>();
+        List<DiskPosting> leftList = new ArrayList<DiskPosting>();
+        List<DiskPosting> rightList = new ArrayList<DiskPosting>();
         
         // https://docs.oracle.com/javase/tutorial/java/data/converting.html                    
         int k = 0;
@@ -262,19 +255,19 @@ public class Disk {
         if (spNear[0].contains("\"")){
             leftList = phraseQuery(spNear[0], dIndex);
         } else {
-            if(dIndex.getPostings(spNear[0]) != null){
-                leftList = dIndex.getPostings(spNear[0]);
+            if(dIndex.getPostingsWithPositions(spNear[0]) != null){
+                leftList = dIndex.getPostingsWithPositions(spNear[0]);
             }
         }
         if (spNear[1].contains("\"")){
             rightList = phraseQuery(spNear[1], dIndex);
         } else {
-            if(dIndex.getPostings(spNear[1]) != null){
-                rightList = dIndex.getPostings(spNear[1]);
+            if(dIndex.getPostingsWithPositions(spNear[1]) != null){
+                rightList = dIndex.getPostingsWithPositions(spNear[1]);
             }   
         }
         
-        if (leftList.length > 0 && rightList.length > 0) {
+        if (leftList.size() > 0 && rightList.size() > 0) {
             nearList = positionalIntersect(leftList, rightList, k);
         }
         return nearList;
@@ -381,81 +374,71 @@ public class Disk {
      * @return positional postings list from the intersection; the position
      * corresponds to term2
      */
-    public static DiskPosting[] positionalIntersect(DiskPosting[] term1, DiskPosting[] term2, int k) {
+    public static List<DiskPosting> positionalIntersect(List<DiskPosting> term1, List<DiskPosting> term2, int k) {
 
         List<DiskPosting> result = new ArrayList<DiskPosting>();
-        int[] docs1 = new int[term1.length]; // term1 documents
-        int[] docs2 = new int[term2.length]; // term2 documents
+        List<Integer> docs1 = new ArrayList<Integer>(term1.size()); // term1 documents
+        List<Integer> docs2 = new ArrayList<Integer>(term2.size()); // term2 documents
         int i = 0; // term1 document index
         int j = 0; // term2 document index
 
-        // load the docIDs to array
-        for (int x = 0; x < term1.length; x++) {
-            docs1[x] = term1[x].getDocumentID();
+        // load the docIDs to list
+        for (DiskPosting d : term1) {
+            docs1.add(d.getDocumentID());
         }
-        for (int x = 0; x < term2.length; x++) {
-            docs2[x] = term2[x].getDocumentID();
+        for (DiskPosting d : term2) {
+            docs2.add(d.getDocumentID());
         }
 
         // intersect the docs
-        while (i < docs1.length && j < docs2.length) {
+        while (i < docs1.size() && j < docs2.size()) {
             // both terms appear in the doc
-            if ((int) docs1[i] == docs2[j]) {
+            if ((int) docs1.get(i) == docs2.get(j)) {
                 List<Integer> candidate = new ArrayList<Integer>();
-                int[] pp1 = term1[i].getPositions(); // term1 positions
-                int[] pp2 = term2[j].getPositions(); // term2 positions
+                List<Integer> pp1 = term1.get(i).getPositions(); // term1 positions
+                List<Integer> pp2 = term2.get(j).getPositions(); // term2 positions
                 int ii = 0; // term1 position index
                 int jj = 0; // term2 position index
+                
+                System.out.println("pp1 size: " + pp1.size() + ", pp2 size: " + pp2.size());
 
                 // check if term2 appears within k positions after term1
-                while (ii < pp1.length) {
-                    while (jj < pp2.length) {
-                        int relativePos = pp2[jj] - pp1[ii];
+                while (ii < pp1.size()) {
+                    while (jj < pp2.size()) {
+                        int relativePos = pp2.get(jj) - pp1.get(ii);
                         if (relativePos > 0 && relativePos <= k) {
                             // add term2 position to candidates
-                            candidate.add(pp2[jj]);
-                        } else if (pp2[jj] > pp1[ii]) {
+                            candidate.add(pp2.get(jj));
+                        } else if (pp2.get(jj) > pp1.get(ii)) {
                             break;
                         }
                         jj++;
                     }
                     // remove duplicate matches
-                    while (!candidate.isEmpty() && Math.abs(candidate.get(0) - pp1[ii]) > k) {
+                    while (!candidate.isEmpty() && Math.abs(candidate.get(0) - pp1.get(ii)) > k) {
                         candidate.remove(0);
                     }
                     // add candidates to the result 
                     for (Integer pos : candidate) {
                         int currentIndex = result.size() - 1;
-                        if (!result.isEmpty() && result.get(currentIndex).getDocumentID() == docs1[i]) {
+                        if (!result.isEmpty() && result.get(currentIndex).getDocumentID() == docs1.get(i)) {
                             // the query appears more than once in the doc
                             // add the position to existing posting
                             result.get(currentIndex).addPosition(pos);
                         } else { // add a new posting to the result 
-                            result.add(new DiskPosting(docs1[i], pos));
+                            result.add(new DiskPosting(docs1.get(i), term1.get(i).getTermFrequency(), pos));
                         }
                     }
                     ii++;
                 }
                 i++;
                 j++;
-            } else if (docs1[i] < docs2[j]) {
+            } else if (docs1.get(i) < docs2.get(j)) {
                 i++;
             } else {
                 j++;
             }
         }
-
-        // Convert list of positional posting to array of disk posting
-        DiskPosting[] diskResult = new DiskPosting[result.size()];
-        for(int x = 0; x < result.size(); x++) {
-            int docID = result.get(x).getDocumentID();
-            int termFrequency = result.get(x).getTermPositions().size();
-            int[] positions = new int[termFrequency];
-            for(int y = 0; y < termFrequency; y++) {
-                positions[y] = result.get(x).getTermPositions().get(y);
-            }
-            diskResult[x] = new DiskPosting(docID, termFrequency, positions);
-        }
-        return diskResult;
+          return result;
     }
 }

@@ -90,10 +90,10 @@ public class SpellingCorrection {
         if (finalCandidates.size() > 1) {
             String type = finalCandidates.get(0); // set the first candidate as the max
             String term = PorterStemmer.getStem(type);
-            int maxDocFrequency = diIndex.getPostings(term).length;
+            int maxDocFrequency = diIndex.getPostings(term).size();
             for (int i = 1; i < finalCandidates.size(); i++) {
                 term = PorterStemmer.getStem(finalCandidates.get(i));
-                int docFrequency = diIndex.getPostings(term).length;
+                int docFrequency = diIndex.getPostings(term).size();
                 if (docFrequency > maxDocFrequency) {
                     maxDocFrequency = docFrequency; // update the highest df
                     type = finalCandidates.get(i); // update the type to be returned

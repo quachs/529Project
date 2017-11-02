@@ -1,5 +1,6 @@
 package Retrivals;
 
+import Indexes.diskPart.*;
 import Retrivals.booleanRetrival.QueryProcessor;
 import Threads.GeneratingTask;
 import Helper.DisplayJson;
@@ -54,7 +55,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     private GeneratingTask gen; // task for generating label/ string    
 
     // indecis
-    private PositionalInvertedIndex index;
+    private DiskInvertedIndex index;
     private KGramIndex kIndex;
     private SoundexIndex sIndex;
 
@@ -359,7 +360,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 foundDocs = parser.getDocumentList(query);// if yes, parse query, save docID results                        
                 checkResults(foundDocs); // check if there are any results
             } else { // run an author query
-                foundDocs = QueryProcessor.authorQuery(query, sIndex); // save DocIds for author query                                   
+                foundDocs = DiskQueryProcessor.authorQuery(query, sIndex); // save DocIds for author query                                   
                 checkResults(foundDocs); // check if there are any results        
             }
             this.number.setText(this.docs); // set text for found documents

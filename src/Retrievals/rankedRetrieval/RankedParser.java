@@ -13,16 +13,16 @@ import Retrivals.booleanRetrival.*;
  * store in a data structure for later evaluation.
  *
  */
-class RankedParser implements QueryParser{
+public class RankedParser implements QueryParser{
 
     private DiskInvertedIndex dIndex;
     private KGramIndex kgIndex;
 
-    RankedParser(DiskInvertedIndex dIndex) {
+    public RankedParser(DiskInvertedIndex dIndex) {
         this.dIndex = dIndex;
     }
     
-    RankedParser(DiskInvertedIndex dIndex, KGramIndex kgIndex) {
+    public RankedParser(DiskInvertedIndex dIndex, KGramIndex kgIndex) {
         this.dIndex = dIndex;
         this.kgIndex = kgIndex;
     }

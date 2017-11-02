@@ -9,7 +9,7 @@ import Indexes.diskPart.*;
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
 //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
 
-class RankedRetrieval{
+public class RankedRetrieval{
     
     private String mFolderPath;
     private static int mCorpusSize;
@@ -18,8 +18,8 @@ class RankedRetrieval{
         this.mFolderPath = folderPath;
     }
     
-    private static double calcWQT(DiskPosting[] tDocIDs){
-        return (Math.log(1 + (mCorpusSize / tDocIDs.length)));
+    private static double calcWQT(List<DiskPosting> tDocIDs){
+        return (Math.log(1 + ((double)mCorpusSize / tDocIDs.size())));
     }
     
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
@@ -43,9 +43,9 @@ class RankedRetrieval{
     }
        
     public static RankedItem[] rankedQuery(DiskInvertedIndex dIndex, KGramIndex kIndex, Subquery query, int k){
-        
+                
         mCorpusSize = dIndex.getCorpusSize();      
-        DiskPosting[] dPostings;
+        List<DiskPosting> dPostings;
         HashMap<Integer, Double> acc = new HashMap<Integer, Double>();
         PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
@@ -55,8 +55,9 @@ class RankedRetrieval{
             //Collect A_d values for each document, add to priority queue
             if (queryLit.contains("*")){
                 List<DiskPosting> wcResults = DiskQueryProcessor.wildcardQuery(queryLit, dIndex, kIndex);
-                dPostings = new DiskPosting[wcResults.size()];
-                wcResults.toArray(dPostings);
+                dPostings = new ArrayList<DiskPosting>(wcResults.size());
+                //wcResults.toArray(dPostings);
+                dPostings = wcResults;
             }
             else{
                 dPostings = dIndex.getPostings(queryLit);
@@ -65,6 +66,7 @@ class RankedRetrieval{
             if (dPostings != null){
                 
                 double WQT = calcWQT(dPostings);
+                System.out.println("WQT: " + WQT);
                 double A_d = 0.0;
              
                 for (DiskPosting dPosting : dPostings){

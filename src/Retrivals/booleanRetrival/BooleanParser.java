@@ -16,10 +16,16 @@ import Indexes.diskPart.*;
 public class BooleanParser implements QueryParser{
 
     private PositionalInvertedIndex posIndex;
+    private DiskInvertedIndex dIndex;
     private KGramIndex kgIndex;
 
     public BooleanParser(PositionalInvertedIndex posIndex, KGramIndex kgIndex) {
         this.posIndex = posIndex;
+        this.kgIndex = kgIndex;
+    }
+    
+    public BooleanParser(DiskInvertedIndex dIndex, KGramIndex kgIndex) {
+        this.dIndex = dIndex;
         this.kgIndex = kgIndex;
     }
 
@@ -39,10 +45,8 @@ public class BooleanParser implements QueryParser{
             String pBegCandidate = andReader.nextToken();
 
             // Phrase candidate must start with a left double quote
-            System.out.println("phrase candidate: " + pBegCandidate);
             if (pBegCandidate.startsWith("\"")) {
                 String phrase = getPhrase(andReader, pBegCandidate);
-                System.out.println("returned phrase: " + phrase);
                  
                  if (andReader.hasNextToken()) {
                     String nearCandidate = andReader.nextToken();
@@ -159,7 +163,6 @@ public class BooleanParser implements QueryParser{
             }
 
             nextCandidate = tokenReader.nextToken();
-            System.out.println("next candidate: " + nextCandidate);
             while (!nextCandidate.endsWith("\"")) { // build phrase
                 phraseQuery = phraseQuery + " " + nextCandidate;
 
@@ -168,6 +171,7 @@ public class BooleanParser implements QueryParser{
                 }
             }
             phraseQuery = phraseQuery + " " + nextCandidate;
+            System.out.println("phrase: " + phraseQuery);
             return phraseQuery;
         } else {
             pBegCandidate = tokenReader.nextToken();
@@ -187,7 +191,8 @@ public class BooleanParser implements QueryParser{
 
         // Parse query, store in a collection, perform the query, return a final postings list.
         List<Subquery> allQueries = collectOrQueries(query);
-        List<PositionalPosting> masterPostings = DiskQueryProcessor.orQuery(allQueries, posIndex, kgIndex);
+        //List<PositionalPosting> masterPostings = QueryProcessor.orQuery(allQueries, posIndex, kgIndex);
+        List<DiskPosting> masterPostings = DiskQueryProcessor.orQuery(allQueries, dIndex, kgIndex);        
         List<Integer> documentList = new ArrayList<Integer>();
 
         // Constuct a list of document IDs from this final postings list.

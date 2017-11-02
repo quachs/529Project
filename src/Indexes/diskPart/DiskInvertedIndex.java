@@ -40,7 +40,8 @@ public class DiskInvertedIndex {
         }
     }
 
-    private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
+    private static List<DiskPosting> readPostingsFromFile(RandomAccessFile postings,      
+    //private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
             long postingsPosition, boolean withPositions) {
         try {
             // seek to the position in the file where the postings start.
@@ -52,10 +53,13 @@ public class DiskInvertedIndex {
 
             // use ByteBuffer to convert the 4 bytes into an int.
             int documentFrequency = ByteBuffer.wrap(buffer).getInt();
-
+            
             // initialize the array that will hold the postings.
-            DiskPosting[] diskPostings = new DiskPosting[documentFrequency];
-
+            List<DiskPosting> diskPostings = new ArrayList<DiskPosting>(documentFrequency);
+            for (int i = 0; i < documentFrequency; i++) {
+                diskPostings.add(null);
+            }
+           
             // write the following code:
             //
             // read 4 bytes at a time from the file, until you have read as many
@@ -80,20 +84,23 @@ public class DiskInvertedIndex {
 
                 if (withPositions) {
                     // the positions for the document
-                    int[] positions = new int[termFrequency];
+                    List<Integer> positions = new ArrayList<Integer>(termFrequency);
+                    for (int j = 0; j < termFrequency; j++) {
+                        positions.add(null);
+                    }
                     int lastPosition = 0;
                     for (int positionIndex = 0; positionIndex < termFrequency; positionIndex++) {
 
                         // read the 4 bytes for the positions; add lastPosition to decode gap
                         postings.read(buffer, 0, buffer.length);
                         int position = ByteBuffer.wrap(buffer).getInt() + lastPosition;
-                        positions[positionIndex] = position;
+                        positions.set(positionIndex, position);
                         lastPosition = position;
                     }
-                    diskPostings[postingIndex] = new DiskPosting(docId, termFrequency, positions);
+                    diskPostings.set(postingIndex, new DiskPosting(docId, termFrequency, positions));
                 } else {
                     postings.skipBytes(4 * termFrequency); // skip over the positions
-                    diskPostings[postingIndex] = new DiskPosting(docId, termFrequency);
+                    diskPostings.set(postingIndex, new DiskPosting(docId, termFrequency));
                 }
             }
 
@@ -105,7 +112,7 @@ public class DiskInvertedIndex {
     }
 
     // Reads and returns a list of document IDs that contain the given term.
-    public DiskPosting[] getPostings(String term) {
+    public List<DiskPosting> getPostings(String term) {
         long postingsPosition = binarySearchVocabulary(term);
         if (postingsPosition >= 0) {
             return readPostingsFromFile(mPostings, postingsPosition, false);
@@ -115,7 +122,7 @@ public class DiskInvertedIndex {
 
     // Reads and returns a list of document IDs, term frequencies, 
     // and positions that contain the given term. For use with phrase queries.
-    public DiskPosting[] getPostingsWithPositions(String term) {
+    public List<DiskPosting> getPostingsWithPositions(String term) {
         long postingsPosition = binarySearchVocabulary(term);
         if (postingsPosition >= 0) {
             return readPostingsFromFile(mPostings, postingsPosition, true);
