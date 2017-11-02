@@ -56,9 +56,6 @@ public class DiskInvertedIndex {
             
             // initialize the array that will hold the postings.
             List<DiskPosting> diskPostings = new ArrayList<DiskPosting>(documentFrequency);
-            for (int i = 0; i < documentFrequency; i++) {
-                diskPostings.add(null);
-            }
            
             // write the following code:
             //
@@ -85,22 +82,19 @@ public class DiskInvertedIndex {
                 if (withPositions) {
                     // the positions for the document
                     List<Integer> positions = new ArrayList<Integer>(termFrequency);
-                    for (int j = 0; j < termFrequency; j++) {
-                        positions.add(null);
-                    }
                     int lastPosition = 0;
                     for (int positionIndex = 0; positionIndex < termFrequency; positionIndex++) {
 
                         // read the 4 bytes for the positions; add lastPosition to decode gap
                         postings.read(buffer, 0, buffer.length);
                         int position = ByteBuffer.wrap(buffer).getInt() + lastPosition;
-                        positions.set(positionIndex, position);
+                        positions.add(position);
                         lastPosition = position;
                     }
-                    diskPostings.set(postingIndex, new DiskPosting(docId, termFrequency, positions));
+                    diskPostings.add(new DiskPosting(docId, termFrequency, positions));
                 } else {
                     postings.skipBytes(4 * termFrequency); // skip over the positions
-                    diskPostings.set(postingIndex, new DiskPosting(docId, termFrequency));
+                    diskPostings.add(new DiskPosting(docId, termFrequency));
                 }
             }
 

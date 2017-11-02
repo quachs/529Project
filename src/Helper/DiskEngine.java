@@ -96,7 +96,7 @@ public class DiskEngine {
                         //DiskPosting[] postingsList = index.getPostings(input.toLowerCase());
                         RankedItem[] postingsList = RankedRetrieval.rankedQuery(index, kIndex, query, 10);
 
-                        if (postingsList == null) {
+                        if (postingsList == null || postingsList.length == 0) {
                             System.out.println("Term not found");
                         } else {
                             System.out.println("Docs: ");

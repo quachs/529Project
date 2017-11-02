@@ -95,7 +95,8 @@ public class RankedRetrieval{
         }
         
         RankedItem[] results = new RankedItem[returnedRIs.size()];
-        returnedRIs.toArray(results);     
+        returnedRIs.toArray(results);  
+        System.out.println("queue size: " + results.length);
         return results;
     }
 }
