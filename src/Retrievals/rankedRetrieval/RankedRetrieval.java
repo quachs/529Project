@@ -19,12 +19,12 @@ public class RankedRetrieval{
     }
     
     private static double calcWQT(List<DiskPosting> tDocIDs){
-        return (Math.log(1 + ((double)mCorpusSize / tDocIDs.size())));
+        return (Math.log(1.0 + ((double)mCorpusSize / tDocIDs.size())));
     }
     
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
     private static double calcWDT(DiskPosting dPosting){
-        return (1 + (Math.log(dPosting.getTermFrequency())));
+        return (1.0 + (Math.log(dPosting.getTermFrequency())));
     }
     
     private static double getL_D(DiskInvertedIndex dIndex, int docID){
