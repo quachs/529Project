@@ -1,11 +1,11 @@
 package retrivals;
 
+import com.sun.javafx.scene.control.skin.VirtualFlow;
 import threads.GeneratingTask;
 import helper.DisplayJson;
 import formulas.FormEnum;
 import helper.PorterStemmer;
 import helper.ProgressDialog;
-import query.Subquery;
 import indexes.KGramIndex;
 import indexes.SoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
@@ -134,8 +134,8 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
 
         this.comboRetrivalType.addItem("Boolean Retrival");
         this.comboRetrivalType.addItem("Ranked Retrival");
-        if (retr == 'b') {
-            this.comboRetrivalType.setSelectedIndex(0);
+        if (retr == 'b') { // b is boolean retrival, is firt entry in combobox.
+            this.comboRetrivalType.setSelectedIndex(0); // set seletion to boolean
             this.lComboTitel.setText("Choose search type");
             this.comboSearchOrForms.removeAllItems(); // clear combo (important after new directory is processed)
             this.comboSearchOrForms.addItem("Normal search"); // normal search is always available as search type
@@ -143,12 +143,12 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 this.comboSearchOrForms.addItem("Search by author"); // author search only if there is any author saved in sIndex
             }
         } else {
-            this.comboRetrivalType.setSelectedIndex(1);
+            this.comboRetrivalType.setSelectedIndex(1); // seat seletion to ranked
             this.lComboTitel.setText("Choose formular for ranked retrival");
             this.comboSearchOrForms.removeAllItems(); // clear combo
             this.comboSearchOrForms.addItem(FormEnum.DEFAULT);
-            this.comboSearchOrForms.addItem(FormEnum.OKAPI);
             this.comboSearchOrForms.addItem(FormEnum.TFIDF);
+            this.comboSearchOrForms.addItem(FormEnum.OKAPI);
             this.comboSearchOrForms.addItem(FormEnum.WACKY);
             this.comboSearchOrForms.setSelectedIndex(form.getID());
         }
@@ -297,7 +297,6 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                     findFile(name, fil);
                 } else if (name.equalsIgnoreCase(fil.getName())) {
                     File p = fil.getParentFile();
-                    //pathString = p.getAbsolutePath();
                 }
             }
         }
@@ -328,15 +327,14 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
 
     private void rankedRetrival() {
         progressDialog.setVisible(true); 
-        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
+        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());        
         String query = this.tQuery.getText(); // save the query
         if (query.length() > 0) {
-            Subquery s = new Subquery();
-            s.addLiteral(query);
+            
             if (dIndex.getFileNames().size() < 10) {
-                task = new GeneratingTask(dIndex, kIndex, s, dIndex.getFileNames().size(), this, form);
+                task = new GeneratingTask(dIndex, kIndex, query, dIndex.getFileNames().size(), this, form);
             } else {
-                task = new GeneratingTask(dIndex, kIndex, s, 10, this, form);
+                task = new GeneratingTask(dIndex, kIndex, query, 10, this, form);
             }
             Thread t = new Thread(task);
             t.start();
@@ -379,7 +377,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     @Override
     public void actionPerformed(ActionEvent e) {
         if (this.comboRetrivalType.getSelectedIndex() == 0) {
-            this.comboRetrivalType.setSelectedIndex(0);
+            //this.comboRetrivalType.setSelectedIndex(0);
             this.lComboTitel.setText("Choose search type");
             this.comboSearchOrForms.removeAllItems(); // clear combo (important after new directory is processed)
             this.comboSearchOrForms.addItem("Normal search"); // normal search is always available as search type
@@ -387,18 +385,22 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 this.comboSearchOrForms.addItem("Search by author"); // author search only if there is any author saved in sIndex
             }
         } else {
-            this.comboRetrivalType.setSelectedIndex(1);
+            //this.comboRetrivalType.setSelectedIndex(1);
             this.lComboTitel.setText("Choose formular for ranked retrival");
             this.comboSearchOrForms.removeAllItems(); // clear combo
-            this.comboSearchOrForms.addItem("Dafault");
-            this.comboSearchOrForms.addItem("tf-idf");
-            this.comboSearchOrForms.addItem("Okapi BM25");
-            this.comboSearchOrForms.addItem("Wacky");
+            this.comboSearchOrForms.removeAllItems(); // clear combo
+            this.comboSearchOrForms.addItem(FormEnum.DEFAULT);
+            this.comboSearchOrForms.addItem(FormEnum.TFIDF);
+            this.comboSearchOrForms.addItem(FormEnum.OKAPI);
+            this.comboSearchOrForms.addItem(FormEnum.WACKY);
+            this.form = FormEnum.getFormByID(this.comboSearchOrForms.getSelectedIndex());
         }
     }
 
     @Override
     public void notifyThreadFinished() {
+        this.foundDocArea.removeAll();
+        this.labels = new ArrayList<JLabel>();
         switch (task.getOpportunities()) {
             case ALL:
                 JTextArea label = new JTextArea();
@@ -441,8 +443,8 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                         this.labels.add(l);
                         this.foundDocArea.add(l);
                     }
-                    this.number.setText("Ranking for the best 10 documents");
-                    this.numberRes.setText("");
+                    this.number.setText("Ranking for the best 10 documents, but found number: ");
+                    this.numberRes.setText(task.getRank().getSizeOfFoundDocs() + "");
                     this.num.setVisible(true);
                 }
                 break;

@@ -2,6 +2,7 @@ package formulas;
 
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
+import java.util.List;
 
 /**
  *
@@ -16,8 +17,8 @@ public class OkapiForm extends Formular {
     }
 
     @Override
-    public double calcWQT(DiskPosting[] tDocIDs) {
-        double res = Math.log((((double) (dIndex.getCorpusSize() - tDocIDs.length)) + 0.5) / ((double) tDocIDs.length) + 0.5);
+    public double calcWQT(List<DiskPosting> tDocIDs) {
+        double res = Math.log((((double) (dIndex.getCorpusSize() - tDocIDs.size())) + 0.5) / (((double) tDocIDs.size()) + 0.5));
         return Math.max(0.1, res);
     }
 

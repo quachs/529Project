@@ -65,7 +65,7 @@ public class UserInterface extends JFrame {
                 new RetrievalGUI('b', null, path.toString());
             } else {
                 Object[] optionsForm = {"Default",
-                    "tf-idf", "Okapi BM25", "Wacky"};
+                    "Traditional", "Okapi BM25", "Wacky"};
                 int resultFormular = JOptionPane.showOptionDialog(this,
                         "Please choose the type of formular",
                         "Formular",

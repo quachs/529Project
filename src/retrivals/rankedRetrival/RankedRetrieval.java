@@ -21,6 +21,7 @@ public class RankedRetrieval {
     private DiskInvertedIndex dIndex;
     private FormEnum formEnum;
     private Formular form;
+    private int sizeOfFoundDocs = 0;
 
     public RankedRetrieval(DiskInvertedIndex dIndex, FormEnum formEnum) {
         this.dIndex = dIndex;
@@ -41,8 +42,11 @@ public class RankedRetrieval {
         }
     }
 
-    private double calcWQT(DiskPosting[] tDocIDs) {
-        return form.calcWQT(tDocIDs);
+    private double calcWQT(List<DiskPosting> tDocIDs) {
+        System.out.println("FormEnum: "+formEnum);
+        double t = form.calcWQT(tDocIDs);
+        System.out.println("WQT: "+t);
+        return t;
     }
 
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
@@ -65,18 +69,18 @@ public class RankedRetrieval {
     }
 
     public RankedItem[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
-        DiskPosting[] dPostings = null;
+        List<DiskPosting> dPostings = null;
         HashMap<Integer, Double> acc = new HashMap<Integer, Double>();
         PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
 
         for (String queryLit : query.getLiterals()) {
-
+            System.out.println("Literal: " +queryLit);
             //Collect A_d values for each document, add to priority queue
             if (queryLit.contains("*")) {
                 List<DiskPosting> wcResults = DiskQueryProcessor.wildcardQuery(queryLit, dIndex, kIndex);
-                dPostings = new DiskPosting[wcResults.size()];
-                wcResults.toArray(dPostings);
+                dPostings = new ArrayList<DiskPosting>(wcResults.size());
+                dPostings = wcResults;
             } else {
                 dPostings = dIndex.getPostings(queryLit);
             }
@@ -92,7 +96,7 @@ public class RankedRetrieval {
                 }
             }
         }
-
+        this.sizeOfFoundDocs = acc.size();
         Integer[] relevantDocuments = new Integer[acc.size()];
         acc.keySet().toArray(relevantDocuments);
 
@@ -113,7 +117,7 @@ public class RankedRetrieval {
             }
         }
 
-        if(A_dQueue.isEmpty()){
+        if (A_dQueue.isEmpty()) {
             return null;
         }
         if (acc.size() < k) {
@@ -128,4 +132,9 @@ public class RankedRetrieval {
         returnedRIs.toArray(results);
         return results;
     }
+
+    public int getSizeOfFoundDocs() {
+        return sizeOfFoundDocs;
+    }
+
 }

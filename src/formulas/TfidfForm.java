@@ -2,6 +2,7 @@ package formulas;
 
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
+import java.util.List;
 
 /**
  *
@@ -14,8 +15,8 @@ public class TfidfForm extends Formular{
     }   
 
     @Override
-    public double calcWQT(DiskPosting[] tDocIDs) {
-        return Math.log((double) dIndex.getCorpusSize()) / ((double) tDocIDs.length);
+    public double calcWQT(List<DiskPosting> tDocIDs) {
+        return Math.log(((double) dIndex.getCorpusSize()) / ((double) tDocIDs.size()));
     }
 
     @Override

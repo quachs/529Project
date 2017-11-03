@@ -2,6 +2,7 @@ package formulas;
 
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
+import java.util.List;
 
 public abstract class Formular {
 
@@ -11,7 +12,7 @@ public abstract class Formular {
         this.dIndex = dIndex;
     }
 
-    public abstract double calcWQT(DiskPosting[] tDocIDs);
+    public abstract double calcWQT(List<DiskPosting> tDocIDs);
 
     public abstract double calcWDT(DiskPosting dPosting);
 

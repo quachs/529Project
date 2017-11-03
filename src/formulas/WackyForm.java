@@ -2,6 +2,7 @@ package formulas;
 
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
+import java.util.List;
 
 /**
  *
@@ -14,8 +15,8 @@ public class WackyForm extends Formular{
     }
     
     @Override
-    public double calcWQT(DiskPosting[] tDocIDs) {
-        int dft = tDocIDs.length;
+    public double calcWQT(List<DiskPosting> tDocIDs) {
+        int dft = tDocIDs.size();
         double res = Math.log(((double) (dIndex.getCorpusSize() - dft)) / (double) dft);
         return Math.max(0, res);
     }

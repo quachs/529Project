@@ -50,7 +50,7 @@ public enum FormEnum {
                 result = "Okapi BM25";
                 break;
             case TFIDF:
-                result = "tf-idf";
+                result = "Traditional";
                 break;
             case WACKY:
                 result = "Wacky";

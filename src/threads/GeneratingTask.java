@@ -9,6 +9,7 @@ import indexes.diskPart.DiskInvertedIndex;
 import retrivals.booleanRetrival.BooleanRetrival;
 import retrivals.rankedRetrival.RankedItem;
 import retrivals.rankedRetrival.RankedRetrieval;
+import query.parser.RankedParser;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class GeneratingTask implements Runnable {
     private GeneratingOpportunities opportunities;
     private ArrayList<JLabel> labels; // arraylist of labels
     private String allTerms; // result string for all voc
+    private RankedRetrieval rank;
 
     private String[] dic;
 
@@ -49,11 +51,11 @@ public class GeneratingTask implements Runnable {
      * @param query
      * @param k
      */
-    public GeneratingTask(DiskInvertedIndex dIndex, KGramIndex kgIndex, Subquery query, int k, ThreadFinishedCallBack finish, FormEnum form) {
+    public GeneratingTask(DiskInvertedIndex dIndex, KGramIndex kgIndex, String query, int k, ThreadFinishedCallBack finish, FormEnum form) {
         opportunities = GeneratingOpportunities.RANKED;
         this.dIndex = dIndex;
         this.kgIndex = kgIndex;
-        this.q = query;
+        this.query = query;
         this.k = k;
         this.callback = finish;
         this.form = form;
@@ -120,6 +122,7 @@ public class GeneratingTask implements Runnable {
 
     @Override
     public void run() {
+        this.resultsBool = new ArrayList<String>();
         timer = new Date().getTime(); // start timer for printing out how long process took
         switch (opportunities) {
             case ALL:
@@ -130,17 +133,12 @@ public class GeneratingTask implements Runnable {
                 this.allTerms = res;
                 break;
             case BOOLEAN:
-                //DiskPosting[] array = dIndex.getPostingsWithPositions(query);
-                PositionalInvertedIndex p = new PositionalInvertedIndex();
-                /*for(DiskPosting posting: array){
-                    for(int position: posting.getPositions()){
-                        p.addTerm(query, posting.getDocumentID(), position);
-                    }
-                }*/
-                this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, p, searchType, kgIndex, sIndex, (ArrayList<String>) dIndex.getFileNames());
+                this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, searchType, kgIndex, sIndex, dIndex);
                 break;
             default:
-                RankedRetrieval rank = new RankedRetrieval(dIndex, form);
+                rank = new RankedRetrieval(dIndex, form);                
+                RankedParser parser = new RankedParser(dIndex, kgIndex);
+                q = parser.collectAndQueries(query);
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;
         }
@@ -158,6 +156,10 @@ public class GeneratingTask implements Runnable {
 
     public ArrayList<String> getResultsBool() {
         return resultsBool;
+    }
+
+    public RankedRetrieval getRank() {
+        return rank;
     }
 
 }
