@@ -1,6 +1,5 @@
 package retrivals;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import threads.GeneratingTask;
 import helper.DisplayJson;
 import formulas.FormEnum;
@@ -39,6 +38,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import start.UserInterface;
 
 public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
@@ -65,7 +65,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     private JLabel numberRes = new JLabel(); // results of text
     private JButton stem = new JButton("Stem"); // start stemming button
     private JLabel lComboTitel; // label for search types
-    //private JButton newDic = new JButton("Index new directory"); // start new directory indexing
+    private JButton newDic = new JButton("Index new directory"); // start new directory indexing
     private JButton all = new JButton("Print vocabulary"); // print all vocab button
 
     // initialize dialog with "Indexing..." as title
@@ -90,7 +90,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         // add mouseListener for the buttons
         bSubmit.addMouseListener(this);
         stem.addMouseListener(this);
-        //newDic.addMouseListener(this);
+        newDic.addMouseListener(this);
         all.addMouseListener(this);
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // get the soundex index for creating the combo box right
@@ -165,7 +165,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         // add components to panel buttons
         buttons.add(bSubmit);
         buttons.add(stem);
-        //buttons.add(newDic);
+        buttons.add(newDic);
         buttons.add(all);
 
         this.frame.add(combos);
@@ -239,23 +239,21 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                             + "\" : " + result, "Result of stemming", JOptionPane.INFORMATION_MESSAGE, this.img);
                 }
             }
-            /*if (e.getSource() == newDic) {
+            if (e.getSource() == newDic) {
                 int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?", 
                         "Index new directory", 2, JOptionPane.INFORMATION_MESSAGE, this.img);
                 if (res == 0) {
                     this.frame.setVisible(false);
                     this.frame.dispose();
                     // close everything
-                    // Task where you can find positionalindex
-                    indexedCorpus = new Indexing();
                     foundDocArea.removeAll();
                     labels = new ArrayList<>();
                     num.setVisible(false);
                     tQuery.setText("");
                     this.frame = new JFrame();
-                    chooseDirectory();
+                    UserInterface u = new UserInterface();
                 }
-            }*/
+            }
             if (e.getSource() == all) {
                 this.foundDocArea.removeAll();
                 this.num.setVisible(false);
