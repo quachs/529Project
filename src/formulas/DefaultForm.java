@@ -3,7 +3,6 @@ package formulas;
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import java.util.List;
-
 /**
  *
  * @author Sandra
