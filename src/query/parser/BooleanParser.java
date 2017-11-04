@@ -1,12 +1,17 @@
-package Retrivals.booleanRetrival;
+package query.parser;
 
 // See README for references
 
 //import .*;
+import indexes.diskPart.DiskPosting;
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.PositionalInvertedIndex;
+import indexes.KGramIndex;
+import helper.PorterStemmer;
+import retrivals.booleanRetrival.*;
 import java.util.*;
-import Indexes.*;
-import Helper.*;
-import Indexes.diskPart.*;
+import query.*;
+import query.processor.*;
 
 /**
  * Class to parse user query into query literals and

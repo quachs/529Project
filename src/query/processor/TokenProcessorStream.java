@@ -1,8 +1,9 @@
-package Helper;
+package query.processor;
 
 
 import java.util.LinkedList;
 import java.util.Queue;
+import query.*;
 
 /**
  * Returns tokens with processing: removing all non-alphanumeric characters from

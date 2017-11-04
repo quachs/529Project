@@ -1,14 +1,20 @@
-package Helper;
+package start;
 
 
+import helper.*;
+import indexes.diskPart.DiskPosting;
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.diskPart.IndexWriter;
+import retrivals.rankedRetrival.RankedRetrieval;
+import retrivals.rankedRetrival.RankedItem;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import Indexes.*;
-import Indexes.diskPart.*;
-import Retrievals.rankedRetrieval.*;
-import Retrivals.booleanRetrival.*;
+import indexes.KGramIndex;
 import java.util.*;
+import query.*;
+import query.parser.*;
+import query.processor.*;
 
 public class DiskEngine {
 
@@ -34,7 +40,7 @@ public class DiskEngine {
 
                 break;
 
-            case 2:
+            case 2:                                
                 System.out.println("Enter the name of an index to read:");
                 String indexName = scan.nextLine();
 

@@ -1,4 +1,6 @@
-package Helper;
+package query;
+
+import helper.*;
 
 /**
  TokenStreams read tokens one at a time from a stream of input.

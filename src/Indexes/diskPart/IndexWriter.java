@@ -1,6 +1,12 @@
-package Indexes.diskPart;
+package indexes.diskPart;
 
 
+import indexes.PositionalInvertedIndex;
+import indexes.SoundexIndex;
+import indexes.KGramIndex;
+import indexes.PositionalPosting;
+import helper.JsonDocument;
+import helper.PorterStemmer;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import java.io.*;
@@ -12,8 +18,8 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import Indexes.*;
-import Helper.*;
+import query.*;
+import query.processor.*;
 
 /**
  * Writes an inverted indexing of a directory to disk.

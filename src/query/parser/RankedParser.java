@@ -1,12 +1,15 @@
-package Retrievals.rankedRetrieval;
+package query.parser;
 
 // See README for references
 
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.KGramIndex;
+import retrivals.rankedRetrival.RankedRetrieval;
+import retrivals.rankedRetrival.RankedItem;
 import java.util.*;
-import Helper.*;
-import Indexes.*;
-import Indexes.diskPart.*;
-import Retrivals.booleanRetrival.*;
+import helper.*;
+import retrivals.booleanRetrival.*;
+import query.*;
 
 /**
  * Class to parse user query into query literals and

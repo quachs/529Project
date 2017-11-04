@@ -1,15 +1,19 @@
-package Indexes.diskPart;
+package query.processor;
 
 
+import indexes.diskPart.DiskPosting;
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.SoundexIndex;
+import indexes.KGramIndex;
+import helper.PorterStemmer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Scanner;
-import Helper.*;
-import Indexes.*;
-import Retrivals.booleanRetrival.*;
+import retrivals.booleanRetrival.*;
+import query.*;
 
 /**
  * Class to process various types of queries
@@ -17,7 +21,7 @@ import Retrivals.booleanRetrival.*;
  */
 public class DiskQueryProcessor {
 
-        private static List<List<DiskPosting>> andCollection = new ArrayList<List<DiskPosting>>();
+    private static List<List<DiskPosting>> andCollection = new ArrayList<List<DiskPosting>>();
 
     /**
      * Add the positional postings list of an AND query to the collection of AND
@@ -426,7 +430,7 @@ public class DiskQueryProcessor {
                             // add the position to existing posting
                             result.get(currentIndex).addPosition(pos);
                         } else { // add a new posting to the result 
-                            result.add(new DiskPosting(docs1.get(i), term1.get(i).getTermFrequency(), pos));
+                            result.add(new DiskPosting((int)docs1.get(i), term1.get(i).getTermFrequency(), pos));
                         }
                     }
                     ii++;

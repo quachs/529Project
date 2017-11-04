@@ -1,4 +1,4 @@
-package Threads;
+package threads;
 
 import java.util.ArrayList;
 import java.util.Date;

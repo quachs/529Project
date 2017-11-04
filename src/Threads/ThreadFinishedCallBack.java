@@ -1,5 +1,5 @@
 
-package Threads;
+package threads;
 
 /**
  *

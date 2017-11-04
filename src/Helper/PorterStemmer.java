@@ -1,4 +1,4 @@
-package Helper;
+package helper;
 
 // See README for references
 import org.tartarus.snowball.ext.englishStemmer;

@@ -1,13 +1,14 @@
-package Helper;
+package helper;
 
 
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.KGramIndex;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import Indexes.*;
-import Indexes.diskPart.*;
-import Retrivals.booleanRetrival.*;
+import retrivals.booleanRetrival.*;
+import query.processor.*;
 
 public class SpellingCorrection {
     

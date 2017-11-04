@@ -1,10 +1,13 @@
-package Retrievals.rankedRetrieval;
+package retrivals.rankedRetrival;
 
+import indexes.diskPart.DiskPosting;
+import indexes.diskPart.DiskInvertedIndex;
+import indexes.KGramIndex;
 import java.util.*;
 import java.lang.*;
-import Helper.*;
-import Indexes.*;
-import Indexes.diskPart.*;
+import helper.*;
+import query.*;
+import query.processor.*;
 
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
 //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html

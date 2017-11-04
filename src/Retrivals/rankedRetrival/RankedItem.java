@@ -1,7 +1,7 @@
-package Retrievals.rankedRetrieval;
+package retrivals.rankedRetrival;
 
+import indexes.diskPart.DiskPosting;
 import java.lang.*;
-import Indexes.diskPart.*;
 
 /**
  *

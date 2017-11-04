@@ -1,13 +1,14 @@
-package Retrivals.booleanRetrival;
+package query.processor;
 
 
-import Helper.Subquery;
-import Helper.TokenProcessorStream;
-import Helper.PorterStemmer;
-import Indexes.PositionalPosting;
-import Indexes.PositionalInvertedIndex;
-import Indexes.SoundexIndex;
-import Indexes.KGramIndex;
+import retrivals.booleanRetrival.*;
+import query.Subquery;
+import query.processor.TokenProcessorStream;
+import helper.PorterStemmer;
+import indexes.PositionalPosting;
+import indexes.PositionalInvertedIndex;
+import indexes.SoundexIndex;
+import indexes.KGramIndex;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

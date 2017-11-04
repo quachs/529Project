@@ -1,5 +1,4 @@
-package Indexes;
-
+package indexes;
 
 import java.util.ArrayList;
 import java.util.List;

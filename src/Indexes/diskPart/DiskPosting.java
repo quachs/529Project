@@ -1,4 +1,4 @@
-package Indexes.diskPart;
+package indexes.diskPart;
 import java.util.*;
 
 /**
@@ -11,21 +11,21 @@ public class DiskPosting implements Comparable<DiskPosting> {
     private int termFrequency;
     private List<Integer> positions = new ArrayList<Integer>();
 
-    DiskPosting(){}
+    public DiskPosting(){}
         
-    DiskPosting(int documentID, int termFrequency, int position) {
+    public DiskPosting(int documentID, int termFrequency, Integer position) {
         this.documentID = documentID;
         this.termFrequency = termFrequency;
         this.positions.add(position);
     }
     
-    DiskPosting(int documentID, int termFrequency, List<Integer> positions) {
+    public DiskPosting(int documentID, int termFrequency, List<Integer> positions) {
         this.documentID = documentID;
         this.termFrequency = termFrequency;
         this.positions = positions;
     }
 
-    DiskPosting(int documentID, int termFrequency) {
+    public DiskPosting(int documentID, int termFrequency) {
         this.documentID = documentID;
         this.termFrequency = termFrequency;
         positions = null;

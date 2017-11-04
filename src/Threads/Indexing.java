@@ -1,14 +1,14 @@
-package Threads;
+package threads;
 
-import Helper.JsonDocument;
-import Helper.PorterStemmer;
-import Helper.SimpleTokenStream;
-import Helper.TokenProcessorStream;
-import Indexes.diskPart.IndexWriter;
-import Indexes.KGramIndex;
-import Indexes.PositionalInvertedIndex;
-import Indexes.PositionalPosting;
-import Indexes.SoundexIndex;
+import helper.JsonDocument;
+import helper.PorterStemmer;
+import query.SimpleTokenStream;
+import query.processor.TokenProcessorStream;
+import indexes.diskPart.IndexWriter;
+import indexes.KGramIndex;
+import indexes.PositionalInvertedIndex;
+import indexes.PositionalPosting;
+import indexes.SoundexIndex;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import java.io.File;
