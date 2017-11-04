@@ -14,6 +14,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import indexes.SoundexIndex;
 
+/**
+ * Adaptation of DiskInvertedIndex to work for soundex indexes
+ */
 public class DiskSoundexIndex {
 
     private RandomAccessFile mVocabList;
