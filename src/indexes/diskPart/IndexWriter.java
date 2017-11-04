@@ -427,9 +427,9 @@ public class IndexWriter {
             
             //make a call to build vocab file with sIndex as the first arg
             String[] authors = sIndex.getDictionary();
-            long[] vocabPositions = new long[authors.length];
+            long[] sVocabPositions = new long[authors.length];
             
-            buildVocabFile(folder, authors, vocabPositions, "sVocab.bin");
+            buildVocabFile(folder, authors, sVocabPositions, "sVocab.bin");
             
             //Condensed adaptation of buildpostingsfile()
             byte[] sBuff; 
@@ -440,16 +440,16 @@ public class IndexWriter {
             
             int vocabI = 0;
             for (String author : authors) {
+                List<Integer> authorPostings = sIndex.getPostingsList(author);
                 
                 //Write to soundex vocab table
-                sBuff = ByteBuffer.allocate(8).putLong(vocabPositions[vocabI]).array();
+                sBuff = ByteBuffer.allocate(8).putLong(sVocabPositions[vocabI]).array();
                 sVocabTable.write(sBuff);
                 
                 sBuff = ByteBuffer.allocate(8).putLong(soundex.getChannel().position()).array();
                 sVocabTable.write(sBuff);
                 
                 //Write the number of documents for an author
-                List<Integer> authorPostings = sIndex.getPostingsList(author);
                 sBuff = ByteBuffer.allocate(4).putInt(authorPostings.size()).array();
                 soundex.write(sBuff);
                 
@@ -460,8 +460,7 @@ public class IndexWriter {
                     sBuff = ByteBuffer.allocate(4).putInt(posting - lastDocID).array();
                     soundex.write(sBuff);
                     lastDocID = posting;
-                }
-                
+                }             
                 vocabI++;               
             }
             

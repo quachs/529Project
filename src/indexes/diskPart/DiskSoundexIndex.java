@@ -12,15 +12,14 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import indexes.SoundexIndex;
 
 public class DiskSoundexIndex {
 
     private RandomAccessFile mVocabList;
     private RandomAccessFile mPostings;
-    private RandomAccessFile mWeightList;
     private long[] mVocabTable;
     private List<String> mFileNames;
-    private int mCorpusSize;
     private List<String> terms = null;
     private String[] dic;
 
@@ -33,7 +32,6 @@ public class DiskSoundexIndex {
             mPostings = new RandomAccessFile(new File(pathIndexes, "soundex.bin"), "r");
             mVocabTable = readVocabTable(pathIndexes);
             mFileNames = readFileNames(path);
-            mCorpusSize = readCorpusSize(pathIndexes);
         } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
         }
@@ -74,10 +72,6 @@ public class DiskSoundexIndex {
                 int docId = ByteBuffer.wrap(buffer).getInt() + lastDocId;
                 lastDocId = docId;
 
-                // read the 4 bytes for the term frequency
-                postings.read(buffer, 0, buffer.length);
-                int termFrequency = ByteBuffer.wrap(buffer).getInt();
-
                 diskPostings.add(docId);
             }
 
@@ -90,7 +84,9 @@ public class DiskSoundexIndex {
 
     // Reads and returns a list of document IDs that contain the given term.
     public List<Integer> getPostings(String term) {
-        long postingsPosition = binarySearchVocabulary(term);
+        SoundexIndex reducer = new SoundexIndex();
+        String sTerm = reducer.reduceToSoundex(term);
+        long postingsPosition = binarySearchVocabulary(sTerm);
         if (postingsPosition >= 0) {
             return readPostingsFromFile(mPostings, postingsPosition);
         }
@@ -161,30 +157,6 @@ public class DiskSoundexIndex {
         }
         return null;
     }
-
-     // Reads the file corpusSize.bin into memory.
-    private static int readCorpusSize(String indexName) {
-        
-        int corpusSize = 0;
-        
-        try {
-            RandomAccessFile corpusFile = new RandomAccessFile(new File(indexName, "corpusSize.bin"), "r");
-            byte[] byteBuffer = new byte[4];
-            
-            corpusFile.read(byteBuffer);
-            corpusSize = ByteBuffer.wrap(byteBuffer).getInt();
-            corpusFile.close();
-        } 
-        catch (FileNotFoundException ex) {
-            System.out.println(ex.toString());
-        } 
-        catch (IOException ex) {
-            System.out.println(ex.toString());
-        }
-        finally{
-            return corpusSize;
-        }
-    }
     
     public int getTermCount() {
         return mVocabTable.length / 2;
@@ -233,10 +205,6 @@ public class DiskSoundexIndex {
     public List<String> getFileNames() {
         return mFileNames;
     }   
-    
-    public int getCorpusSize(){
-        return mCorpusSize;
-    }
     
     public String[] getDictionary() {
         List<String> vocabList = new ArrayList<String>();
