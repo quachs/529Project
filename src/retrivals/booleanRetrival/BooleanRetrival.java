@@ -1,10 +1,10 @@
 package retrivals.booleanRetrival;
 
-import query.processor.QueryProcessor;
+import query.processor.DiskQueryProcessor;
 import query.parser.BooleanParser;
 import indexes.KGramIndex;
 import indexes.PositionalInvertedIndex;
-import indexes.SoundexIndex;
+import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +19,12 @@ public class BooleanRetrival {
 
     }
 
-    public static List<String> booleanQuery(String query, boolean searchType, KGramIndex kIndex, SoundexIndex sIndex, DiskInvertedIndex dIndex) {
+    public static List<String> booleanQuery(String query, boolean searchType, KGramIndex kIndex, DiskSoundexIndex sIndex, DiskInvertedIndex dIndex) {
 
         BooleanParser parser = new BooleanParser(dIndex, kIndex); // create the parser
         List<Integer> foundDocs = new ArrayList<Integer>(); // create a list to save found documents  
         if (searchType) {
-            foundDocs = QueryProcessor.authorQuery(query, sIndex); // save DocIds for author query
+            foundDocs = DiskQueryProcessor.authorQuery(query, sIndex); // save DocIds for author query
         } else {
             foundDocs = parser.getDocumentList(query);// if yes, parse query, save docID results 
         }

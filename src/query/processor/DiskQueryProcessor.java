@@ -2,7 +2,7 @@ package query.processor;
 
 import helper.PorterStemmer;
 import indexes.KGramIndex;
-import indexes.SoundexIndex;
+import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import java.util.ArrayList;
@@ -282,13 +282,13 @@ public class DiskQueryProcessor {
      * @param sIndex soundex index
      * @return list of document IDs that match the author's name
      */
-    public static List<Integer> authorQuery(String aQuery, SoundexIndex sIndex) {
+    public static List<Integer> authorQuery(String aQuery, DiskSoundexIndex sIndex) {
         List<Integer> result = new ArrayList<Integer>();
         TokenProcessorStream t = new TokenProcessorStream(aQuery);
         while (t.hasNextToken()) {
             String name = t.nextToken();
-            if (sIndex.getPostingsList(name) != null) {
-                result = unionList(result, sIndex.getPostingsList(name));
+            if (sIndex.getPostings(name) != null) {
+                result = unionList(result, sIndex.getPostings(name));
             }
         }
         return result;

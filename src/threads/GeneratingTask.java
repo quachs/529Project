@@ -4,7 +4,7 @@ import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.PositionalInvertedIndex;
-import indexes.SoundexIndex;
+import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import retrivals.booleanRetrival.BooleanRetrival;
 import retrivals.rankedRetrival.RankedItem;
@@ -33,7 +33,7 @@ public class GeneratingTask implements Runnable {
 
     private boolean searchType;
     private KGramIndex kgIndex;
-    private SoundexIndex sIndex;
+    private DiskSoundexIndex sIndex;
     private String query;
     private DiskInvertedIndex dIndex;
     private ArrayList<String> resultsBool;
@@ -64,7 +64,7 @@ public class GeneratingTask implements Runnable {
     /**
      * Constructor for making boolean retrival
      */
-    public GeneratingTask(String query, DiskInvertedIndex dIndex, boolean searchType, KGramIndex kIndex, SoundexIndex sIndex, ThreadFinishedCallBack finish) {
+    public GeneratingTask(String query, DiskInvertedIndex dIndex, boolean searchType, KGramIndex kIndex, DiskSoundexIndex sIndex, ThreadFinishedCallBack finish) {
         opportunities = GeneratingOpportunities.BOOLEAN;
         this.query = query;
         this.kgIndex = kIndex;

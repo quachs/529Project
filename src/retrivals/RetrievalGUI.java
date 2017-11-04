@@ -6,7 +6,7 @@ import formulas.FormEnum;
 import helper.PorterStemmer;
 import helper.ProgressDialog;
 import indexes.KGramIndex;
-import indexes.SoundexIndex;
+import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import retrivals.rankedRetrival.RankedItem;
 import threads.ThreadFinishedCallBack;
@@ -50,7 +50,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
     // indecis
     private DiskInvertedIndex dIndex;
     private KGramIndex kIndex;
-    private SoundexIndex sIndex;
+    private DiskSoundexIndex sIndex;
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
@@ -94,7 +94,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         all.addMouseListener(this);
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // get the soundex index for creating the combo box right
-        sIndex = new SoundexIndex();
+        sIndex = new DiskSoundexIndex(path);
         // deserialize the k-gram index
         this.kIndex = new KGramIndex();
         createKGramIndex();
@@ -307,7 +307,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
             if (this.comboSearchOrForms.getSelectedIndex() == 0) {
                 task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
             } else {
-                task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
+                task = new GeneratingTask(query, dIndex, true, kIndex, sIndex, this);
             }
             Thread t = new Thread(task);
             t.start();
