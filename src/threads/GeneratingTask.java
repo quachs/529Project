@@ -10,6 +10,7 @@ import retrivals.booleanRetrival.BooleanRetrival;
 import retrivals.rankedRetrival.RankedItem;
 import retrivals.rankedRetrival.RankedRetrieval;
 import query.parser.RankedParser;
+import helper.SpellingCorrection;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.*;
@@ -138,6 +139,14 @@ public class GeneratingTask implements Runnable {
             default:
                 rank = new RankedRetrieval(dIndex, form);                
                 RankedParser parser = new RankedParser(dIndex, kgIndex);
+                SpellingCorrection spellCorrect = new SpellingCorrection(query, dIndex, kgIndex);
+                if(spellCorrect.needCorrection()){
+                    String modifiedQuery = spellCorrect.getModifiedQuery();
+                    if(modifiedQuery != null){
+                        System.out.println("Did you mean: "+modifiedQuery.toUpperCase());
+                    }
+                    
+                }
                 q = parser.collectAndQueries(query);
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;

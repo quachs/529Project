@@ -2,28 +2,85 @@ package helper;
 
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
+import query.QueryTokenStream;
 import query.processor.QueryProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+/**
+ * Spelling correction module
+ *
+ */
 public class SpellingCorrection {
-    
+
     private static final double JACCARD_THRESHOLD = 0.35;
+    private static final int DF_THRESHOLD = 5;
+
+    private final DiskInvertedIndex dIndex;
+    private final KGramIndex kIndex;
+    private final String query;
+    private String[] queryTokens; // store the unprocessed tokens from the query
+    private List<Integer> correctionIndex; // index of where to do the correction
+
+    public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex) {
+        this.dIndex = dIndex;
+        this.kIndex = kIndex;
+        this.query = query;
+        queryTokens = query.split(" ");
+        correctionIndex = new ArrayList<Integer>();
+    }
 
     /**
-     * Generate a spelling correction for the given query type
+     * Return true if the query contains a term that does not exist in the index
+     * or if the document frequency is below the threshold. False otherwise.
+     * @return true if need to call spelling correction
+     */
+    public Boolean needCorrection() {
+        int queryIndex = 0;
+        QueryTokenStream s = new QueryTokenStream(query);
+        while (s.hasNextToken()) {
+            String proToken = s.nextToken();
+            if (proToken != null && !proToken.contains("*")) { // ignore wildcards and phrases
+                String term = PorterStemmer.getStem(proToken);
+                if (dIndex.getPostings(term) == null || dIndex.getPostings(term).size() < DF_THRESHOLD) {
+                    correctionIndex.add(queryIndex);
+                }
+            }
+            queryIndex++;
+        }
+
+        return correctionIndex.size() > 0;
+    }
+
+    /**
+     * Get the modified query with spelling correction
      *
-     * @param query mispelled query
-     * @param kIndex k-gram index
-     * @param diIndex positional inverted index
+     * @return modified query
+     */
+    public String getModifiedQuery() {
+
+        // Correct the misspelled token in the query
+        for (Integer index : correctionIndex) {
+            String correction = getCorrection(queryTokens[index]);
+            queryTokens[index] = correction;
+        }
+
+        // Return the modified query
+        return String.join(" ", queryTokens);
+    }
+
+    /**
+     * Generate a spelling correction for the given token
+     *
+     * @param token mispelled query token
      * @return spelling correction of the given mispelled query
      */
-    public String getCorrection(String query, DiskInvertedIndex diIndex, KGramIndex kIndex) {
+    private String getCorrection(String token) {
 
-        // Get the k-grams for the query type
-        List<String> qKGrams = getKGrams(query);
+        // Get the k-grams for the token
+        List<String> qKGrams = getKGrams(token);
 
         // Get the vocabulary types that have k-grams in common with the query
         List<String> candidates = new ArrayList<String>();
@@ -34,7 +91,7 @@ public class SpellingCorrection {
         }
 
         // Assume the first letter is correct
-        String first2Gram = "$" + Character.toString(query.charAt(0));
+        String first2Gram = "$" + Character.toString(token.charAt(0));
         if (kIndex.getPostingsList(first2Gram) != null) {
             candidates = QueryProcessor.intersectList(candidates, kIndex.getPostingsList(first2Gram));
         }
@@ -51,15 +108,11 @@ public class SpellingCorrection {
             int unionSize = qKGrams.size() + cKGrams.size() - intersection.size();
             double jCoefficient = (double) intersection.size() / unionSize;
 
-            // System.out.println(candidate + " (jco)" + jCoefficient); // TESTING 
-
             // Keep the candidates that exceed the threshold
-            if (jCoefficient > JACCARD_THRESHOLD) { 
+            if (jCoefficient > JACCARD_THRESHOLD) {
                 editDistanceCandidates.add(candidate);
             }
         }
-        
-        // System.out.println("edit: "+editDistanceCandidates); // TESTING 
 
         // Return if no further filtering is necessary
         if (editDistanceCandidates.isEmpty()) {
@@ -71,11 +124,11 @@ public class SpellingCorrection {
         // Select the candidate(s) with the lowest edit distance
         List<String> finalCandidates = new ArrayList<String>();
         finalCandidates.add(editDistanceCandidates.get(0)); // set the first candidate as the min
-        int minDistance = editDistance(query, editDistanceCandidates.get(0));
-        // System.out.println(editDistanceCandidates.get(0) + " (edit)" + minDistance); // TESTING 
+        int minDistance = editDistance(token, editDistanceCandidates.get(0));
+
+        // Compare the edit distance with the remaining candidates
         for (int i = 1; i < editDistanceCandidates.size(); i++) {
-            int distance = editDistance(query, editDistanceCandidates.get(i));
-            // System.out.println(editDistanceCandidates.get(i) + " (edit)" + distance); // TESTING 
+            int distance = editDistance(token, editDistanceCandidates.get(i));
             if (distance < minDistance) {
                 minDistance = distance; // update the lowest distance and candidate
                 finalCandidates.clear(); // update the candidates list
@@ -89,10 +142,12 @@ public class SpellingCorrection {
         if (finalCandidates.size() > 1) {
             String type = finalCandidates.get(0); // set the first candidate as the max
             String term = PorterStemmer.getStem(type);
-            int maxDocFrequency = diIndex.getPostings(term).size();
+            int maxDocFrequency = dIndex.getPostings(term).size();
+            
+            // Compare the df with the remaining candidates
             for (int i = 1; i < finalCandidates.size(); i++) {
                 term = PorterStemmer.getStem(finalCandidates.get(i));
-                int docFrequency = diIndex.getPostings(term).size();
+                int docFrequency = dIndex.getPostings(term).size();
                 if (docFrequency > maxDocFrequency) {
                     maxDocFrequency = docFrequency; // update the highest df
                     type = finalCandidates.get(i); // update the type to be returned
