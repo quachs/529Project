@@ -49,7 +49,7 @@ public class UserInterface extends JFrame {
                 optionsBeginning[1]);
         if (resultBeginning == 0) {
             path = chooseDirectory();
-            new IndexingGUI(path);
+            IndexingGUI indexingGUI = new IndexingGUI(path);
         } else //Custom button text
         {
             path = chooseDirectory();            
@@ -64,7 +64,7 @@ public class UserInterface extends JFrame {
                     optionsRetrival,
                     optionsRetrival[1]);
             if (resultRetrival == 0) {
-                new RetrievalGUI('b', null, path.toString());
+                RetrievalGUI retrievalGUI = new RetrievalGUI('b', null, path.toString());
             } else {
                 Object[] optionsForm = {"Default",
                     "Traditional", "Okapi BM25", "Wacky"};
@@ -76,7 +76,7 @@ public class UserInterface extends JFrame {
                         img,
                         optionsForm,
                         optionsForm[1]);
-                new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString());
+                RetrievalGUI retrievalGUI = new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString());
             }
         }
     }

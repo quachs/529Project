@@ -43,6 +43,7 @@ public class GeneratingTask implements Runnable {
     private ThreadFinishedCallBack callback;
     private RankedItem[] resultsRank;
     private FormEnum form;
+    private SpellingCorrection spellCorrect;
 
     /**
      * Constructor for making a ranked retrival
@@ -139,14 +140,7 @@ public class GeneratingTask implements Runnable {
             default:
                 rank = new RankedRetrieval(dIndex, form);                
                 RankedParser parser = new RankedParser(dIndex, kgIndex);
-                SpellingCorrection spellCorrect = new SpellingCorrection(query, dIndex, kgIndex);
-                if(spellCorrect.needCorrection()){
-                    String modifiedQuery = spellCorrect.getModifiedQuery();
-                    if(modifiedQuery != null){
-                        System.out.println("Did you mean: "+modifiedQuery.toUpperCase());
-                    }
-                    
-                }
+                spellCorrect = new SpellingCorrection(query, dIndex, kgIndex);
                 q = parser.collectAndQueries(query);
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;
@@ -169,6 +163,10 @@ public class GeneratingTask implements Runnable {
 
     public RankedRetrieval getRank() {
         return rank;
+    }
+
+    public SpellingCorrection getSpellCorrect() {
+        return spellCorrect;
     }
 
 }

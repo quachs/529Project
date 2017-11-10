@@ -5,6 +5,7 @@ import helper.DisplayJson;
 import formulas.FormEnum;
 import helper.PorterStemmer;
 import helper.ProgressDialog;
+import helper.SpellingCorrection;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
@@ -220,7 +221,8 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 if (this.comboRetrivalType.getSelectedIndex() == 0) {
                     booleanRetrival();
                 } else {
-                    rankedRetrival();
+                    String query = this.tQuery.getText(); // save the query
+                    rankedRetrival(query);
                 }
             }
             if (e.getSource() == stem) { // stemming is clicked
@@ -240,7 +242,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 }
             }
             if (e.getSource() == newDic) {
-                int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?", 
+                int res = JOptionPane.showConfirmDialog(this.frame, "Do you really want to index a new directory?",
                         "Index new directory", 2, JOptionPane.INFORMATION_MESSAGE, this.img);
                 if (res == 0) {
                     this.frame.setVisible(false);
@@ -323,12 +325,11 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         }
     }
 
-    private void rankedRetrival() {
-        progressDialog.setVisible(true); 
-        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());        
-        String query = this.tQuery.getText(); // save the query
+    private void rankedRetrival(String query) {
+        progressDialog.setVisible(true);
+        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
         if (query.length() > 0) {
-            
+
             if (dIndex.getFileNames().size() < 10) {
                 task = new GeneratingTask(dIndex, kIndex, query, dIndex.getFileNames().size(), this, form);
             } else {
@@ -430,12 +431,30 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 break;
             default:
                 RankedItem[] res = task.getResultsRank();
+                SpellingCorrection spellCorrect = task.getSpellCorrect();
+                if (spellCorrect.needCorrection()) {
+                    String modifiedQuery = spellCorrect.getModifiedQuery();
+                    if (modifiedQuery != null) {
+                        Object[] options = {"Yes", "No"};
+                        int spellingCorrection = JOptionPane.showOptionDialog(this.frame,
+                                "Did you mean: " + modifiedQuery,
+                                "Spelling correction needed",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.PLAIN_MESSAGE,
+                                img, options, options[1]);
+                        if (spellingCorrection == 0) { // Yes
+                            rankedRetrival(modifiedQuery);
+                            this.tQuery.setText(modifiedQuery);
+                            return;
+                        }
+                    }
+                }
                 if (res == null) {
                     JLabel l = new JLabel("No document found!");
                     this.foundDocArea.add(l);
                 } else {
                     for (RankedItem item : res) {
-                        String output = String.format("%.6f: %s", item.getA_d(),dIndex.getFileNames().get(item.getDocID()));
+                        String output = String.format("%.6f: %s", item.getA_d(), dIndex.getFileNames().get(item.getDocID()));
                         JLabel l = new JLabel(output);
                         l.addMouseListener(this);
                         this.labels.add(l);
