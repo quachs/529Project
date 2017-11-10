@@ -43,22 +43,28 @@ public class RankedRetrieval {
     }
 
     private double calcWQT(List<DiskPosting> tDocIDs) {
-        System.out.println("FormEnum: "+formEnum);
+        System.out.println("FormEnum: " + formEnum);
         double t = form.calcWQT(tDocIDs);
-        System.out.println("WQT: "+t);
+        System.out.println("RR: WQT: " + t);
         return t;
     }
 
     //Adapted from Sylvia's IndexWriter.buildWeightFile;
     private double calcWDT(DiskPosting dPosting) {
+        if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
+            System.out.println("RR: WDT for " + dPosting.getDocumentID() + ": " + form.calcWDT(dPosting));
+        }
         return form.calcWDT(dPosting);
     }
 
     private double getL_D(int docID) {
+        if (dIndex.getFileNames().get(docID).equals("769.json")) {
+            System.out.println("RR: L_D for " + docID + ": " + form.getL_D(docID));
+        }
         return form.getL_D(docID);
     }
 
-    private static void accumulate(HashMap<Integer, Double> acc, int docID, double A_d) {
+    private static void accumulate(HashMap<DiskPosting, Double> acc, DiskPosting docID, double A_d) {
 
         if (acc.containsKey(docID)) {
             double newA_d = acc.get(docID) + A_d;
@@ -70,12 +76,12 @@ public class RankedRetrieval {
 
     public RankedItem[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
         List<DiskPosting> dPostings = null;
-        HashMap<Integer, Double> acc = new HashMap<Integer, Double>();
+        HashMap<DiskPosting, Double> acc = new HashMap<DiskPosting, Double>();
         PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
 
         for (String queryLit : query.getLiterals()) {
-            System.out.println("Literal: " +queryLit);
+            System.out.println("Literal: " + queryLit);
             //Collect A_d values for each document, add to priority queue
             if (queryLit.contains("*")) {
                 List<DiskPosting> wcResults = DiskQueryProcessor.wildcardQuery(queryLit, dIndex, kIndex);
@@ -92,28 +98,27 @@ public class RankedRetrieval {
 
                 for (DiskPosting dPosting : dPostings) {
                     double newAccumulator = calcWDT(dPosting) * WQT;
-                    accumulate(acc, dPosting.getDocumentID(), newAccumulator);
+                    accumulate(acc, dPosting, newAccumulator);
+                    if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
+                        System.out.println("RR: Accumulator for " + dPosting.getDocumentID() + ": " + acc.get(dPosting));
+                    }
                 }
             }
         }
         this.sizeOfFoundDocs = acc.size();
-        Integer[] relevantDocuments = new Integer[acc.size()];
+        DiskPosting[] relevantDocuments = new DiskPosting[acc.size()];
         acc.keySet().toArray(relevantDocuments);
 
-        for (int relevantDocument : relevantDocuments) {
+        for (DiskPosting relevantDocument : relevantDocuments) {
 
             double accumulator = acc.get(relevantDocument);
             if (accumulator > 0.0) {
                 if (form instanceof OkapiForm) {
-                    for (DiskPosting dPosting : dPostings) {
-                        if (acc.containsKey(dPosting.getDocumentID())) {
-                            ((OkapiForm) form).setdPosting(dPosting);
-                        }
-                    }
+                    ((OkapiForm) form).setdPosting(relevantDocument);
                 }
-                double docWeight = getL_D(relevantDocument);
+                double docWeight = getL_D(relevantDocument.getDocumentID());
                 double rank = accumulator / docWeight;
-                A_dQueue.add(new RankedItem(rank, relevantDocument));
+                A_dQueue.add(new RankedItem(rank, relevantDocument.getDocumentID()));
             }
         }
 
@@ -137,4 +142,8 @@ public class RankedRetrieval {
         return sizeOfFoundDocs;
     }
 
+    public void testDiskIndex() {
+        System.out.println("DiskIndex 744: " + dIndex.getFileNames().get(744));
+        System.out.println("DiskIndex 999: " + dIndex.getFileNames().get(999));
+    }
 }
