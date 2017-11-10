@@ -41,7 +41,7 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import start.UserInterface;
 
-public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinishedCallBack {
+public class RetrievalGUI extends Thread implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
     private JFrame frame; // frame of the search engine, saved for restarting it
     private String path; // for saving the path
@@ -77,17 +77,26 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
 
     private FormEnum form;
     private GeneratingTask task;
+    private char retr;
+
+    private ThreadFinishedCallBack finishCreatingGUI;
 
     /**
      * Constructor for new User Interface for the search engine
      */
-    public RetrievalGUI(char retr, FormEnum form, String path) {
+    public RetrievalGUI(char retr, FormEnum form, String path, ThreadFinishedCallBack finish) {
+        this.finishCreatingGUI = finish;
         this.dIndex = new DiskInvertedIndex(path);
         this.labels = new ArrayList<>(); // initialize labels array
         this.frame = new JFrame(); // initialize frame
         this.form = form;
         this.path = path;
+        this.retr = retr;
+        this.start();
+    }
 
+    @Override
+    public void run() {
         // add mouseListener for the buttons
         bSubmit.addMouseListener(this);
         stem.addMouseListener(this);
@@ -100,7 +109,6 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         this.kIndex = new KGramIndex();
         createKGramIndex();
         createUI(retr, form);
-
     }
 
     private void createKGramIndex() {
@@ -195,6 +203,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         this.frame.pack();
         this.frame.setLocationRelativeTo(null);
         this.frame.setVisible(true);
+        this.finishCreatingGUI.notifyThreadFinished();
     }
 
     /**
@@ -415,16 +424,16 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 ArrayList<String> results = task.getResultsBool();
                 boolean number = true;
                 String modified = spellingCorrection();
-                    if (modified != null) {
-                        this.tQuery.setText(modified);
-                        booleanRetrival();
-                        return;
-                    }
+                if (modified != null) {
+                    this.tQuery.setText(modified);
+                    booleanRetrival();
+                    return;
+                }
                 if (results.get(0).equals("No document found.")) {
                     this.foundDocArea.add(new JLabel("No document found."));
                     number = false;
                 } else {
-                    
+
                     for (String s : results) {
                         JLabel l = new JLabel(s);
                         l.addMouseListener(this);

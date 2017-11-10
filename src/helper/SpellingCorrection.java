@@ -23,22 +23,12 @@ public class SpellingCorrection {
     private final String query;
     private String[] queryTokens; // store the unprocessed tokens from the query
     private List<Integer> correctionIndex; // index of where to do the correction
-    private int resultsSize;
 
     public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex) {
         this.dIndex = dIndex;
         this.kIndex = kIndex;
         this.query = query;
         queryTokens = query.split(" ");
-        correctionIndex = new ArrayList<Integer>();
-    }
-
-    public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex, int resultsSize) {
-        this.dIndex = dIndex;
-        this.kIndex = kIndex;
-        this.query = query;
-        queryTokens = query.split(" ");
-        this.resultsSize = resultsSize;
         correctionIndex = new ArrayList<Integer>();
     }
 

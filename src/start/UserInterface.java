@@ -12,16 +12,19 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import threads.ThreadFinishedCallBack;
+import helper.ProgressDialog;
 
 /**
  * UserInterface Implements MouseListener for user input handling
  *
  * @author Sandra
  */
-public class UserInterface extends JFrame {
+public class UserInterface extends JFrame implements ThreadFinishedCallBack{
 
     private Path path = Paths.get("");
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
+    private ProgressDialog progress;
 
     public UserInterface() {
         // Change look and feel of swing components
@@ -37,6 +40,7 @@ public class UserInterface extends JFrame {
                 | InstantiationException | UnsupportedLookAndFeelException e) {
             System.err.println(e.toString());
         }
+        progress = new ProgressDialog("Creating view");
         Object[] optionsBeginning = {"Indexing a corpus",
             "Process Queries"};
         int resultBeginning = JOptionPane.showOptionDialog(this,
@@ -64,7 +68,8 @@ public class UserInterface extends JFrame {
                     optionsRetrival,
                     optionsRetrival[1]);
             if (resultRetrival == 0) {
-                RetrievalGUI retrievalGUI = new RetrievalGUI('b', null, path.toString());
+                progress.setVisible(true);
+                RetrievalGUI retrievalGUI = new RetrievalGUI('b', null, path.toString(), this);
             } else {
                 Object[] optionsForm = {"Default",
                     "Traditional", "Okapi BM25", "Wacky"};
@@ -76,7 +81,8 @@ public class UserInterface extends JFrame {
                         img,
                         optionsForm,
                         optionsForm[1]);
-                RetrievalGUI retrievalGUI = new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString());
+                progress.setVisible(true);
+                RetrievalGUI retrievalGUI = new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString(), this);
             }
         }
     }
@@ -106,5 +112,10 @@ public class UserInterface extends JFrame {
             System.exit(0); // Close the system if user presses x or cancel
             return null;
         }
+    }
+
+    @Override
+    public void notifyThreadFinished() {
+        this.progress.setVisible(false);
     }
 }
