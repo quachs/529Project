@@ -20,16 +20,27 @@ public class SpellingCorrection {
 
     private final DiskInvertedIndex dIndex;
     private final KGramIndex kIndex;
-    private final String query;
     private String[] queryTokens; // store the unprocessed tokens from the query
     private List<Integer> correctionIndex; // index of where to do the correction
 
     public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex) {
         this.dIndex = dIndex;
         this.kIndex = kIndex;
-        this.query = query;
         queryTokens = query.split(" ");
         correctionIndex = new ArrayList<Integer>();
+        
+        // Add the index of the query for terms that need spelling correction
+        int queryIndex = 0;
+        QueryTokenStream s = new QueryTokenStream(query);
+        while (s.hasNextToken()) {
+            String term = s.nextToken();
+            if (term != null && !term.contains("*")) { // ignore wildcards
+                if (dIndex.getPostings(term) == null || dIndex.getPostings(term).size() < DF_THRESHOLD) {
+                    correctionIndex.add(queryIndex);
+                }
+            }
+            queryIndex++;
+        }
     }
 
     /**
@@ -39,19 +50,7 @@ public class SpellingCorrection {
      * @return true if need to call spelling correction
      */
     public Boolean needCorrection() {
-        int queryIndex = 0;
-        QueryTokenStream s = new QueryTokenStream(query);
-        while (s.hasNextToken()) {
-            String proToken = s.nextToken();
-            if (proToken != null && !proToken.contains("*")) { // ignore wildcards and phrases
-                String term = PorterStemmer.getStem(proToken);
-                if (dIndex.getPostings(term) == null || dIndex.getPostings(term).size() < DF_THRESHOLD) {
-                    correctionIndex.add(queryIndex);
-                }
-            }
-            queryIndex++;
-        }
-        return correctionIndex.size() > 0;
+        return !correctionIndex.isEmpty();
     }
 
     /**
