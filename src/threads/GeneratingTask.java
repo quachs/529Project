@@ -140,7 +140,6 @@ public class GeneratingTask implements Runnable {
             default:
                 rank = new RankedRetrieval(dIndex, form);                
                 RankedParser parser = new RankedParser(dIndex, kgIndex);
-                spellCorrect = new SpellingCorrection(query, dIndex, kgIndex);
                 q = parser.collectAndQueries(query);
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;

@@ -221,8 +221,7 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 if (this.comboRetrivalType.getSelectedIndex() == 0) {
                     booleanRetrival();
                 } else {
-                    String query = this.tQuery.getText(); // save the query
-                    rankedRetrival(query);
+                    rankedRetrival();
                 }
             }
             if (e.getSource() == stem) { // stemming is clicked
@@ -325,7 +324,8 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         }
     }
 
-    private void rankedRetrival(String query) {
+    private void rankedRetrival() {
+        String query = this.tQuery.getText();
         progressDialog.setVisible(true);
         form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
         if (query.length() > 0) {
@@ -413,41 +413,36 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
                 break;
             case BOOLEAN:
                 ArrayList<String> results = task.getResultsBool();
-                boolean num = true;
-                for (String s : results) {
-                    JLabel l = new JLabel(s);
-                    if (l.getText().equals("No document found.")) {
-                        this.foundDocArea.add(l);
-                        num = false;
-                        break;
+                boolean number = true;
+                String modified = spellingCorrection();
+                    if (modified != null) {
+                        this.tQuery.setText(modified);
+                        booleanRetrival();
+                        return;
                     }
-                    l.addMouseListener(this);
-                    this.labels.add(l);
-                    this.foundDocArea.add(l);
+                if (results.get(0).equals("No document found.")) {
+                    this.foundDocArea.add(new JLabel("No document found."));
+                    number = false;
+                } else {
+                    
+                    for (String s : results) {
+                        JLabel l = new JLabel(s);
+                        l.addMouseListener(this);
+                        this.labels.add(l);
+                        this.foundDocArea.add(l);
+                    }
                 }
                 this.number.setText(this.docs);
                 this.numberRes.setText(this.labels.size() + "");
-                this.num.setVisible(num);
+                this.num.setVisible(number);
                 break;
             default:
                 RankedItem[] res = task.getResultsRank();
-                SpellingCorrection spellCorrect = task.getSpellCorrect();
-                if (spellCorrect.needCorrection()) {
-                    String modifiedQuery = spellCorrect.getModifiedQuery();
-                    if (modifiedQuery != null) {
-                        Object[] options = {"Yes", "No"};
-                        int spellingCorrection = JOptionPane.showOptionDialog(this.frame,
-                                "Did you mean: " + modifiedQuery,
-                                "Spelling correction needed",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.PLAIN_MESSAGE,
-                                img, options, options[1]);
-                        if (spellingCorrection == 0) { // Yes
-                            rankedRetrival(modifiedQuery);
-                            this.tQuery.setText(modifiedQuery);
-                            return;
-                        }
-                    }
+                String modifiedQuery = spellingCorrection();
+                if (modifiedQuery != null) {
+                    this.tQuery.setText(modifiedQuery);
+                    rankedRetrival();
+                    return;
                 }
                 if (res == null) {
                     JLabel l = new JLabel("No document found!");
@@ -471,5 +466,25 @@ public class RetrievalGUI implements MouseListener, ActionListener, ThreadFinish
         this.foundDocArea.setVisible(true);
         // reload the view again by packing the frame
         this.frame.pack();
+    }
+
+    private String spellingCorrection() {
+        SpellingCorrection spellCorrect = new SpellingCorrection(this.tQuery.getText(), dIndex, kIndex);
+        if (spellCorrect.needCorrection()) {
+            String modifiedQuery = spellCorrect.getModifiedQuery();
+            if (modifiedQuery != null) {
+                Object[] options = {"Yes", "No"};
+                int pane = JOptionPane.showOptionDialog(this.frame,
+                        "Did you mean: " + modifiedQuery,
+                        "Spelling correction needed",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.PLAIN_MESSAGE,
+                        img, options, options[1]);
+                if (pane == 0) { // Yes
+                    return modifiedQuery;
+                }
+            }
+        }
+        return null;
     }
 }

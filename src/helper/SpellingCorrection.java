@@ -23,6 +23,7 @@ public class SpellingCorrection {
     private final String query;
     private String[] queryTokens; // store the unprocessed tokens from the query
     private List<Integer> correctionIndex; // index of where to do the correction
+    private int resultsSize;
 
     public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex) {
         this.dIndex = dIndex;
@@ -32,9 +33,19 @@ public class SpellingCorrection {
         correctionIndex = new ArrayList<Integer>();
     }
 
+    public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex, int resultsSize) {
+        this.dIndex = dIndex;
+        this.kIndex = kIndex;
+        this.query = query;
+        queryTokens = query.split(" ");
+        this.resultsSize = resultsSize;
+        correctionIndex = new ArrayList<Integer>();
+    }
+
     /**
      * Return true if the query contains a term that does not exist in the index
      * or if the document frequency is below the threshold. False otherwise.
+     *
      * @return true if need to call spelling correction
      */
     public Boolean needCorrection() {
@@ -50,7 +61,6 @@ public class SpellingCorrection {
             }
             queryIndex++;
         }
-
         return correctionIndex.size() > 0;
     }
 
@@ -143,7 +153,7 @@ public class SpellingCorrection {
             String type = finalCandidates.get(0); // set the first candidate as the max
             String term = PorterStemmer.getStem(type);
             int maxDocFrequency = dIndex.getPostings(term).size();
-            
+
             // Compare the df with the remaining candidates
             for (int i = 1; i < finalCandidates.size(); i++) {
                 term = PorterStemmer.getStem(finalCandidates.get(i));
