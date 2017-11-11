@@ -40,7 +40,6 @@ public class QueryProcessor {
         if (preLiteral.contains("\"") && !preLiteral.contains("near")) {
             masterList = phraseQuery(preLiteral, posIndex);
         } else if (preLiteral.contains("*")) {
-            System.out.println("preliteral: " + preLiteral);
             masterList = QueryProcessor.wildcardQuery(preLiteral, posIndex, kgIndex);
         } else if (preLiteral.contains("near")) {
             masterList = nearQuery(preLiteral, posIndex);
@@ -56,7 +55,6 @@ public class QueryProcessor {
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
                 if (currentLiteral.contains("\"")) {
-                    System.out.println("current literal: " + currentLiteral);
                     intermediateList = phraseQuery(currentLiteral, posIndex);
                     if (masterList != null && intermediateList != null) {
                         masterList = intersectList(masterList, intermediateList);

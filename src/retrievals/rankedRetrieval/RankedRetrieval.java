@@ -49,7 +49,7 @@ public class RankedRetrieval {
         return t;
     }
 
-    //Adapted from Sylvia's IndexWriter.buildWeightFile;
+    // Adapted from Sylvia's IndexWriter.buildWeightFile;
     private double calcWDT(DiskPosting dPosting) {
         if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
             System.out.println("RR: WDT for " + dPosting.getDocumentID() + ": " + form.calcWDT(dPosting));
@@ -64,25 +64,33 @@ public class RankedRetrieval {
         return form.getL_D(docID);
     }
 
-    private static void accumulate(HashMap<DiskPosting, Double> acc, DiskPosting docID, double A_d) {
+    /**
+     * Term-at-a-time scoring algorithm
+     * as presented during lecture
+     * 
+     * @param accumulators
+     * @param docID
+     * @param accDocScore 
+     */
+    private static void accumulate(HashMap<DiskPosting, Double> accumulators, DiskPosting docID, double accDocScore) {
 
-        if (acc.containsKey(docID)) {
-            double newA_d = acc.get(docID) + A_d;
-            acc.put(docID, newA_d);
+        if (accumulators.containsKey(docID)) {
+            double updatedAccumulation = accumulators.get(docID) + accDocScore;
+            accumulators.put(docID, updatedAccumulation);
         } else {
-            acc.put(docID, A_d);
+            accumulators.put(docID, accDocScore);
         }
     }
 
     public RankedItem[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
         List<DiskPosting> dPostings = null;
-        HashMap<DiskPosting, Double> acc = new HashMap<DiskPosting, Double>();
-        PriorityQueue<RankedItem> A_dQueue = new PriorityQueue<RankedItem>();
+        HashMap<DiskPosting, Double> accumulators = new HashMap<DiskPosting, Double>();
+        PriorityQueue<RankedItem> rankedQueue = new PriorityQueue<RankedItem>();
         List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
 
         for (String queryLit : query.getLiterals()) {
             System.out.println("Literal: " + queryLit);
-            //Collect A_d values for each document, add to priority queue
+            // Collect accDocScore values for each document, add to priority queue
             if (queryLit.contains("*")) {
                 List<DiskPosting> wcResults = DiskQueryProcessor.wildcardQuery(queryLit, dIndex, kIndex);
                 dPostings = new ArrayList<DiskPosting>(wcResults.size());
@@ -94,42 +102,46 @@ public class RankedRetrieval {
             if (dPostings != null) {
 
                 double WQT = calcWQT(dPostings);
-                double A_d = 0.0;
+                double accDocScore = 0.0;
 
                 for (DiskPosting dPosting : dPostings) {
                     double newAccumulator = calcWDT(dPosting) * WQT;
-                    accumulate(acc, dPosting, newAccumulator);
+                    accumulate(accumulators, dPosting, newAccumulator);
                     if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
-                        System.out.println("RR: Accumulator for " + dPosting.getDocumentID() + ": " + acc.get(dPosting));
+                        System.out.println("RR: Accumulator for " + dPosting.getDocumentID() + ": " + accumulators.get(dPosting));
                     }
                 }
             }
         }
-        this.sizeOfFoundDocs = acc.size();
-        DiskPosting[] relevantDocuments = new DiskPosting[acc.size()];
-        acc.keySet().toArray(relevantDocuments);
+        this.sizeOfFoundDocs = accumulators.size();
+        DiskPosting[] relevantDocuments = new DiskPosting[accumulators.size()];
+        accumulators.keySet().toArray(relevantDocuments);
 
         for (DiskPosting relevantDocument : relevantDocuments) {
 
-            double accumulator = acc.get(relevantDocument);
+            double accumulator = accumulators.get(relevantDocument);
             if (accumulator > 0.0) {
                 if (form instanceof OkapiForm) {
                     ((OkapiForm) form).setdPosting(relevantDocument);
                 }
                 double docWeight = getL_D(relevantDocument.getDocumentID());
                 double rank = accumulator / docWeight;
-                A_dQueue.add(new RankedItem(rank, relevantDocument.getDocumentID()));
+                rankedQueue.add(new RankedItem(rank, relevantDocument.getDocumentID()));
             }
         }
 
-        if (A_dQueue.isEmpty()) {
+        if (rankedQueue.isEmpty()) {
             return null;
         }
-        if (acc.size() < k) {
-            k = acc.size();
+        
+        // Adjust size of result set if there are
+        // fewer results than the k value.
+        if (accumulators.size() < k) {
+            k = accumulators.size();
         }
+        
         for (int i = 0; i < k; i++) {
-            RankedItem ri = A_dQueue.poll();
+            RankedItem ri = rankedQueue.poll();
             returnedRIs.add(ri);
         }
 

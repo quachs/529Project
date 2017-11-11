@@ -39,7 +39,6 @@ public class DiskQueryProcessor {
         if (preLiteral.contains("\"") && !preLiteral.contains("near")) {
             masterList = phraseQuery(preLiteral, dIndex);
         } else if (preLiteral.contains("*")) {
-            System.out.println("preliteral: " + preLiteral);
             masterList = wildcardQuery(preLiteral, dIndex, kgIndex);
         } else if (preLiteral.contains("near")) {
             masterList = nearQuery(preLiteral, dIndex);
@@ -55,7 +54,6 @@ public class DiskQueryProcessor {
                 String currentLiteral = andQueryLiterals.getLiterals().get(i);
 
                 if (currentLiteral.contains("\"")) {
-                    System.out.println("current literal: " + currentLiteral);
                     intermediateList = phraseQuery(currentLiteral, dIndex);
                     if (masterList != null && intermediateList != null) {
                         masterList = intersectList(masterList, intermediateList);
@@ -222,7 +220,6 @@ public class DiskQueryProcessor {
         } else { // return empty list
             return phraseList;
         }
-        System.out.println("returned phrase list size: " + phraseList.size());
         return phraseList;
     }
     

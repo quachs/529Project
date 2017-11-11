@@ -4,7 +4,10 @@ import indexes.diskPart.DiskPosting;
 import java.lang.*;
 
 /**
- *
+ * 
+ * A class that maintains an accumulated document score for 
+ * every relevant document found through a ranked query.
+ * 
  * @author Sean
  */
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Comparable.html
@@ -50,10 +53,6 @@ public class RankedItem implements Comparable<RankedItem>{
         else {
             return 1;
         }
-        
-        //Sylvia's suggestion; there may be rounding errors,
-        //however, so she advises that we don't use this, after all.
-        //return (int)(this.A_d - ri.A_d);
-        
+                
     }
 }
