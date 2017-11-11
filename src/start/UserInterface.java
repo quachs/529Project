@@ -41,7 +41,7 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
             System.err.println(e.toString());
         }
         progress = new ProgressDialog("Creating view");
-        Object[] optionsBeginning = {"Indexing a corpus",
+        Object[] optionsBeginning = {"Index a corpus",
             "Process Queries"};
         int resultBeginning = JOptionPane.showOptionDialog(this,
                 "What do you want to do?",
@@ -57,11 +57,11 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
         } else //Custom button text
         {
             path = chooseDirectory();            
-            Object[] optionsRetrival = {"Boolean Retrival",
+            Object[] optionsRetrival = {"Boolean Retrieval",
                 "Ranked Retrieval"};
             int resultRetrival = JOptionPane.showOptionDialog(this,
-                    "Please choose retrival type",
-                    "Retrival Type",
+                    "Please choose retrieval type",
+                    "Retrieval Type",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.PLAIN_MESSAGE,
                     img,
@@ -74,8 +74,8 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
                 Object[] optionsForm = {"Default",
                     "Traditional", "Okapi BM25", "Wacky"};
                 int resultFormular = JOptionPane.showOptionDialog(this,
-                        "Please choose the type of formular",
-                        "Formular",
+                        "Please choose the type of formula",
+                        "Formula",
                         JOptionPane.YES_NO_CANCEL_OPTION,
                         JOptionPane.PLAIN_MESSAGE,
                         img,

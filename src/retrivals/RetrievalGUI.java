@@ -55,7 +55,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
 
     // Strings for easily changing the text of the label number.
     private final String docs = "Number of found Documents: ";
-    private final String voc = "Number of Vocabulary found in corpus: ";
+    private final String voc = "Size of Vocabulary found in corpus: ";
 
     // UI elements
     private JPanel foundDocArea = new JPanel(); // area which shows found documents
@@ -71,7 +71,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
 
     // initialize dialog with "Indexing..." as title
     private JComboBox comboSearchOrForms = new JComboBox(); // combo box for search types (normal, author)    
-    private JComboBox comboRetrivalType = new JComboBox(); // combo box for retrival types (boolean/ ranked)
+    private JComboBox comboRetrievalType = new JComboBox(); // combo box for retrival types (boolean/ ranked)
     private List<JLabel> labels; // List of results that are shown in the foundDocArea
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
 
@@ -132,7 +132,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         this.frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
         // Components that do not need to be used or changed again
         lComboTitel = new JLabel("Choose search type"); // create label that explains what combo box options
-        JLabel lComboRetrival = new JLabel("Choose retrival type"); // create label that explains what combo box options
+        JLabel lComboRetrieval = new JLabel("Choose retrieval type"); // create label that explains what combo box options
         JLabel lQuery = new JLabel("Enter the Query"); // create label for showing what to enter in the text box
         JPanel buttons = new JPanel(new FlowLayout()); // create panel fo all buttons
 
@@ -141,10 +141,10 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         // Modify components
         lQuery.setAlignmentX(Component.CENTER_ALIGNMENT); // component in the center
 
-        this.comboRetrivalType.addItem("Boolean Retrival");
-        this.comboRetrivalType.addItem("Ranked Retrival");
+        this.comboRetrievalType.addItem("Boolean Retrieval");
+        this.comboRetrievalType.addItem("Ranked Retrieval");
         if (retr == 'b') { // b is boolean retrival, is firt entry in combobox.
-            this.comboRetrivalType.setSelectedIndex(0); // set seletion to boolean
+            this.comboRetrievalType.setSelectedIndex(0); // set seletion to boolean
             this.lComboTitel.setText("Choose search type");
             this.comboSearchOrForms.removeAllItems(); // clear combo (important after new directory is processed)
             this.comboSearchOrForms.addItem("Normal search"); // normal search is always available as search type
@@ -152,8 +152,8 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 this.comboSearchOrForms.addItem("Search by author"); // author search only if there is any author saved in sIndex
             }
         } else {
-            this.comboRetrivalType.setSelectedIndex(1); // seat seletion to ranked
-            this.lComboTitel.setText("Choose formular for ranked retrival");
+            this.comboRetrievalType.setSelectedIndex(1); // seat seletion to ranked
+            this.lComboTitel.setText("Choose formula for ranked retrieval");
             this.comboSearchOrForms.removeAllItems(); // clear combo
             this.comboSearchOrForms.addItem(FormEnum.DEFAULT);
             this.comboSearchOrForms.addItem(FormEnum.TFIDF);
@@ -161,14 +161,14 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
             this.comboSearchOrForms.addItem(FormEnum.WACKY);
             this.comboSearchOrForms.setSelectedIndex(form.getID());
         }
-        this.comboRetrivalType.addActionListener(this);
+        this.comboRetrievalType.addActionListener(this);
 
         // Create combo boxes next to each other
         JPanel combos = new JPanel(new GridLayout(2, 2));
         // add all components to frame
-        combos.add(lComboRetrival);
+        combos.add(lComboRetrieval);
         combos.add(lComboTitel);
-        combos.add(comboRetrivalType);
+        combos.add(comboRetrievalType);
         combos.add(comboSearchOrForms);
 
         // add components to panel buttons
@@ -227,10 +227,10 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
 
                 // Put all the calculation into the background thread.
                 //GeneratingTask t = new GeneratingTask();
-                if (this.comboRetrivalType.getSelectedIndex() == 0) {
-                    booleanRetrival();
+                if (this.comboRetrievalType.getSelectedIndex() == 0) {
+                    booleanRetrieval();
                 } else {
-                    rankedRetrival();
+                    rankedRetrieval();
                 }
             }
             if (e.getSource() == stem) { // stemming is clicked
@@ -310,7 +310,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         }
     }
 
-    private void booleanRetrival() {
+    private void booleanRetrieval() {
         progressDialog.setVisible(true); // close the dialog
         String query = this.tQuery.getText(); // save the query
         if (query.length() > 0) {
@@ -333,7 +333,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         }
     }
 
-    private void rankedRetrival() {
+    private void rankedRetrieval() {
         String query = this.tQuery.getText();
         progressDialog.setVisible(true);
         form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
@@ -384,17 +384,17 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (this.comboRetrivalType.getSelectedIndex() == 0) {
-            //this.comboRetrivalType.setSelectedIndex(0);
-            this.lComboTitel.setText("Choose search type");
+        if (this.comboRetrievalType.getSelectedIndex() == 0) {
+            //this.comboRetrievalType.setSelectedIndex(0);
+            this.lComboTitel.setText("Choose search type: ");
             this.comboSearchOrForms.removeAllItems(); // clear combo (important after new directory is processed)
             this.comboSearchOrForms.addItem("Normal search"); // normal search is always available as search type
             if (sIndex.getTermCount() > 0) {
                 this.comboSearchOrForms.addItem("Search by author"); // author search only if there is any author saved in sIndex
             }
         } else {
-            //this.comboRetrivalType.setSelectedIndex(1);
-            this.lComboTitel.setText("Choose formular for ranked retrival");
+            //this.comboRetrievalType.setSelectedIndex(1);
+            this.lComboTitel.setText("Choose formular for ranked retrieval");
             this.comboSearchOrForms.removeAllItems(); // clear combo
             this.comboSearchOrForms.removeAllItems(); // clear combo
             this.comboSearchOrForms.addItem(FormEnum.DEFAULT);
@@ -426,11 +426,11 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 String modified = spellingCorrection();
                 if (modified != null) {
                     this.tQuery.setText(modified);
-                    booleanRetrival();
+                    booleanRetrieval();
                     return;
                 }
-                if (results.get(0).equals("No document found.")) {
-                    this.foundDocArea.add(new JLabel("No document found."));
+                if (results.get(0).equals("No documents found.")) {
+                    this.foundDocArea.add(new JLabel("No documents found."));
                     number = false;
                 } else {
 
@@ -450,11 +450,11 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 String modifiedQuery = spellingCorrection();
                 if (modifiedQuery != null) {
                     this.tQuery.setText(modifiedQuery);
-                    rankedRetrival();
+                    rankedRetrieval();
                     return;
                 }
                 if (res == null) {
-                    JLabel l = new JLabel("No document found!");
+                    JLabel l = new JLabel("No documents found!");
                     this.foundDocArea.add(l);
                 } else {
                     for (RankedItem item : res) {
