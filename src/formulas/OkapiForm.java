@@ -30,7 +30,7 @@ public class OkapiForm extends Formular {
         if(dPosting.getDocumentID() == 744){
             System.out.println("OK: 744 TermFrequency-WDT for "+dPosting.getDocumentID()+": "+dPosting.getTermFrequency());
         }
-        return (2.2 * dPosting.getTermFrequency());
+        return (2.2 * ((double)dPosting.getTermFrequency()));
     }
 
     @Override
@@ -45,7 +45,7 @@ public class OkapiForm extends Formular {
             System.out.println("OK: 744 AverageDoc for "+dPosting.getDocumentID()+": "+dIndex.getAvgDocLength());
             System.out.println("OK: 744 TermFrequency-LD for "+dPosting.getDocumentID()+": "+dPosting.getTermFrequency());
         }
-        return (1.2 * (0.25 + 0.75 * (((double)dIndex.getDocLength(docID)) / ((double)dIndex.getAvgDocLength())))) + dPosting.getTermFrequency();
+        return (1.2 * (0.25 + 0.75 * (((double)dIndex.getDocLength(docID)) / ((double)dIndex.getAvgDocLength())))) + ((double)dPosting.getTermFrequency());
     }
 
     public void setdPosting(DiskPosting dPosting) {

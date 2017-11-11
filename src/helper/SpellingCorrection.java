@@ -4,6 +4,7 @@ import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import query.QueryTokenStream;
 import query.processor.QueryProcessor;
+import query.processor.DiskQueryProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -85,14 +86,14 @@ public class SpellingCorrection {
         List<String> candidates = new ArrayList<String>();
         for (int i = 0; i < qKGrams.size(); i++) {
             if (kIndex.getPostingsList(qKGrams.get(i)) != null) {
-                candidates = QueryProcessor.unionList(candidates, kIndex.getPostingsList(qKGrams.get(i)));
+                candidates = DiskQueryProcessor.unionList(candidates, kIndex.getPostingsList(qKGrams.get(i)));
             }
         }
 
         // Assume the first letter is correct
         String first2Gram = "$" + Character.toString(token.charAt(0));
         if (kIndex.getPostingsList(first2Gram) != null) {
-            candidates = QueryProcessor.intersectList(candidates, kIndex.getPostingsList(first2Gram));
+            candidates = DiskQueryProcessor.intersectList(candidates, kIndex.getPostingsList(first2Gram));
         }
 
         // Calculate the Jaccard coefficient for the candidates
@@ -103,7 +104,7 @@ public class SpellingCorrection {
             List<String> cKGrams = getKGrams(candidate);
 
             // Calculate the Jaccard coefficient
-            List<String> intersection = QueryProcessor.intersectList(qKGrams, cKGrams);
+            List<String> intersection = DiskQueryProcessor.intersectList(qKGrams, cKGrams);
             int unionSize = qKGrams.size() + cKGrams.size() - intersection.size();
             double jCoefficient = (double) intersection.size() / unionSize;
 
