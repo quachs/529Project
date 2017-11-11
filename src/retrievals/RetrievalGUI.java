@@ -9,7 +9,7 @@ import helper.SpellingCorrection;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import retrievals.rankedRetrieval.RankedItem;
+import retrievals.rankedRetrieval.RankedDocument;
 import threads.ThreadFinishedCallBack;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -446,7 +446,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 this.num.setVisible(number);
                 break;
             default:
-                RankedItem[] res = task.getResultsRank();
+                RankedDocument[] res = task.getResultsRank();
                 String modifiedQuery = spellingCorrection();
                 if (modifiedQuery != null) {
                     this.tQuery.setText(modifiedQuery);
@@ -457,8 +457,8 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                     JLabel l = new JLabel("No documents found!");
                     this.foundDocArea.add(l);
                 } else {
-                    for (RankedItem item : res) {
-                        String output = String.format("%.6f: %s", item.getA_d(), dIndex.getFileNames().get(item.getDocID()));
+                    for (RankedDocument item : res) {
+                        String output = String.format("%.6f: %s", item.getAccumulatedScore(), dIndex.getFileNames().get(item.getDocID()));
                         JLabel l = new JLabel(output);
                         l.addMouseListener(this);
                         this.labels.add(l);

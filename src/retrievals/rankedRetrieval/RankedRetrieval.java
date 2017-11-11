@@ -82,11 +82,11 @@ public class RankedRetrieval {
         }
     }
 
-    public RankedItem[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
+    public RankedDocument[] rankedQuery(KGramIndex kIndex, Subquery query, int k) {
         List<DiskPosting> dPostings = null;
         HashMap<DiskPosting, Double> accumulators = new HashMap<DiskPosting, Double>();
-        PriorityQueue<RankedItem> rankedQueue = new PriorityQueue<RankedItem>();
-        List<RankedItem> returnedRIs = new ArrayList<RankedItem>();
+        PriorityQueue<RankedDocument> rankedQueue = new PriorityQueue<RankedDocument>();
+        List<RankedDocument> returnedRIs = new ArrayList<RankedDocument>();
 
         for (String queryLit : query.getLiterals()) {
             System.out.println("Literal: " + queryLit);
@@ -126,7 +126,7 @@ public class RankedRetrieval {
                 }
                 double docWeight = getL_D(relevantDocument.getDocumentID());
                 double rank = accumulator / docWeight;
-                rankedQueue.add(new RankedItem(rank, relevantDocument.getDocumentID()));
+                rankedQueue.add(new RankedDocument(rank, relevantDocument.getDocumentID()));
             }
         }
 
@@ -141,11 +141,11 @@ public class RankedRetrieval {
         }
         
         for (int i = 0; i < k; i++) {
-            RankedItem ri = rankedQueue.poll();
+            RankedDocument ri = rankedQueue.poll();
             returnedRIs.add(ri);
         }
 
-        RankedItem[] results = new RankedItem[returnedRIs.size()];
+        RankedDocument[] results = new RankedDocument[returnedRIs.size()];
         returnedRIs.toArray(results);
         return results;
     }

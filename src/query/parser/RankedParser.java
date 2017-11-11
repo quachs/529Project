@@ -8,7 +8,7 @@ import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import query.parser.QueryParser;
 import query.QueryTokenStream;
-import retrievals.rankedRetrieval.RankedItem;
+import retrievals.rankedRetrieval.RankedDocument;
 import retrievals.rankedRetrieval.RankedRetrieval;
 import java.util.*;
 
@@ -63,7 +63,7 @@ public class RankedParser implements QueryParser{
         // Parse query, store in a collection, perform the query, return a final postings list.
         Subquery allQueryLiterals = collectAndQueries(query);
         RankedRetrieval rank = new RankedRetrieval(dIndex, FormEnum.DEFAULT);
-        RankedItem[] masterPostings = rank.rankedQuery(kgIndex, allQueryLiterals, 10);
+        RankedDocument[] masterPostings = rank.rankedQuery(kgIndex, allQueryLiterals, 10);
         List<Integer> documentList = new ArrayList<Integer>();
 
         // Constuct a list of document IDs from this final postings list.
