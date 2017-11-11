@@ -1,4 +1,4 @@
-package retrivals;
+package retrievals;
 
 import threads.GeneratingTask;
 import helper.DisplayJson;
@@ -9,7 +9,7 @@ import helper.SpellingCorrection;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import retrivals.rankedRetrival.RankedItem;
+import retrievals.rankedRetrieval.RankedItem;
 import threads.ThreadFinishedCallBack;
 import java.awt.Component;
 import java.awt.Dimension;

@@ -3,7 +3,7 @@ package start;
 
 import formulas.FormEnum;
 import indexes.IndexingGUI;
-import retrivals.RetrievalGUI;
+import retrievals.RetrievalGUI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.swing.ImageIcon;

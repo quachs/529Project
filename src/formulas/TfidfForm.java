@@ -8,7 +8,7 @@ import java.util.List;
  *
  * @author Sandra
  */
-public class TfidfForm extends Formular{
+public class TfidfForm extends Formula{
 
     public TfidfForm(DiskInvertedIndex dIndex) {
         super(dIndex);

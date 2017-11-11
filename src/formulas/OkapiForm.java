@@ -8,7 +8,7 @@ import java.util.List;
  *
  * @author Sandra
  */
-public class OkapiForm extends Formular {
+public class OkapiForm extends Formula {
 
     private DiskPosting dPosting;
 

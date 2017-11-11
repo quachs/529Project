@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author Sandra
  */
-public class DefaultForm extends Formular{
+public class DefaultForm extends Formula{
 
     public DefaultForm(DiskInvertedIndex dIndex) {
         super(dIndex);

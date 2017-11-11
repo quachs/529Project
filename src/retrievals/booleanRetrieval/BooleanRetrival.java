@@ -1,4 +1,4 @@
-package retrivals.booleanRetrival;
+package retrievals.booleanRetrieval;
 
 import query.processor.DiskQueryProcessor;
 import query.parser.BooleanParser;

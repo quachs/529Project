@@ -1,8 +1,8 @@
-package retrivals.rankedRetrival;
+package retrievals.rankedRetrieval;
 
 import formulas.DefaultForm;
 import formulas.FormEnum;
-import formulas.Formular;
+import formulas.Formula;
 import formulas.OkapiForm;
 import formulas.TfidfForm;
 import formulas.WackyForm;
@@ -20,7 +20,7 @@ public class RankedRetrieval {
 
     private DiskInvertedIndex dIndex;
     private FormEnum formEnum;
-    private Formular form;
+    private Formula form;
     private int sizeOfFoundDocs = 0;
 
     public RankedRetrieval(DiskInvertedIndex dIndex, FormEnum formEnum) {

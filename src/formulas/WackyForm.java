@@ -8,7 +8,7 @@ import java.util.List;
  *
  * @author Sandra
  */
-public class WackyForm extends Formular{
+public class WackyForm extends Formula{
 
     public WackyForm(DiskInvertedIndex dIndex) {
         super(dIndex);

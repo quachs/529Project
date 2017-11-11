@@ -8,8 +8,8 @@ import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import query.parser.QueryParser;
 import query.QueryTokenStream;
-import retrivals.rankedRetrival.RankedItem;
-import retrivals.rankedRetrival.RankedRetrieval;
+import retrievals.rankedRetrieval.RankedItem;
+import retrievals.rankedRetrieval.RankedRetrieval;
 import java.util.*;
 
 /**

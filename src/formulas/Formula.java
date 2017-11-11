@@ -4,11 +4,11 @@ import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import java.util.List;
 
-public abstract class Formular {
+public abstract class Formula {
 
     DiskInvertedIndex dIndex;
 
-    public Formular(DiskInvertedIndex dIndex) {
+    public Formula(DiskInvertedIndex dIndex) {
         this.dIndex = dIndex;
     }
 
