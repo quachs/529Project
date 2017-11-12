@@ -3,7 +3,6 @@ package threads;
 import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
-import indexes.PositionalInvertedIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import retrievals.booleanRetrieval.BooleanRetrival;
@@ -87,41 +86,6 @@ public class GeneratingTask implements Runnable {
         this.callback = finish;
     }
 
-    /*
-    /**
-     * With this parameter we know that we don´t have to create labels.
-     * A string for representing it in an text area is enough.
-     * This saves time!
-     * @param docNames Array of vocabulary
-     *
-    public GeneratingTask(String[] docArray) {
-        this.docArray = docArray;
-        this.docIds = new ArrayList<Integer>();
-        this.labels = new ArrayList<JLabel>();
-    }
-
-    /**
-     * With this parameter we need to create labels to later add mouse click listener
-     * Documents can be open
-     * @param docIds List of document IDs
-     * @param docNames List of all names of all documents
-     *
-    public GeneratingTask(ArrayList<Integer> docIds, ArrayList<String> docNames) {
-        this.docIds = docIds;
-        this.fileNames = docNames;
-        this.docArray = new String[0];
-        this.labels = new ArrayList<JLabel>();
-    }
-     */
-    // Getter
-    public ArrayList<JLabel> getArray() {
-        return labels;
-    }
-
-    public String getAllTerms() {
-        return allTerms;
-    }
-
     @Override
     public void run() {
         this.resultsBool = new ArrayList<String>();
@@ -138,7 +102,7 @@ public class GeneratingTask implements Runnable {
                 this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, searchType, kgIndex, sIndex, dIndex);
                 break;
             default:
-                rank = new RankedRetrieval(dIndex, form);                
+                rank = new RankedRetrieval(dIndex, form);
                 RankedParser parser = new RankedParser(dIndex, kgIndex);
                 q = parser.collectAndQueries(query);
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
@@ -146,6 +110,15 @@ public class GeneratingTask implements Runnable {
         }
         System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
         callback.notifyThreadFinished();
+    }
+
+    // Getter
+    public ArrayList<JLabel> getArray() {
+        return labels;
+    }
+
+    public String getAllTerms() {
+        return allTerms;
     }
 
     public GeneratingOpportunities getOpportunities() {
