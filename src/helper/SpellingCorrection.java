@@ -3,7 +3,6 @@ package helper;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import query.QueryTokenStream;
-import query.processor.QueryProcessor;
 import query.processor.DiskQueryProcessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +81,7 @@ public class SpellingCorrection {
             } catch (NullPointerException ex) {
             }
         }
+        
         if (postingSize <= DF_THRESHOLD) {
             boolean need = false;
             for (String token : this.queryTokens) {
