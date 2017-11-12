@@ -34,9 +34,13 @@ public class IndexWriter {
     /**
      * Constructs an IndexWriter object which is prepared to index the given
      * folder.
+     *
+     * @param folderPath Folder where to write the index
      */
     public IndexWriter(String folderPath) {
-        mFolderPath = folderPath;
+        mFolderPath = folderPath; // save the path
+        // create a new directory in the given path
+        // this is good for searching later for the created files because we don´t have to search the whole corpus.
         File dir = new File(folderPath + "\\Indexes");
         // if the directory does not exist, create it
         if (!dir.exists()) {
@@ -52,10 +56,8 @@ public class IndexWriter {
     }
 
     /**
-     * Builds and writes an inverted index to disk. Creates three files:
-     * vocab.bin, containing the vocabulary of the corpus; postings.bin,
-     * containing the postings list of document IDs; vocabTable.bin, containing
-     * a table that maps vocab terms to postings locations
+     * Builds and writes an inverted index to disk. Creates nine files which are
+     * dircribed in detail at the given position.
      */
     public void buildIndex() {
         PositionalInvertedIndex index = new PositionalInvertedIndex();
@@ -189,13 +191,12 @@ public class IndexWriter {
     }
 
     /**
-     * Builds the normal PositionalInvertedIndex for the folder.
+     * Builds the normal PositionalInvertedIndex for the folder. at this point,
+     * "index" contains the in-memory inverted index now we save the index to
+     * disk, building three files: the postings index, the vocabulary list, and
+     * the vocabulary table.
      */
     private static void buildIndexForDirectory(PositionalInvertedIndex index, String folder) {
-        // at this point, "index" contains the in-memory inverted index
-        // now we save the index to disk, building three files: the postings index,
-        // the vocabulary list, and the vocabulary table.
-
         // the array of terms
         String[] dictionary = index.getDictionary();
         // an array of positions in the vocabulary file
@@ -282,6 +283,10 @@ public class IndexWriter {
         }
     }
 
+    /**
+     * Build the vocab file for a given folder, file, vocab positions and
+     * dictionary.
+     */
     private static void buildVocabFile(String folder, String[] dictionary,
             long[] vocabPositions, String file) {
         OutputStreamWriter vocabList = null;
@@ -314,6 +319,11 @@ public class IndexWriter {
         }
     }
 
+    /**
+     * Builds the file for the weights in the given folder. It includes the
+     * weight, lenght, size and average term frequency of each document. At the
+     * end it saves the average doc lenght.
+     */
     private void buildWeightFile(String folder) {
         FileOutputStream weightsFile = null;
         try {
@@ -375,6 +385,9 @@ public class IndexWriter {
 
     }
 
+    /**
+     * Bulds the file for the corpus size in the given folder.
+     */
     private void buildCorpusSizeFile(String folder) {
         FileOutputStream corpusFile = null;
 
@@ -417,59 +430,62 @@ public class IndexWriter {
         }
 
     }
-    private static void buildSoundexFile(String folder, SoundexIndex sIndex){
-    
-        try{
-            
+
+    /**
+     * Builds the soundex file for a given file and index.
+     */
+    private static void buildSoundexFile(String folder, SoundexIndex sIndex) {
+
+        try {
+
             //Adaptation of buildIndexForDirectory()
             FileOutputStream soundex = new FileOutputStream(new File(folder, "soundex.bin"));
             FileOutputStream sVocabTable = new FileOutputStream(new File(folder, "sVocabTable.bin"));
-            
+
             //make a call to build vocab file with sIndex as the first arg
             String[] authors = sIndex.getDictionary();
             long[] sVocabPositions = new long[authors.length];
-            
+
             buildVocabFile(folder, authors, sVocabPositions, "sVocab.bin");
-            
+
             //Condensed adaptation of buildpostingsfile()
-            byte[] sBuff; 
-            
+            byte[] sBuff;
+
             //Write the size of the vocabulary to disk
             sBuff = ByteBuffer.allocate(4).putInt(authors.length).array();
             sVocabTable.write(sBuff);
-            
+
             int vocabI = 0;
             for (String author : authors) {
                 List<Integer> authorPostings = sIndex.getPostingsList(author);
-                
+
                 //Write to soundex vocab table
                 sBuff = ByteBuffer.allocate(8).putLong(sVocabPositions[vocabI]).array();
                 sVocabTable.write(sBuff);
-                
+
                 sBuff = ByteBuffer.allocate(8).putLong(soundex.getChannel().position()).array();
                 sVocabTable.write(sBuff);
-                
+
                 //Write the number of documents for an author
                 sBuff = ByteBuffer.allocate(4).putInt(authorPostings.size()).array();
                 soundex.write(sBuff);
-                
+
                 //Write each document to disk
                 int lastDocID = 0;
-                for (int posting : authorPostings){
-                                  
+                for (int posting : authorPostings) {
+
                     sBuff = ByteBuffer.allocate(4).putInt(posting - lastDocID).array();
                     soundex.write(sBuff);
                     lastDocID = posting;
-                }             
-                vocabI++;               
+                }
+                vocabI++;
             }
-            
+
             sVocabTable.close();
             soundex.close();
+        } catch (Exception e) {
+
         }
-        catch (Exception e) {
-            
-        }
-        
+
     }
 }

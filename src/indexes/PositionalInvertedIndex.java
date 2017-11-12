@@ -1,7 +1,5 @@
 package indexes;
 
-
-import indexes.Index;
 import java.util.*;
 
 /**

@@ -2,7 +2,6 @@ package indexes;
 
 // See README for references
 
-import indexes.Index;
 import java.util.ArrayList;
 import java.util.List;
 

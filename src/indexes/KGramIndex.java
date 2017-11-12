@@ -1,7 +1,5 @@
 package indexes;
 
-
-import indexes.Index;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +9,7 @@ import java.util.List;
  * vocabulary type and the postings are the corresponding types.
  *
  */
-public class KGramIndex extends Index<String> implements Serializable{
+public class KGramIndex extends Index<String> implements Serializable {
 
     public KGramIndex() {
         super();
