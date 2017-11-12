@@ -1,64 +1,67 @@
 package formulas;
 
 /**
- *
- * @author Sandra
+ * Enum for easier GUI setup and calling the right methods and classes.
  */
 public enum FormEnum {
     DEFAULT, TFIDF, OKAPI, WACKY;
-    public int getID(){
-        int result = 0;
+
+    /**
+     * The ID represents the position of the type in the GUI component combo
+     * box.
+     *
+     * @return The ID of the saved enum.
+     */
+    public int getID() {
         switch (this) {
             case WACKY:
-                result = 3;
-                break;
+                return 3;
             case TFIDF:
-                result = 1;
-                break;
+                return 1;
             case OKAPI:
-                result = 2;
-                break;
+                return 2;
             default:
-                result = 0;
-                break;
+                return 0;
         }
-        return result;
     }
-    public static FormEnum getFormByID(int id){
-        FormEnum result = null;
+
+    /**
+     * Get the right type of enum by giving the ID. Also needed for working with
+     * the combo box.
+     *
+     * @param id ID for the wanted type.
+     * @return The Type for the ID.
+     */
+    public static FormEnum getFormByID(int id) {
         switch (id) {
             case 0:
-                result = FormEnum.DEFAULT;
-                break;
+                return FormEnum.DEFAULT;
             case 1:
-                result = FormEnum.TFIDF;
-                break;
+                return FormEnum.TFIDF;
             case 2:
-                result = FormEnum.OKAPI;
-                break;
+                return FormEnum.OKAPI;
             default:
-                result = FormEnum.WACKY;
-                break;
+                return FormEnum.WACKY;
         }
-        return result;
     }
+
+    /**
+     * Get the pretty form of the enum Type to print it in the combo box or to
+     * the buttons at the beginnng.
+     *
+     * @return The string of the type.
+     */
     @Override
-    public String toString(){
-        String result = "";
+    public String toString() {
         switch (this) {
             case OKAPI:
-                result = "Okapi BM25";
-                break;
+                return "Okapi BM25";
             case TFIDF:
-                result = "Traditional";
-                break;
+                return "Traditional";
             case WACKY:
-                result = "Wacky";
-                break;
+                return "Wacky";
             default:
-                result = "Dafault";
-                break;
+                return "Dafault";
         }
-        return result;
     }
 }
