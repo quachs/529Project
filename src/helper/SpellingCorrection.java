@@ -16,7 +16,8 @@ import java.util.TreeSet;
 public class SpellingCorrection {
 
     private static final double JACCARD_THRESHOLD = 0.35;
-    private static final int DF_THRESHOLD = 2;
+    private static final int DF_THRESHOLD = 3;
+    private static final String OP_REGEX = "^[near/\\d+]+$"; // match boolean operators
 
     private final DiskInvertedIndex dIndex;
     private final KGramIndex kIndex;
@@ -37,7 +38,7 @@ public class SpellingCorrection {
         }
 
         queryTokens = query.split(" ");
-        correctionIndex = getCorrectionIndexList(query);
+        correctionIndex = getCorrectionIndexList(queryTokens);
 
     }
 
@@ -48,21 +49,23 @@ public class SpellingCorrection {
      * @param query
      * @return indices from the query
      */
-    private List<Integer> getCorrectionIndexList(String query) {
+    private List<Integer> getCorrectionIndexList(String[] queryTokens) {
 
         int queryIndex = 0;
         List<Integer> ciList = new ArrayList<Integer>();
-        QueryTokenStream s = new QueryTokenStream(query);
-
-        // Add the index of the query for terms that need spelling correction
-        while (s.hasNextToken()) {
-            String term = s.nextToken();
-            if (term != null && !term.contains("*")) { // ignore wildcards
-                if (dIndex.getPostings(term) == null || dIndex.getPostings(term).size() < DF_THRESHOLD) {
-                    ciList.add(queryIndex);
+        
+        for(String token : queryTokens) {
+            if(!token.matches(OP_REGEX)){ // ignore boolean operators
+                QueryTokenStream t = new QueryTokenStream(token);
+                String term = t.nextToken();
+                if (term != null && !term.contains("*")) { // ignore wildcards
+                    if (dIndex.getPostings(term) == null || dIndex.getPostings(term).size() < DF_THRESHOLD) {
+                        ciList.add(queryIndex);
+                    }
                 }
             }
             queryIndex++;
+            
         }
         return ciList;
     }
@@ -74,18 +77,21 @@ public class SpellingCorrection {
      * @return true if need to call spelling correction
      */
     public Boolean needCorrection() {
+        
+        // Workaround for the df threshold in a small corpus
         int postingSize = 0;
         for (String token : this.queryTokens) {
-            try {
-                postingSize += this.dIndex.getPostings(token).size();
-            } catch (NullPointerException ex) {
-            }
+            if(!token.matches(OP_REGEX) && !token.contains("*")) {
+                try {
+                    postingSize += this.dIndex.getPostings(token).size();
+                } catch (NullPointerException ex) {
+                }    
+            }  
         }
         
         if (postingSize <= DF_THRESHOLD) {
-            boolean need = false;
             for (String token : this.queryTokens) {
-                if (!token.equals(getCorrection(token))) {
+                if (!token.matches(OP_REGEX) && !token.contains("*") && !token.equals(getCorrection(token))) {
                     return true;
                 }
             }
