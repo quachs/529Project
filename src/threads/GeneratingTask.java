@@ -7,7 +7,7 @@ import indexes.PositionalInvertedIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import retrievals.booleanRetrieval.BooleanRetrival;
-import retrievals.rankedRetrieval.RankedItem;
+import retrievals.rankedRetrieval.RankedDocument;
 import retrievals.rankedRetrieval.RankedRetrieval;
 import query.parser.RankedParser;
 import helper.SpellingCorrection;
@@ -41,7 +41,7 @@ public class GeneratingTask implements Runnable {
     private Subquery q;
     private int k;
     private ThreadFinishedCallBack callback;
-    private RankedItem[] resultsRank;
+    private RankedDocument[] resultsRank;
     private FormEnum form;
     private SpellingCorrection spellCorrect;
 
@@ -152,7 +152,7 @@ public class GeneratingTask implements Runnable {
         return opportunities;
     }
 
-    public RankedItem[] getResultsRank() {
+    public RankedDocument[] getResultsRank() {
         return resultsRank;
     }
 

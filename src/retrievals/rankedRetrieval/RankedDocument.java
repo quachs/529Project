@@ -11,23 +11,23 @@ import java.lang.*;
  * @author Sean
  */
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Comparable.html
-public class RankedItem implements Comparable<RankedItem>{
+public class RankedDocument implements Comparable<RankedDocument>{
     
-    private double A_d;
+    private double accumulatedScore;
     private DiskPosting dPosting;
     private int docID;
     
-    public RankedItem(double A_d, int docID){
-        this.A_d = A_d;
+    public RankedDocument(double accumulatedScore, int docID){
+        this.accumulatedScore = accumulatedScore;
         this.docID = docID;
     }
     
-    public void setA_d(double A_d){
-        this.A_d = A_d;
+    public void setAccumulatedScore(double accumulatedScore){
+        this.accumulatedScore = accumulatedScore;
     }
     
-    public double getA_d(){
-        return A_d;
+    public double getAccumulatedScore(){
+        return accumulatedScore;
     } 
     
     public void setDPosting(DiskPosting dPosting){
@@ -42,12 +42,20 @@ public class RankedItem implements Comparable<RankedItem>{
         return docID;
     }
     
+    /**
+     * Method of comparison that allows documents
+     * to be ranked by document score and presented
+     * to a user in ranked order.
+     * 
+     * @param ri
+     * @return 
+     */
     @Override
-    public int compareTo(RankedItem ri){
-        if (ri.A_d < this.A_d){
+    public int compareTo(RankedDocument ri){
+        if (ri.accumulatedScore < this.accumulatedScore){
             return -1;
         }
-        if (this.A_d == ri.A_d) {
+        if (this.accumulatedScore == ri.accumulatedScore) {
             return 0;
         }
         else {
