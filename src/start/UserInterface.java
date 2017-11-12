@@ -56,7 +56,16 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
             IndexingGUI indexingGUI = new IndexingGUI(path);
         } else //Custom button text
         {
-            path = chooseDirectory();            
+            path = chooseDirectory(); // let the user select where the corpus is saved
+            Path indexPath = Paths.get(path.toString() + "\\Indexes");
+            // If the given path doesn´t have a indexes folder than it is not a corpus that is alread indexed. Let the user try again.
+            if (!Files.exists(indexPath)) {
+                JOptionPane.showMessageDialog(this, "You entered a corpus that is not indexed yet. Either you index it or you choose another one.",
+                        "Not a indexed corpus", JOptionPane.INFORMATION_MESSAGE, this.img);
+                new UserInterface();
+                return;
+            }
+            // Now let the user decide which type of retrival he wants to have.
             Object[] optionsRetrival = {"Boolean Retrieval",
                 "Ranked Retrieval"};
             int resultRetrival = JOptionPane.showOptionDialog(this,
