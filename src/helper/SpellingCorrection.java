@@ -75,6 +75,13 @@ public class SpellingCorrection {
      * @return true if need to call spelling correction
      */
     public Boolean needCorrection() {
+        int postingSize = 0;
+        for(String token: this.queryTokens){
+            postingSize += this.dIndex.getPostings(token).size();
+        }
+        if(postingSize <= DF_THRESHOLD){
+            return false;
+        }
         return !correctionIndex.isEmpty();
     }
 
