@@ -3,15 +3,12 @@ package query.parser;
 
 // See README for references
 
-import query.parser.QueryParser;
 import helper.PorterStemmer;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.PositionalInvertedIndex;
-import indexes.PositionalPosting;
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
-import query.processor.QueryProcessor;
 import query.QueryTokenStream;
 import java.util.*;
 import query.processor.DiskQueryProcessor;

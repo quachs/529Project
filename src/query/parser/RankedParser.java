@@ -6,7 +6,6 @@ import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import query.parser.QueryParser;
 import query.QueryTokenStream;
 import retrievals.rankedRetrieval.RankedDocument;
 import retrievals.rankedRetrieval.RankedRetrieval;
