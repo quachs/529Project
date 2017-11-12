@@ -28,7 +28,7 @@ public class SpellingCorrection {
     public SpellingCorrection(String query, DiskInvertedIndex dIndex, KGramIndex kIndex) {
         this.dIndex = dIndex;
         this.kIndex = kIndex;
-        
+
         // Trim the quotations if phrase
         if (query.contains("\"")) {
             query = query.substring(1, query.length() - 1);
@@ -36,13 +36,13 @@ public class SpellingCorrection {
         } else {
             isPhrase = false;
         }
-        
+
         queryTokens = query.split(" ");
         correctionIndex = getCorrectionIndexList(query);
-        
+
     }
-    
-     /**
+
+    /**
      * Get a list of the indices of the query where spelling correction is
      * needed
      *
@@ -76,10 +76,19 @@ public class SpellingCorrection {
      */
     public Boolean needCorrection() {
         int postingSize = 0;
-        for(String token: this.queryTokens){
-            postingSize += this.dIndex.getPostings(token).size();
+        for (String token : this.queryTokens) {
+            try {
+                postingSize += this.dIndex.getPostings(token).size();
+            } catch (NullPointerException ex) {
+            }
         }
-        if(postingSize <= DF_THRESHOLD){
+        if (postingSize <= DF_THRESHOLD) {
+            boolean need = false;
+            for (String token : this.queryTokens) {
+                if (!token.equals(getCorrection(token))) {
+                    return true;
+                }
+            }
             return false;
         }
         return !correctionIndex.isEmpty();
