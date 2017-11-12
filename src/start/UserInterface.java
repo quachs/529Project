@@ -1,6 +1,5 @@
 package start;
 
-
 import formulas.FormEnum;
 import indexes.IndexingGUI;
 import retrievals.RetrievalGUI;
@@ -14,13 +13,15 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import threads.ThreadFinishedCallBack;
 import helper.ProgressDialog;
+import java.nio.file.Files;
 
 /**
- * UserInterface Implements MouseListener for user input handling
+ * UserInterface is a Frame and implements ThreadFinishedCallBack to get
+ * notified, when the UI is created.
  *
  * @author Sandra
  */
-public class UserInterface extends JFrame implements ThreadFinishedCallBack{
+public class UserInterface extends JFrame implements ThreadFinishedCallBack {
 
     private Path path = Paths.get("");
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
@@ -40,9 +41,9 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
                 | InstantiationException | UnsupportedLookAndFeelException e) {
             System.err.println(e.toString());
         }
-        progress = new ProgressDialog("Creating view");
+        progress = new ProgressDialog("Creating view..."); // create the progress dialog
         Object[] optionsBeginning = {"Index a corpus",
-            "Process Queries"};
+            "Process Queries"}; // first step user can dicide if he wants to index or process a query
         int resultBeginning = JOptionPane.showOptionDialog(this,
                 "What do you want to do?",
                 "Search Engine Start",
@@ -50,11 +51,11 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
                 JOptionPane.PLAIN_MESSAGE,
                 img,
                 optionsBeginning,
-                optionsBeginning[1]);
-        if (resultBeginning == 0) {
-            path = chooseDirectory();
-            IndexingGUI indexingGUI = new IndexingGUI(path);
-        } else //Custom button text
+                optionsBeginning[1]);  // save users answer
+        if (resultBeginning == 0) { // 0 = indexig
+            path = chooseDirectory(); // let the user select where the corpus is he wants to index
+            new IndexingGUI(path); // create indexing GUI.
+        } else //otherwise the user wants to process a query
         {
             path = chooseDirectory(); // let the user select where the corpus is saved
             Path indexPath = Paths.get(path.toString() + "\\Indexes");
@@ -76,10 +77,12 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
                     img,
                     optionsRetrival,
                     optionsRetrival[1]);
-            if (resultRetrival == 0) {
-                progress.setVisible(true);
-                RetrievalGUI retrievalGUI = new RetrievalGUI('b', null, path.toString(), this);
-            } else {
+            if (resultRetrival == 0) { // boolean retrival.
+                progress.setVisible(true); // show progress bar
+                // create the GUI
+                new RetrievalGUI('b', null, path.toString(), this);
+            } else { // ranked retrival
+                // let the user choose between the different types of formulars.
                 Object[] optionsForm = {"Default",
                     "Traditional", "Okapi BM25", "Wacky"};
                 int resultFormular = JOptionPane.showOptionDialog(this,
@@ -90,8 +93,9 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
                         img,
                         optionsForm,
                         optionsForm[1]);
-                progress.setVisible(true);
-                RetrievalGUI retrievalGUI = new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString(), this);
+                progress.setVisible(true); // show the progress bar
+                // create the GUI
+                new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString(), this);
             }
         }
     }
@@ -125,6 +129,6 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack{
 
     @Override
     public void notifyThreadFinished() {
-        this.progress.setVisible(false);
+        this.progress.setVisible(false); // close the progress bar dialog
     }
 }

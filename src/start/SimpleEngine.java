@@ -1,6 +1,5 @@
 package start;
 
-import start.UserInterface;
 import java.io.*;
 import javax.swing.SwingUtilities;
 
