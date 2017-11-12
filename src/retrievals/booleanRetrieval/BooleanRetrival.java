@@ -3,21 +3,15 @@ package retrievals.booleanRetrieval;
 import query.processor.DiskQueryProcessor;
 import query.parser.BooleanParser;
 import indexes.KGramIndex;
-import indexes.PositionalInvertedIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author Sandra
+ * Class for process a boolean retrival.
  */
 public class BooleanRetrival {
-
-    public BooleanRetrival() {
-
-    }
 
     public static List<String> booleanQuery(String query, boolean searchType, KGramIndex kIndex, DiskSoundexIndex sIndex, DiskInvertedIndex dIndex) {
 

@@ -12,20 +12,22 @@ import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import query.processor.DiskQueryProcessor;
 import java.util.*;
-import java.lang.*;
 
 //https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
 //https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
 public class RankedRetrieval {
 
     private DiskInvertedIndex dIndex;
-    private FormEnum formEnum;
     private Formula form;
     private int sizeOfFoundDocs = 0;
 
+    /**
+     * Depending on the given form create a new Object for its instance.
+     * @param dIndex
+     * @param formEnum 
+     */
     public RankedRetrieval(DiskInvertedIndex dIndex, FormEnum formEnum) {
         this.dIndex = dIndex;
-        this.formEnum = formEnum;
         switch (formEnum) {
             case OKAPI:
                 form = new OkapiForm(dIndex);
@@ -43,24 +45,15 @@ public class RankedRetrieval {
     }
 
     private double calcWQT(List<DiskPosting> tDocIDs) {
-        System.out.println("FormEnum: " + formEnum);
-        double t = form.calcWQT(tDocIDs);
-        System.out.println("RR: WQT: " + t);
-        return t;
+        return form.calcWQT(tDocIDs);
     }
 
     // Adapted from Sylvia's IndexWriter.buildWeightFile;
     private double calcWDT(DiskPosting dPosting) {
-        if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
-            System.out.println("RR: WDT for " + dPosting.getDocumentID() + ": " + form.calcWDT(dPosting));
-        }
         return form.calcWDT(dPosting);
     }
 
     private double getL_D(int docID) {
-        if (dIndex.getFileNames().get(docID).equals("769.json")) {
-            System.out.println("RR: L_D for " + docID + ": " + form.getL_D(docID));
-        }
         return form.getL_D(docID);
     }
 
@@ -102,14 +95,10 @@ public class RankedRetrieval {
             if (dPostings != null) {
 
                 double WQT = calcWQT(dPostings);
-                double accDocScore = 0.0;
 
                 for (DiskPosting dPosting : dPostings) {
                     double newAccumulator = calcWDT(dPosting) * WQT;
                     accumulate(accumulators, dPosting, newAccumulator);
-                    if (dIndex.getFileNames().get(dPosting.getDocumentID()).equals("769.json")) {
-                        System.out.println("RR: Accumulator for " + dPosting.getDocumentID() + ": " + accumulators.get(dPosting));
-                    }
                 }
             }
         }
@@ -152,10 +141,5 @@ public class RankedRetrieval {
 
     public int getSizeOfFoundDocs() {
         return sizeOfFoundDocs;
-    }
-
-    public void testDiskIndex() {
-        System.out.println("DiskIndex 744: " + dIndex.getFileNames().get(744));
-        System.out.println("DiskIndex 999: " + dIndex.getFileNames().get(999));
     }
 }

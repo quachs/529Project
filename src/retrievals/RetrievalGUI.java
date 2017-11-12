@@ -41,9 +41,17 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import start.UserInterface;
 
+/**
+ * Represents the GUI for the retrival part. It is a thread to show the progress
+ * bar while it is created. The creation needs some time because of the many
+ * things that have to be set at the beginning. It implements the mousListener
+ * to react on buttons or label clicks. Tje ActionListener is for changing combo
+ * box selections. The ThreadFinishedCallCack is to notify the GUI that the
+ * background thread is finisched.
+ */
 public class RetrievalGUI extends Thread implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
-    private JFrame frame; // frame of the search engine, saved for restarting it
+    private JFrame frame; // frame of the search engine, saved for successfull restarting it
     private String path; // for saving the path
 
     private ProgressDialog progressDialog = new ProgressDialog("Generating...");
@@ -102,7 +110,6 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         stem.addMouseListener(this);
         newDic.addMouseListener(this);
         all.addMouseListener(this);
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // get the soundex index for creating the combo box right
         sIndex = new DiskSoundexIndex(path);
         // deserialize the k-gram index
@@ -225,13 +232,26 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 this.foundDocArea.removeAll();
                 this.foundDocArea.repaint();
 
-                // Put all the calculation into the background thread.
-                //GeneratingTask t = new GeneratingTask();
-                if (this.comboRetrievalType.getSelectedIndex() == 0) {
-                    booleanRetrieval();
-                } else {
-                    rankedRetrieval();
+                String query = this.tQuery.getText(); // save the query
+                // check if user typed something in...
+                if (query.length() > 0) {
+                    // if yes start the retrival for the selected user choice
+                    if (this.comboRetrievalType.getSelectedIndex() == 0) { // 0 = boolean
+                        booleanRetrieval(query);
+                    } else {
+                        rankedRetrieval(query);
+                    }
+                } else { // there is no query entered - let the user know
+                    labels = new ArrayList<JLabel>();
+                    this.num.setVisible(false);
+                    this.foundDocArea.add(new JLabel("Please enter a term!"));
+                    // show panel where buttons are in
+                    this.foundDocArea.setVisible(true);
+                    // reload the view again by packing the frame
+                    this.frame.pack();
+                    this.progressDialog.setVisible(false);
                 }
+
             }
             if (e.getSource() == stem) { // stemming is clicked
                 // Stem the word that is input in the textfield and show it in a dialog
@@ -280,7 +300,6 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
             int indx = labels.indexOf(e.getSource());
             // this shows that there is really an entry found -> double click submit can´t go in this
             if (indx >= 0) {
-                findFile(labels.get(indx).getText(), new File(path));
                 String text = labels.get(indx).getText();
                 if (text.contains(":")) {
                     String[] array = text.split(" ");
@@ -297,91 +316,48 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         }
     }
 
-    private void findFile(String name, File file) {
-        File[] list = file.listFiles();
-        if (list != null) {
-            for (File fil : list) {
-                if (fil.isDirectory()) {
-                    findFile(name, fil);
-                } else if (name.equalsIgnoreCase(fil.getName())) {
-                    File p = fil.getParentFile();
-                }
-            }
-        }
-    }
-
-    private void booleanRetrieval() {
+    /**
+     * Boolean retrival is submitted. Start the proccess in a background thread
+     */
+    private void booleanRetrieval(String query) {
         progressDialog.setVisible(true); // close the dialog
-        String query = this.tQuery.getText(); // save the query
-        if (query.length() > 0) {
-            if (this.comboSearchOrForms.getSelectedIndex() == 0) {
-                task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
-            } else {
-                task = new GeneratingTask(query, dIndex, true, kIndex, sIndex, this);
-            }
-            Thread t = new Thread(task);
-            t.start();
-        } else { // there is no query entered - let the user know
-            labels = new ArrayList<JLabel>();
-            this.num.setVisible(false);
-            this.foundDocArea.add(new JLabel("Please enter a term!"));
-            // show panel where buttons are in
-            this.foundDocArea.setVisible(true);
-            // reload the view again by packing the frame
-            this.frame.pack();
-            this.progressDialog.setVisible(false);
+        // generate the task depending on the user input for normal or author search
+        if (this.comboSearchOrForms.getSelectedIndex() == 0) {
+            task = new GeneratingTask(query, dIndex, false, kIndex, sIndex, this);
+        } else {
+            task = new GeneratingTask(query, dIndex, true, kIndex, sIndex, this);
         }
-    }
-
-    private void rankedRetrieval() {
-        String query = this.tQuery.getText();
-        progressDialog.setVisible(true);
-        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex());
-        if (query.length() > 0) {
-
-            if (dIndex.getFileNames().size() < 10) {
-                task = new GeneratingTask(dIndex, kIndex, query, dIndex.getFileNames().size(), this, form);
-            } else {
-                task = new GeneratingTask(dIndex, kIndex, query, 10, this, form);
-            }
-            Thread t = new Thread(task);
-            t.start();
-        } else { // there is no query entered - let the user know
-            labels = new ArrayList<JLabel>();
-            this.num.setVisible(false);
-            this.foundDocArea.add(new JLabel("Please enter a term!"));
-            // show panel where buttons are in
-            this.foundDocArea.setVisible(true);
-            // reload the view again by packing the frame
-            this.frame.pack();
-        }
+        // create and start the thread
+        Thread t = new Thread(task);
+        t.start();
     }
 
     /**
-     * all the other mouse click events are not used
-     *
-     * @param e
+     * Ranked retrival is submitted. Start the proccess in a background thread
      */
-    @Override
-    public void mousePressed(MouseEvent e) {
+    private void rankedRetrieval(String query) {
+        progressDialog.setVisible(true); // show the progress dialog
+        form = FormEnum.getFormByID(comboSearchOrForms.getSelectedIndex()); // save the formular that is selected by the user 
 
+        // if we have less then 10 documents in the corpus we show maximum the size of documents otherwise we only show the best ten results
+        if (dIndex.getFileNames().size() < 10) {
+            task = new GeneratingTask(dIndex, kIndex, query, dIndex.getFileNames().size(), this, form);
+        } else {
+            task = new GeneratingTask(dIndex, kIndex, query, 10, this, form);
+        }
+        // create and start the thread;
+        Thread t = new Thread(task);
+        t.start();
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
+    /**
+     * Change the items of the second combo box depending on the selection of
+     * the first one. For boolean retrival the user can choose between normal
+     * and author search if the documents are saving documents. The combo box
+     * though stays visible, maybe we want to add different search types later.
+     * For ranked retrival is the user able to choose between the four diffrent
+     * types of formulars explained in the given paper.
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         if (this.comboRetrievalType.getSelectedIndex() == 0) {
@@ -405,10 +381,14 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         }
     }
 
+    /**
+     * Is called when the thread is finished.
+     */
     @Override
     public void notifyThreadFinished() {
-        this.foundDocArea.removeAll();
-        this.labels = new ArrayList<JLabel>();
+        this.foundDocArea.removeAll(); // remove everything from the foundDocArea that we never print out stuff twice.
+        this.labels = new ArrayList<JLabel>(); // the same with the labels
+        // go trough the three different opportunities of a thread. We either want to print all vocabulary, print the boolean results or the ranked one.
         switch (task.getOpportunities()) {
             case ALL:
                 JTextArea label = new JTextArea();
@@ -426,7 +406,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 String modified = spellingCorrection();
                 if (modified != null) {
                     this.tQuery.setText(modified);
-                    booleanRetrieval();
+                    booleanRetrieval(modified);
                     return;
                 }
                 if (results.get(0).equals("No documents found.")) {
@@ -445,12 +425,12 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 this.numberRes.setText(this.labels.size() + "");
                 this.num.setVisible(number);
                 break;
-            default:
+            default: // equals ranked retrival
                 RankedDocument[] res = task.getResultsRank();
                 String modifiedQuery = spellingCorrection();
                 if (modifiedQuery != null) {
                     this.tQuery.setText(modifiedQuery);
-                    rankedRetrieval();
+                    rankedRetrieval(modifiedQuery);
                     return;
                 }
                 if (res == null) {
@@ -477,6 +457,11 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         this.frame.pack();
     }
 
+    /**
+     * For the spelling correction check if the query needs to be modified. If
+     * yes, ask the user if he wants to use the new spelling correction. If he
+     * wants then return the modified query, otherwise return null
+     */
     private String spellingCorrection() {
         SpellingCorrection spellCorrect = new SpellingCorrection(this.tQuery.getText(), dIndex, kIndex);
         if (spellCorrect.needCorrection()) {
@@ -495,5 +480,30 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
             }
         }
         return null;
+    }
+
+    /**
+     * all the other mouse click events are not used
+     *
+     * @param e
+     */
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
     }
 }
