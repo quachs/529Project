@@ -28,7 +28,7 @@ public class DiskInvertedIndex {
     public DiskInvertedIndex(String path) {
         try {
             String pathIndexes = path + "//Indexes";
-            
+
             mVocabList = new RandomAccessFile(new File(pathIndexes, "vocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(pathIndexes, "postings.bin"), "r");
             mWeightList = new RandomAccessFile(new File(pathIndexes, "docWeights.bin"), "r");
@@ -40,8 +40,8 @@ public class DiskInvertedIndex {
         }
     }
 
-    private static List<DiskPosting> readPostingsFromFile(RandomAccessFile postings,      
-    //private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
+    private static List<DiskPosting> readPostingsFromFile(RandomAccessFile postings,
+            //private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
             long postingsPosition, boolean withPositions) {
         try {
             // seek to the position in the file where the postings start.
@@ -53,10 +53,10 @@ public class DiskInvertedIndex {
 
             // use ByteBuffer to convert the 4 bytes into an int.
             int documentFrequency = ByteBuffer.wrap(buffer).getInt();
-            
+
             // initialize the array that will hold the postings.
             List<DiskPosting> diskPostings = new ArrayList<DiskPosting>(documentFrequency);
-           
+
             // write the following code:
             //
             // read 4 bytes at a time from the file, until you have read as many
@@ -189,30 +189,27 @@ public class DiskInvertedIndex {
         return null;
     }
 
-     // Reads the file corpusSize.bin into memory.
+    // Reads the file corpusSize.bin into memory.
     private static int readCorpusSize(String indexName) {
-        
+
         int corpusSize = 0;
-        
+
         try {
             RandomAccessFile corpusFile = new RandomAccessFile(new File(indexName, "corpusSize.bin"), "r");
             byte[] byteBuffer = new byte[4];
-            
+
             corpusFile.read(byteBuffer);
             corpusSize = ByteBuffer.wrap(byteBuffer).getInt();
             corpusFile.close();
-        } 
-        catch (FileNotFoundException ex) {
+        } catch (FileNotFoundException ex) {
             System.out.println(ex.toString());
-        } 
-        catch (IOException ex) {
+        } catch (IOException ex) {
             System.out.println(ex.toString());
-        }
-        finally{
+        } finally {
             return corpusSize;
         }
     }
-    
+
     public int getTermCount() {
         return mVocabTable.length / 2;
     }
@@ -260,7 +257,7 @@ public class DiskInvertedIndex {
     public List<String> getFileNames() {
         return mFileNames;
     }
-    
+
     public Double getDocWeight(int docId) {
         try {
             mWeightList.seek(docId * 32);
@@ -319,33 +316,37 @@ public class DiskInvertedIndex {
             System.out.println(ex.toString());
         }
         return null;
-}
-    
-    public int getCorpusSize(){
+    }
+
+    public int getCorpusSize() {
         return mCorpusSize;
     }
-    
-    public String[] getDictionary() {
-        List<String> vocabList = new ArrayList<String>();
-        int i = 0, j = mVocabTable.length / 2 - 1;
-        while (i <= j) {
-            try {
-                int termLength;
-                if (i == j) {
-                    termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
-                } else {
-                    termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
-                }
 
-                byte[] buffer = new byte[termLength];
-                mVocabList.read(buffer, 0, termLength);
-                String term = new String(buffer, "ASCII");
-                vocabList.add(term);
-            } catch (IOException ex) {
-                System.out.println(ex.toString());
+    public String[] getDictionary() {
+        if (dic == null) {
+            List<String> vocabList = new ArrayList<String>();
+            int i = 0, j = mVocabTable.length / 2 - 1;
+            while (i <= j) {
+                try {
+                    int termLength;
+                    if (i == j) {
+                        termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
+                    } else {
+                        termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
+                    }
+
+                    byte[] buffer = new byte[termLength];
+                    mVocabList.read(buffer, 0, termLength);
+                    String term = new String(buffer, "ASCII");
+                    vocabList.add(term);
+                } catch (IOException ex) {
+                    System.out.println(ex.toString());
+                }
+                i++;
             }
-            i++;
+            dic = vocabList.toArray(new String[0]);
         }
-        return vocabList.toArray(new String[0]);
+            return dic;
+        
     }
 }
