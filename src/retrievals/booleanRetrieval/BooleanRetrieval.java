@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Class for process a boolean retrival.
  */
-public class BooleanRetrival {
+public class BooleanRetrieval {
 
     public static List<String> booleanQuery(String query, boolean searchType, KGramIndex kIndex, DiskSoundexIndex sIndex, DiskInvertedIndex dIndex) {
 

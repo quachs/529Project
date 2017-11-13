@@ -5,7 +5,7 @@ import query.Subquery;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskSoundexIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import retrievals.booleanRetrieval.BooleanRetrival;
+import retrievals.booleanRetrieval.BooleanRetrieval;
 import retrievals.rankedRetrieval.RankedDocument;
 import retrievals.rankedRetrieval.RankedRetrieval;
 import query.parser.RankedParser;
@@ -99,7 +99,7 @@ public class GeneratingTask implements Runnable {
                 this.allTerms = res;
                 break;
             case BOOLEAN:
-                this.resultsBool = (ArrayList<String>) BooleanRetrival.booleanQuery(query, searchType, kgIndex, sIndex, dIndex);
+                this.resultsBool = (ArrayList<String>) BooleanRetrieval.booleanQuery(query, searchType, kgIndex, sIndex, dIndex);
                 break;
             default:
                 rank = new RankedRetrieval(dIndex, form);
