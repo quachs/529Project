@@ -467,7 +467,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         SpellingCorrection spellCorrect = new SpellingCorrection(this.tQuery.getText(), dIndex, kIndex);
         if (spellCorrect.needCorrection()) {
             String modifiedQuery = spellCorrect.getModifiedQuery();
-            if (modifiedQuery != null) {
+            if (!modifiedQuery.equals(this.tQuery.getText())) {
                 Object[] options = {"Yes", "No"};
                 int pane = JOptionPane.showOptionDialog(this.frame,
                         "Did you mean: " + modifiedQuery,

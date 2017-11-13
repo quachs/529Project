@@ -53,9 +53,9 @@ public class SpellingCorrection {
 
         int queryIndex = 0;
         List<Integer> ciList = new ArrayList<Integer>();
-        
-        for(String token : queryTokens) {
-            if(!token.matches(OP_REGEX)){ // ignore boolean operators
+
+        for (String token : queryTokens) {
+            if (!token.matches(OP_REGEX)) { // ignore boolean operators
                 QueryTokenStream t = new QueryTokenStream(token);
                 String term = t.nextToken();
                 if (term != null && !term.contains("*")) { // ignore wildcards
@@ -65,7 +65,7 @@ public class SpellingCorrection {
                 }
             }
             queryIndex++;
-            
+
         }
         return ciList;
     }
@@ -77,18 +77,18 @@ public class SpellingCorrection {
      * @return true if need to call spelling correction
      */
     public Boolean needCorrection() {
-        
+
         // Workaround for the df threshold in a small corpus
         int postingSize = 0;
         for (String token : this.queryTokens) {
-            if(!token.matches(OP_REGEX) && !token.contains("*")) {
+            if (!token.matches(OP_REGEX) && !token.contains("*")) {
                 try {
                     postingSize += this.dIndex.getPostings(token).size();
                 } catch (NullPointerException ex) {
-                }    
-            }  
+                }
+            }
         }
-        
+
         if (postingSize <= DF_THRESHOLD) {
             for (String token : this.queryTokens) {
                 if (!token.matches(OP_REGEX) && !token.contains("*") && !token.equals(getCorrection(token))) {
@@ -106,18 +106,21 @@ public class SpellingCorrection {
      * @return modified query
      */
     public String getModifiedQuery() {
-
+        String modified = "";
         // Correct the misspelled token in the query
-        for (Integer index : correctionIndex) {
-            String correction = getCorrection(queryTokens[index]);
-            queryTokens[index] = correction;
+        for (int i = 0; i < queryTokens.length; i++) {
+            if (correctionIndex.contains(i)) {
+                String correction = getCorrection(queryTokens[i]);
+                if (correction == null) {
+                    modified += queryTokens[i] + " ";
+                } else {
+                    modified += correction + " ";
+                }
+            }else{
+                modified += queryTokens[i]+" ";
+            }
         }
-
-        // Return the modified query
-        if (isPhrase) {
-            return "\"" + String.join(" ", queryTokens) + "\"";
-        }
-        return String.join(" ", queryTokens);
+        return modified;
     }
 
     /**
