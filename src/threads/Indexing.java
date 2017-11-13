@@ -6,14 +6,14 @@ import java.nio.file.Paths;
 import java.util.Date;
 
 /**
- * Thread to do the indexing in the background
+ * Thread to do perform indexing as a background process.
  *
  * @author Sandra
  */
 public class Indexing implements Runnable {
-    long timer; // timer to print how long task took
+    long timer; // Timer to print how long the task took
 
-    // saving the path of the directory of the corpus
+    // Save the path of the corpus's directory
     private Path path;
 
     private ThreadFinishedCallBack callback;
@@ -25,7 +25,7 @@ public class Indexing implements Runnable {
         path = Paths.get(".");
     }
 
-    // this constructor for the directory the user chooses
+    // Constructor for a user-specified corpus
     public Indexing(Path path, ThreadFinishedCallBack finish) {
         this.path = path;
         this.callback = finish;        
@@ -36,10 +36,10 @@ public class Indexing implements Runnable {
      */
     @Override
     public void run() {
-        timer = new Date().getTime(); // start the timer    
+        timer = new Date().getTime(); // Start the timer    
         IndexWriter writer = new IndexWriter(path.toString());  
         writer.buildIndex();
-        System.out.println("Time for indexing: " + (new Date().getTime() - timer)); // print out time that process took   
+        System.out.println("Time for indexing: " + (new Date().getTime() - timer)); // Print the length of time the process took   
         callback.notifyThreadFinished();
     }
 }

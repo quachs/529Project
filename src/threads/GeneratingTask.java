@@ -15,18 +15,18 @@ import java.util.Date;
 import javax.swing.*;
 
 /**
- * Task to process in backround the walking trough all vocabulary of the corpus.
- * There are three ways that generating task is needed: 1. Boolean retrival
- * results 2. Print all vocabulary 3. Ranked retrival results
+ * Task to process in background the walking trough the corpus vocabulary.
+ * There are three reasons why generating tasks in this fashion is necessary: 
+ * 1. Boolean retrieval results, 2. to display all vocabulary 3. Ranked retrieval results
  *
  * @author Sandra
  */
 public class GeneratingTask implements Runnable {
 
-    private long timer; // time for printing how long task took
+    private long timer; // Time for printing how long the task took
     private GeneratingOpportunities opportunities;
-    private ArrayList<JLabel> labels; // arraylist of labels
-    private String allTerms; // result string for all voc
+    private ArrayList<JLabel> labels; // ArrayList of labels
+    private String allTerms; // Result string for all vocabulary
     private RankedRetrieval rank;
 
     private String[] dic;
@@ -45,7 +45,7 @@ public class GeneratingTask implements Runnable {
     private SpellingCorrection spellCorrect;
 
     /**
-     * Constructor for making a ranked retrival
+     * Constructor for making a ranked retrieval.
      *
      * @param dIndex
      * @param kgIndex
@@ -63,7 +63,7 @@ public class GeneratingTask implements Runnable {
     }
 
     /**
-     * Constructor for making boolean retrival
+     * Constructor for making boolean retrieval.
      */
     public GeneratingTask(String query, DiskInvertedIndex dIndex, boolean searchType, KGramIndex kIndex, DiskSoundexIndex sIndex, ThreadFinishedCallBack finish) {
         opportunities = GeneratingOpportunities.BOOLEAN;
@@ -76,7 +76,7 @@ public class GeneratingTask implements Runnable {
     }
 
     /**
-     * Constructor for getting all terms of a corpus and print them.
+     * Constructor for getting all terms of a corpus and printing them.
      *
      * @param elements
      */
@@ -89,12 +89,12 @@ public class GeneratingTask implements Runnable {
     @Override
     public void run() {
         this.resultsBool = new ArrayList<String>();
-        timer = new Date().getTime(); // start timer for printing out how long process took
+        timer = new Date().getTime(); // Start timer for printing out how long the process took
         switch (opportunities) {
             case ALL:
                 String res = "";
                 for (String s : this.dic) {
-                    res = res + s + "\n"; // add every single voc with a linebreak to the result string
+                    res = res + s + "\n"; // Add every single voc with a linebreak to the result string
                 }
                 this.allTerms = res;
                 break;
@@ -108,11 +108,11 @@ public class GeneratingTask implements Runnable {
                 resultsRank = rank.rankedQuery(kgIndex, q, k);
                 break;
         }
-        System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // print time that process took
+        System.out.println("Time for Generating process: " + (new Date().getTime() - timer)); // Print the length of time the process took
         callback.notifyThreadFinished();
     }
 
-    // Getter
+    // Getters
     public ArrayList<JLabel> getArray() {
         return labels;
     }
