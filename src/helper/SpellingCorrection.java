@@ -91,7 +91,9 @@ public class SpellingCorrection {
 
         if (postingSize <= DF_THRESHOLD) {
             for (String token : this.queryTokens) {
-                if (!token.matches(OP_REGEX) && !token.contains("*") && !token.equals(getCorrection(token))) {
+                QueryTokenStream t = new QueryTokenStream(token);
+                String term = t.nextToken();
+                if (!token.matches(OP_REGEX) && !token.contains("*") && !term.equals(getCorrection(token))) {
                     return true;
                 }
             }
