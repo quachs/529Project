@@ -5,32 +5,21 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import indexes.SoundexIndex;
 
 /**
  * Adaptation of DiskInvertedIndex to work for soundex indexes
  */
-public class DiskSoundexIndex {
+public class DiskSoundexIndex extends DiskIndex {
 
-    private RandomAccessFile mVocabList;
-    private RandomAccessFile mPostings;
-    private long[] mVocabTable;
-    private List<String> mFileNames;
-    private List<String> terms = null;
-    private String[] dic;
-
-    // Opens a disk inverted index that was constructed in the given path.
+    /**
+     * Opens a disk soundex index that was constructed in the given path.
+     * @param path 
+     */
     public DiskSoundexIndex(String path) {
         try {
             String pathIndexes = path + "//Indexes";
-            
             mVocabList = new RandomAccessFile(new File(pathIndexes, "sVocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(pathIndexes, "soundex.bin"), "r");
             mVocabTable = readVocabTable(pathIndexes);
@@ -40,8 +29,13 @@ public class DiskSoundexIndex {
         }
     }
 
+    /**
+     * Read the postings from file
+     * @param postings
+     * @param postingsPosition
+     * @return list of disk postings
+     */
     private static List<Integer> readPostingsFromFile(RandomAccessFile postings,      
-    //private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
             long postingsPosition) {
         try {
             // seek to the position in the file where the postings start.
@@ -85,7 +79,11 @@ public class DiskSoundexIndex {
         return null;
     }
 
-    // Reads and returns a list of document IDs that contain the given term.
+    /**
+     * Reads and returns a list of document IDs that contain the given term.
+     * @param term
+     * @return list of disk postings, null if the term is not found
+     */
     public List<Integer> getPostings(String term) {
         SoundexIndex reducer = new SoundexIndex();
         String sTerm = reducer.reduceToSoundex(term);
@@ -96,44 +94,11 @@ public class DiskSoundexIndex {
         return null;
     }
 
-    // Locates the byte position of the postings for the given term.
-    private long binarySearchVocabulary(String term) {
-        // do a binary search over the vocabulary, using the vocabTable and the file vocabList.
-        int i = 0, j = mVocabTable.length / 2 - 1;
-        while (i <= j) {
-            try {
-                int m = (i + j) / 2;
-                long vListPosition = mVocabTable[m * 2];
-                int termLength;
-                if (m == mVocabTable.length / 2 - 1) {
-                    termLength = (int) (mVocabList.length() - mVocabTable[m * 2]);
-                } else {
-                    termLength = (int) (mVocabTable[(m + 1) * 2] - vListPosition);
-                }
-
-                mVocabList.seek(vListPosition);
-
-                byte[] buffer = new byte[termLength];
-                mVocabList.read(buffer, 0, termLength);
-                String fileTerm = new String(buffer, "ASCII");
-
-                int compareValue = term.compareTo(fileTerm);
-                if (compareValue == 0) {
-                    // found it!
-                    return mVocabTable[m * 2 + 1];
-                } else if (compareValue < 0) {
-                    j = m - 1;
-                } else {
-                    i = m + 1;
-                }
-            } catch (IOException ex) {
-                System.out.println(ex.toString());
-            }
-        }
-        return -1;
-    }
-
-    // Reads the file vocabTable.bin into memory.
+    /**
+     * Reads the file vocabTable.bin into memory.
+     * @param indexName
+     * @return byte position of vocabulary
+     */
     private static long[] readVocabTable(String indexName) {
         try {
             long[] vocabTable;
@@ -159,77 +124,6 @@ public class DiskSoundexIndex {
             System.out.println(ex.toString());
         }
         return null;
-    }
+    }  
     
-    public int getTermCount() {
-        return mVocabTable.length / 2;
-    }
-
-    /**
-     * Walk the file tree to get the names of the files
-     *
-     * @param path directory path
-     * @return array of file names
-     */
-    private static List<String> readFileNames(String path) {
-        List<String> fileNames = new ArrayList<String>();
-        try {
-
-            Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
-
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    // process the current working directory and subdirectories
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFile(Path file,
-                        BasicFileAttributes attrs) throws FileNotFoundException {
-                    // only process .json files
-                    if (file.toString().endsWith(".json")) {
-                        fileNames.add(file.toFile().getName()); // add to list
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-
-                // don't throw exceptions if files are locked/other errors occur
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException e) {
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException ex) {
-            System.out.println(ex.toString());
-        }
-        return fileNames;
-    }
-
-    public List<String> getFileNames() {
-        return mFileNames;
-    }   
-    
-    public String[] getDictionary() {
-        List<String> vocabList = new ArrayList<String>();
-        int i = 0, j = mVocabTable.length / 2 - 1;
-        while (i <= j) {
-            try {
-                int termLength;
-                if (i == j) {
-                    termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
-                } else {
-                    termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
-                }
-
-                byte[] buffer = new byte[termLength];
-                mVocabList.read(buffer, 0, termLength);
-                String term = new String(buffer, "ASCII");
-                vocabList.add(term);
-            } catch (IOException ex) {
-                System.out.println(ex.toString());
-            }
-            i++;
-        }
-        return vocabList.toArray(new String[0]);
-    }
 }
