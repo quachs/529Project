@@ -322,7 +322,7 @@ public class IndexWriter {
     /**
      * Builds the file for the weights in the given folder. It includes the
      * weight, lenght, size and average term frequency of each document. At the
-     * end it saves the average doc lenght.
+     * end it saves the average doc length.
      */
     private void buildWeightFile(String folder) {
         FileOutputStream weightsFile = null;
@@ -457,7 +457,7 @@ public class IndexWriter {
 
             int vocabI = 0;
             for (String author : authors) {
-                List<Integer> authorPostings = sIndex.getPostingsList(author);
+                List<Integer> authorPostings = sIndex.getCodePosts(author);
 
                 //Write to soundex vocab table
                 sBuff = ByteBuffer.allocate(8).putLong(sVocabPositions[vocabI]).array();

@@ -85,5 +85,18 @@ public class SoundexIndex extends Index<Integer> {
         return mIndex.get(reduceToSoundex(term));
     }
     
+    /**
+     * Used by buildSoundexFile() in IndexWriter.java
+     * Retrieves postings lists for a soundex Code,
+     * rather than a term to be reduced to a soundex code.
+     * 
+     * @param soundexCode Four-character code representing
+     * an author name
+     * @return The soundex code's postings list
+     */
+    public List<Integer> getCodePosts(String soundexCode){
+        return mIndex.get(soundexCode);
+    }
+    
     
 }
