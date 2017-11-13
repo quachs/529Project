@@ -22,11 +22,11 @@ import java.nio.file.Files;
  * @author Sandra
  */
 public class UserInterface extends JFrame implements ThreadFinishedCallBack {
-
+    
     private Path path = Paths.get("");
     private ImageIcon img = new ImageIcon(System.getProperty("user.dir") + "/icon.png"); // logo icon
     private ProgressDialog progress;
-
+    
     public UserInterface() {
         // Change look and feel of swing components
         // resource: http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/nimbus.html
@@ -55,7 +55,7 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack {
         if (resultBeginning == 0) { // 0 = indexig
             path = chooseDirectory(); // let the user select where the corpus is he wants to index
             new IndexingGUI(path); // create indexing GUI.
-        } else //otherwise the user wants to process a query
+        } else if (resultBeginning == 1)//otherwise the user wants to process a query
         {
             path = chooseDirectory(); // let the user select where the corpus is saved
             Path indexPath = Paths.get(path.toString() + "\\Indexes");
@@ -81,7 +81,7 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack {
                 progress.setVisible(true); // show progress bar
                 // create the GUI
                 new RetrievalGUI('b', null, path.toString(), this);
-            } else { // ranked retrival
+            } else if (resultRetrival == 1) { // ranked retrival
                 // let the user choose between the different types of formulars.
                 Object[] optionsForm = {"Default",
                     "Traditional", "Okapi BM25", "Wacky"};
@@ -92,11 +92,18 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack {
                         JOptionPane.PLAIN_MESSAGE,
                         img,
                         optionsForm,
-                        optionsForm[1]);
+                        optionsForm[0]);
+                if(resultFormular == -1){
+                    System.exit(0);
+                }
                 progress.setVisible(true); // show the progress bar
                 // create the GUI
                 new RetrievalGUI('r', FormEnum.getFormByID(resultFormular), path.toString(), this);
+            } else {
+                System.exit(0);
             }
+        } else {
+            System.exit(0);
         }
     }
 
@@ -126,7 +133,7 @@ public class UserInterface extends JFrame implements ThreadFinishedCallBack {
             return null;
         }
     }
-
+    
     @Override
     public void notifyThreadFinished() {
         this.progress.setVisible(false); // close the progress bar dialog
