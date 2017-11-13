@@ -403,13 +403,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 break;
             case BOOLEAN:
                 ArrayList<String> results = task.getResultsBool();
-                boolean number = true;
-                String modified = spellingCorrection();
-                if (modified != null) {
-                    this.tQuery.setText(modified);
-                    booleanRetrieval(modified);
-                    return;
-                }
+                boolean number = true;            
                 if (results.get(0).equals("No documents found.")) {
                     this.foundDocArea.add(new JLabel("No documents found."));
                     number = false;
@@ -425,15 +419,15 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 this.number.setText(this.docs);
                 this.numberRes.setText(this.labels.size() + "");
                 this.num.setVisible(number);
-                break;
-            default: // Ranked retrival
-                RankedDocument[] res = task.getResultsRank();
-                String modifiedQuery = spellingCorrection();
-                if (modifiedQuery != null) {
-                    this.tQuery.setText(modifiedQuery);
-                    rankedRetrieval(modifiedQuery);
+                String modified = spellingCorrection();    
+                if (modified != null) {
+                    this.tQuery.setText(modified);
+                    booleanRetrieval(modified);
                     return;
                 }
+                break;
+            default: // Ranked retrival
+                RankedDocument[] res = task.getResultsRank();            
                 if (res == null) {
                     JLabel l = new JLabel("No documents found!");
                     this.foundDocArea.add(l);
@@ -448,6 +442,12 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                     this.number.setText("Ranking for the best 10 documents, but found number: ");
                     this.numberRes.setText(task.getRank().getSizeOfFoundDocs() + "");
                     this.num.setVisible(true);
+                }
+                String modifiedQuery = spellingCorrection();    
+                if (modifiedQuery != null) {
+                    this.tQuery.setText(modifiedQuery);
+                    rankedRetrieval(modifiedQuery);
+                    return;
                 }
                 break;
         }
