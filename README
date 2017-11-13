@@ -1,41 +1,74 @@
-CECS 429/529 Project Milestone 1
+CECS 429/529 Project Milestone 2
 
 Team Members:
 Sandra Kramlich
 Sylvia Quach
 Sean Vidal
 
-Goal: Index a corpus provided by user, then 
-present the user with a GUI that allows them to query corpus
+Goal: Index a user-provided corpus on disk using the SPIMI strategy. 
+Present the user with a GUI that allows them to execute boolean or 
+ranked queries from a selected on-disk corpus.
 
 ----------------------------------------------------------------
 
 General Program Flow:
-1. User selects a directory containing a corpus
-2. Program indexes all terms in a corpus, building a dictionary that maps
-	terms to positional posting lists
-3. Program displays GUI to user
 
-4a. User enters query in text box
-5a. Program displays a list of documents that match query
-6a. User double-clicks on one of the document titles
-7a. Program displays document in its entirety
-8a. Return to step 3 or click [X] in top-right corner of window to terminate program
+// If User Wants to Create an On-disk Index
+1. User has a choice of creating an on-disk index or querying an existing on-disk index
+2. User clicks "Index a Corpus"
+3. A file chooser allows the user to navigate to their corpus of choice.
+4. Program indexes all terms in a corpus, building a dictionary that maps
+	terms to on-disk positional posting lists.  Note that if a corpus
+	contains documents with an author filed, the automatically-generated
+	on-disk soundex will be populated.  Otherwise, it will remain empty.
+5. Program displays a dialog box with the text "Indexing is finished"
+6. User clicks "Ok"
+7. Program terminates
 
-4b. User enters token in text box and clicks "Stem" button
-5b. Program displays stemmed term in a dialog box
-6b. User clicks "OK" button
-7b. Return to step 3
+// If User Wants to Execute Boolean Queries
+2a. User clicks "Process queries"
+3a. A file choose allows the user to navigate to their on-disk index of choice.
+	Note that the folder must be the same as the corpus.  For example,
+	if the indexed corpus was at folder ".../myCorpus/", then the user
+	must also use ".../myCorpus/" as their index location and not the
+	folder ".../myCorpus/Indexes".  An attempt to use the latter filepath
+	will throw an exception
+4a. Program prompts user to select between boolean and ranked retrieval
+5a. User clicks "Boolean Retrieval"
+6a. Program displays query GUI.
+7a. User enters a boolean query into the GUI text field
+8a. Program displays a list of documents that match query
+9a. User double-clicks on one of the document titles
+10a. Program displays document in its entirety
+11a. Return to step 6a or click [X] in top-right corner of window to terminate program
 
-4c. User clicks "Index new directory" button
-5c. Return to step 1
+// If User Wants to Execute Ranked Queries
+5a-b. User clicks "Ranked Retrieval"
+6a-b. User clicks one of four document scoring formulas ("Default," "Traditional," etc.)
+7a-b. User enters a ranked query into the GUI text field
+8a-b. Program displays a list of the top 10 most relevant documents,
+	ordered from most relevant to least relevant.
+9a-b. Return to step 9a
 
-4d. User clicks "Print Vocabulary" button
-5d. Program displays all terms stored in index in alphabetical order
+// If User Wants to Stem a Token
+6a-c. User enters token in text box and clicks "Stem" button
+7a-c. Program displays stemmed term in a dialog box
+8a-c. User clicks "OK" button
+9a-c. Return to step 6a
+
+// If User Wants to Index a New Directory
+6a-d. User clicks "Index new directory" button
+7a-d. Return to step 3
+
+// If user Wants to View Corpus Vocabulary
+6a-e. User clicks "Print Vocabulary" button
+7a-e. Program displays all terms stored in index in alphabetical order
+8a-e. return to step 6a
 
 ----------------------------------------------------------------
 
-Types of user queries that will work:
+******** Boolean Queries: ********
+
 AND queries -> [query literal | wildcard query | near query | phrase query]+
 OR queries -> [AND query]+
 AUTHOR queries -> [query literal]
@@ -54,6 +87,11 @@ Types of user queries that will not work:
 ... [wildcard literal] near\[k] [wildcard literal] ...
 
 In other words, wildcard queries can not be embedded within near queries
+
+******** Ranked Queries ********
+Literals/Queries:
+query literal - a standard, one-word term
+wildcard query - a one-word term with leading, trailing, or embeded * characters.
 
 ----------------------------------------------------------------
 
@@ -79,6 +117,8 @@ https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#startsWith(java.lang.String)
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.lang.String)
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
+https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
+https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
 
 [NOTE: This reference list is not exhaustive; 
 additional references can be found within this project's code]
