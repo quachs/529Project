@@ -403,10 +403,9 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 break;
             case BOOLEAN:
                 ArrayList<String> results = task.getResultsBool();
-                boolean number = true;            
                 if (results.get(0).equals("No documents found.")) {
                     this.foundDocArea.add(new JLabel("No documents found."));
-                    number = false;
+                    this.num.setVisible(false);
                 } else {
 
                     for (String s : results) {
@@ -418,7 +417,6 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 }
                 this.number.setText(this.docs);
                 this.numberRes.setText(this.labels.size() + "");
-                this.num.setVisible(number);
                 String modified = spellingCorrection();    
                 if (modified != null) {
                     this.tQuery.setText(modified);
@@ -431,6 +429,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 if (res == null) {
                     JLabel l = new JLabel("No documents found!");
                     this.foundDocArea.add(l);
+                    this.num.setVisible(false);
                 } else {
                     for (RankedDocument item : res) {
                         String output = String.format("%.6f: %s", item.getAccumulatedScore(), dIndex.getFileNames().get(item.getDocID()));
@@ -467,6 +466,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         SpellingCorrection spellCorrect = new SpellingCorrection(this.tQuery.getText(), dIndex, kIndex);
         if (spellCorrect.needCorrection()) {
             String modifiedQuery = spellCorrect.getModifiedQuery();
+            modifiedQuery= modifiedQuery.trim();
             if (!modifiedQuery.equals(this.tQuery.getText())) {
                 Object[] options = {"Yes", "No"};
                 int pane = JOptionPane.showOptionDialog(this.frame,
