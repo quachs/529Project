@@ -1,7 +1,7 @@
-package query.processor;
+package token;
 
 
-import query.TokenStream;
+import token.TokenStream;
 import java.util.LinkedList;
 import java.util.Queue;
 

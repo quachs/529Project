@@ -6,7 +6,7 @@ import formulas.FormEnum;
 import query.Subquery;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import query.QueryTokenStream;
+import token.QueryTokenStream;
 import retrievals.rankedRetrieval.RankedDocument;
 import retrievals.rankedRetrieval.RankedRetrieval;
 import java.util.*;

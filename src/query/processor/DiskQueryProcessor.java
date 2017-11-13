@@ -1,5 +1,6 @@
 package query.processor;
 
+import token.TokenProcessorStream;
 import helper.PorterStemmer;
 import indexes.KGramIndex;
 import indexes.diskPart.DiskSoundexIndex;

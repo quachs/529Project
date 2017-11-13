@@ -1,6 +1,7 @@
 package query.processor;
 
 
+import token.TokenProcessorStream;
 import query.Subquery;
 import helper.PorterStemmer;
 import indexes.PositionalPosting;

@@ -2,7 +2,7 @@ package helper;
 
 import indexes.KGramIndex;
 import indexes.diskPart.DiskInvertedIndex;
-import query.QueryTokenStream;
+import token.QueryTokenStream;
 import query.processor.DiskQueryProcessor;
 import java.util.ArrayList;
 import java.util.List;

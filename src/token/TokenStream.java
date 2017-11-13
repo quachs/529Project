@@ -1,4 +1,4 @@
-package query;
+package token;
 
 /**
  TokenStreams read tokens one at a time from a stream of input.

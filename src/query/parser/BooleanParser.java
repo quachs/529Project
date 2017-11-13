@@ -9,7 +9,7 @@ import indexes.KGramIndex;
 import indexes.PositionalInvertedIndex;
 import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
-import query.QueryTokenStream;
+import token.QueryTokenStream;
 import java.util.*;
 import query.processor.DiskQueryProcessor;
 
