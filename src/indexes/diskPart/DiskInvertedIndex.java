@@ -5,30 +5,23 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-public class DiskInvertedIndex {
-
-    private RandomAccessFile mVocabList;
-    private RandomAccessFile mPostings;
+/**
+ * Positional inverted index on disk
+ */
+public class DiskInvertedIndex extends DiskIndex {
+    
     private RandomAccessFile mWeightList;
-    private long[] mVocabTable;
-    private List<String> mFileNames;
     private int mCorpusSize;
-    private List<String> terms = null;
-    private String[] dic;
 
-    // Opens a disk inverted index that was constructed in the given path.
+    /**
+     * Opens a disk inverted index that was constructed in the given path.
+     * @param path 
+     */
     public DiskInvertedIndex(String path) {
         try {
             String pathIndexes = path + "//Indexes";
-
             mVocabList = new RandomAccessFile(new File(pathIndexes, "vocab.bin"), "r");
             mPostings = new RandomAccessFile(new File(pathIndexes, "postings.bin"), "r");
             mWeightList = new RandomAccessFile(new File(pathIndexes, "docWeights.bin"), "r");
@@ -40,8 +33,14 @@ public class DiskInvertedIndex {
         }
     }
 
+    /**
+     * Read the postings from file
+     * @param postings
+     * @param postingsPosition
+     * @param withPositions
+     * @return list of disk postings
+     */
     private static List<DiskPosting> readPostingsFromFile(RandomAccessFile postings,
-            //private static DiskPosting[] readPostingsFromFile(RandomAccessFile postings,
             long postingsPosition, boolean withPositions) {
         try {
             // seek to the position in the file where the postings start.
@@ -105,7 +104,11 @@ public class DiskInvertedIndex {
         return null;
     }
 
-    // Reads and returns a list of document IDs that contain the given term.
+    /**
+     * Reads and returns a list of document IDs that contain the given term.
+     * @param term
+     * @return list of disk postings, null if the term is not found
+     */
     public List<DiskPosting> getPostings(String term) {
         long postingsPosition = binarySearchVocabulary(term);
         if (postingsPosition >= 0) {
@@ -114,8 +117,12 @@ public class DiskInvertedIndex {
         return null;
     }
 
-    // Reads and returns a list of document IDs, term frequencies, 
-    // and positions that contain the given term. For use with phrase queries.
+    /**
+     * Reads and returns a list of document IDs, term frequencies, 
+     * and positions that contain the given term. For use with phrase queries.
+     * @param term
+     * @return list of disk postings, null if the term is not found
+     */
     public List<DiskPosting> getPostingsWithPositions(String term) {
         long postingsPosition = binarySearchVocabulary(term);
         if (postingsPosition >= 0) {
@@ -124,44 +131,11 @@ public class DiskInvertedIndex {
         return null;
     }
 
-    // Locates the byte position of the postings for the given term.
-    private long binarySearchVocabulary(String term) {
-        // do a binary search over the vocabulary, using the vocabTable and the file vocabList.
-        int i = 0, j = mVocabTable.length / 2 - 1;
-        while (i <= j) {
-            try {
-                int m = (i + j) / 2;
-                long vListPosition = mVocabTable[m * 2];
-                int termLength;
-                if (m == mVocabTable.length / 2 - 1) {
-                    termLength = (int) (mVocabList.length() - mVocabTable[m * 2]);
-                } else {
-                    termLength = (int) (mVocabTable[(m + 1) * 2] - vListPosition);
-                }
-
-                mVocabList.seek(vListPosition);
-
-                byte[] buffer = new byte[termLength];
-                mVocabList.read(buffer, 0, termLength);
-                String fileTerm = new String(buffer, "ASCII");
-
-                int compareValue = term.compareTo(fileTerm);
-                if (compareValue == 0) {
-                    // found it!
-                    return mVocabTable[m * 2 + 1];
-                } else if (compareValue < 0) {
-                    j = m - 1;
-                } else {
-                    i = m + 1;
-                }
-            } catch (IOException ex) {
-                System.out.println(ex.toString());
-            }
-        }
-        return -1;
-    }
-
-    // Reads the file vocabTable.bin into memory.
+    /**
+     * Reads the file vocabTable.bin into memory.
+     * @param indexName
+     * @return byte position of vocabulary
+     */
     private static long[] readVocabTable(String indexName) {
         try {
             long[] vocabTable;
@@ -189,8 +163,12 @@ public class DiskInvertedIndex {
         return null;
     }
 
-    // Reads the file corpusSize.bin into memory.
-    private static int readCorpusSize(String indexName) {
+    /**
+     * Reads the file corpusSize.bin into memory.
+     * @param indexName
+     * @return corpus size
+     */
+    private int readCorpusSize(String indexName) {
 
         int corpusSize = 0;
 
@@ -210,54 +188,11 @@ public class DiskInvertedIndex {
         }
     }
 
-    public int getTermCount() {
-        return mVocabTable.length / 2;
-    }
-
     /**
-     * Walk the file tree to get the names of the files
-     *
-     * @param path directory path
-     * @return array of file names
+     * Read the document weight from the weight file
+     * @param docId
+     * @return document weight
      */
-    private static List<String> readFileNames(String path) {
-        List<String> fileNames = new ArrayList<String>();
-        try {
-
-            Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
-
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    // process the current working directory and subdirectories
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFile(Path file,
-                        BasicFileAttributes attrs) throws FileNotFoundException {
-                    // only process .json files
-                    if (file.toString().endsWith(".json")) {
-                        fileNames.add(file.toFile().getName()); // add to list
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-
-                // don't throw exceptions if files are locked/other errors occur
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException e) {
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException ex) {
-            System.out.println(ex.toString());
-        }
-        return fileNames;
-    }
-
-    public List<String> getFileNames() {
-        return mFileNames;
-    }
-
     public Double getDocWeight(int docId) {
         try {
             mWeightList.seek(docId * 32);
@@ -270,6 +205,11 @@ public class DiskInvertedIndex {
         return null;
     }
 
+    /**
+     * Read the document length from the weight file
+     * @param docId
+     * @return document length
+     */
     public Double getDocLength(int docId) {
         try {
             mWeightList.seek((docId * 32) + 8);
@@ -282,6 +222,11 @@ public class DiskInvertedIndex {
         return null;
     }
 
+    /**
+     * Read the document byte size from the weight file
+     * @param docId
+     * @return document byte size
+     */
     public Double getDocSize(int docId) {
         try {
             mWeightList.seek((docId * 32) + 16);
@@ -294,6 +239,11 @@ public class DiskInvertedIndex {
         return null;
     }
 
+    /**
+     * Read the average term frequency from the weight file
+     * @param docId
+     * @return document term frequency
+     */
     public Double getAvgTermFrequency(int docId) {
         try {
             mWeightList.seek((docId * 32) + 24);
@@ -306,6 +256,10 @@ public class DiskInvertedIndex {
         return null;
     }
 
+    /**
+     * Read the average document length of the corpus from the weight file
+     * @return average document length of the corpus
+     */
     public Double getAvgDocLength() {
         try {
             mWeightList.seek(mCorpusSize * 32);
@@ -322,31 +276,4 @@ public class DiskInvertedIndex {
         return mCorpusSize;
     }
 
-    public String[] getDictionary() {
-        if (dic == null) {
-            List<String> vocabList = new ArrayList<String>();
-            int i = 0, j = mVocabTable.length / 2 - 1;
-            while (i <= j) {
-                try {
-                    int termLength;
-                    if (i == j) {
-                        termLength = (int) (mVocabList.length() - mVocabTable[i * 2]);
-                    } else {
-                        termLength = (int) (mVocabTable[(i + 1) * 2] - mVocabTable[i * 2]);
-                    }
-
-                    byte[] buffer = new byte[termLength];
-                    mVocabList.read(buffer, 0, termLength);
-                    String term = new String(buffer, "ASCII");
-                    vocabList.add(term);
-                } catch (IOException ex) {
-                    System.out.println(ex.toString());
-                }
-                i++;
-            }
-            dic = vocabList.toArray(new String[0]);
-        }
-            return dic;
-        
-    }
 }
