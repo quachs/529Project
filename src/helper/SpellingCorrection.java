@@ -114,13 +114,18 @@ public class SpellingCorrection {
             if (correctionIndex.contains(i)) {
                 String correction = getCorrection(queryTokens[i]);
                 if (correction == null) {
+                    // Cannot find a suitable correction; keep the same token
                     modified += queryTokens[i] + " ";
                 } else {
+                    // Append the correction to the modified query
                     modified += correction + " ";
                 }
-            }else{
-                modified += queryTokens[i]+" ";
+            } else {
+                modified += queryTokens[i] + " ";
             }
+        }
+        if (isPhrase) {
+            return "\"" + modified.substring(0, modified.length() - 1) + "\"";
         }
         return modified;
     }

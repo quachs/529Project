@@ -61,7 +61,7 @@ public enum FormEnum {
             case WACKY:
                 return "Wacky";
             default:
-                return "Dafault";
+                return "Default";
         }
     }
 }
