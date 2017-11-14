@@ -47,7 +47,7 @@ public enum FormEnum {
 
     /**
      * Get the pretty form of the enum Type to print it in the combo box or to
-     * the buttons at the beginnng.
+     * the buttons at the beginning.
      *
      * @return The string of the type.
      */
