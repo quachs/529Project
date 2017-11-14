@@ -5,7 +5,7 @@ Sandra Kramlich
 Sylvia Quach
 Sean Vidal
 
-Goal: Index a user-provided corpus on disk using the SPIMI strategy. 
+Goal: Index a user-provided corpus on disk. 
 Present the user with a GUI that allows them to execute boolean or 
 ranked queries from a selected on-disk corpus.
 
