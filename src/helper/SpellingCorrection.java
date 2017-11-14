@@ -261,18 +261,23 @@ public class SpellingCorrection {
      * @return edit distance between two strings
      */
     private int editDistance(String string1, String string2, int i, int j) {
-        if (i == 0) {
-            return j;
+        
+        int dp[][] = new int[i+1][j+1];
+        for (int x=0; x<=i; x++)
+        {
+            for (int y=0; y<=j; y++)
+            {
+                if (x==0)
+                    dp[x][y] = y;
+                else if (y==0)
+                    dp[x][y] = x;
+                else if (string1.charAt(x-1) == string2.charAt(y-1))
+                    dp[x][y] = dp[x-1][y-1];
+                else
+                    dp[x][y] = 1 + min(dp[x][y-1], dp[x-1][y], dp[x-1][y-1]); 
+            }
         }
-        if (j == 0) {
-            return i;
-        }
-        if (string1.charAt(i - 1) == string2.charAt(j - 1)) {
-            return editDistance(string1, string2, i - 1, j - 1);
-        }
-        return 1 + min(editDistance(string1, string2, i - 1, j),
-                editDistance(string1, string2, i, j - 1),
-                editDistance(string1, string2, i - 1, j - 1));
+        return dp[i][j];
     }
 
     /**
