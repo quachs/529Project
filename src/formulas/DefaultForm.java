@@ -5,7 +5,7 @@ import indexes.diskPart.DiskPosting;
 import java.util.List;
 
 /**
- * Formular for calclatiing the default algorithm as discribed in the paper.
+ * Formula for calculating the default algorithm as described in the paper.
  */
 public class DefaultForm extends Formula {
 
@@ -13,7 +13,7 @@ public class DefaultForm extends Formula {
      * Call parent constructor to save the disk inverted index.
      *
      * @param dIndex The disk inverted index is needed for all calculations in
-     * every formular.
+     * every formula.
      */
     public DefaultForm(DiskInvertedIndex dIndex) {
         super(dIndex);
@@ -42,10 +42,10 @@ public class DefaultForm extends Formula {
     }
 
     /**
-     * Calculate the lengh of the given document.
+     * Calculate the length of the given document.
      *
      * @param docID ID of the document.
-     * @return The lengh of the document
+     * @return The length of the document
      */
     @Override
     public double getL_D(int docID) {

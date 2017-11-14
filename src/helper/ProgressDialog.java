@@ -8,8 +8,8 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
 /**
- * Create a dialog for showing a progressbar whenever the something takes to
- * long to proccess that the user knows that the project is working.
+ * Create a dialog for showing a progress bar whenever the something takes to
+ * long to process that the user knows that the project is working.
  */
 public class ProgressDialog {
 
@@ -37,15 +37,15 @@ public class ProgressDialog {
      * Create the Progress Bar
      */
     private void createProgressBar() {
-        JPanel contentPane = new JPanel(); // create a new panel        
-        contentPane.setPreferredSize(new Dimension(300, 100)); // set preferred size
-        // initialize progress bar and add it to the panel
+        JPanel contentPane = new JPanel(); // Create a new panel        
+        contentPane.setPreferredSize(new Dimension(300, 100)); // Set preferred size
+        // Initialize progress bar and add it to the panel
         JProgressBar bar = new JProgressBar(SwingConstants.HORIZONTAL);
         bar.setIndeterminate(true);
         contentPane.add(bar);
-        progressDialog.setContentPane(contentPane); // add panel to the dialog        
-        progressDialog.pack(); // pack the dialog you minimalize the size of it        
-        progressDialog.setLocationRelativeTo(null); // set the location to the center of the screen
+        progressDialog.setContentPane(contentPane); // Add panel to the dialog        
+        progressDialog.pack(); // Pack the dialog you minimalize the size of it        
+        progressDialog.setLocationRelativeTo(null); // Set the location to the center of the screen
     }
 
     /**

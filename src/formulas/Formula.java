@@ -5,7 +5,7 @@ import indexes.diskPart.DiskPosting;
 import java.util.List;
 
 /**
- * Abstract class for all formulars. They have to provide the three given
+ * Abstract class for all formulas. They have to provide the three given
  * methods.
  */
 public abstract class Formula {
@@ -13,7 +13,7 @@ public abstract class Formula {
     DiskInvertedIndex dIndex;
 
     /**
-     * Save the Diskinverted Index for caluclating wqt, wtd and L_d
+     * Save the Diskinverted Index for calculating wqt, wtd and L_d
      *
      * @param dIndex
      */
@@ -38,10 +38,10 @@ public abstract class Formula {
     public abstract double calcWDT(DiskPosting dPosting);
 
     /**
-     * Calculate the lengh of the given document.
+     * Calculate the length of the given document.
      *
      * @param docID ID of the document.
-     * @return The lengh of the document
+     * @return The length of the document
      */
     public abstract double getL_D(int docID);
 }

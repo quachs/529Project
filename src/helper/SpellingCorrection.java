@@ -125,8 +125,8 @@ public class SpellingCorrection {
     /**
      * Generate a spelling correction for the given token
      *
-     * @param token mispelled query token
-     * @return spelling correction of the given mispelled query
+     * @param token misspelled query token
+     * @return spelling correction of the given misspelled query
      */
     private String getCorrection(String token) {
 

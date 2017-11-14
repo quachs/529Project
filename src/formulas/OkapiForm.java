@@ -5,7 +5,7 @@ import indexes.diskPart.DiskPosting;
 import java.util.List;
 
 /**
- * Formular for calclatiing the okapi algorithm as discribed in the paper.
+ * Formula for calculating the okapi algorithm as described in the paper.
  */
 public class OkapiForm extends Formula {
 
@@ -15,7 +15,7 @@ public class OkapiForm extends Formula {
      * Call parent constructor to save the disk inverted index.
      *
      * @param dIndex The disk inverted index is needed for all calculations in
-     * every formular.
+     * every formula.
      */
     public OkapiForm(DiskInvertedIndex dIndex) {
         super(dIndex);
@@ -45,10 +45,10 @@ public class OkapiForm extends Formula {
     }
 
     /**
-     * Calculate the lengh of the given document.
+     * Calculate the length of the given document.
      *
      * @param docID ID of the document.
-     * @return The lengh of the document
+     * @return The length of the document
      */
     @Override
     public double getL_D(int docID) {
@@ -57,7 +57,7 @@ public class OkapiForm extends Formula {
 
     /**
      * This algorithm is the only one who needs the term frequency for a
-     * document to calculate the lengh of the document. It is set during the
+     * document to calculate the length of the document. It is set during the
      * runtime when it is needed.
      *
      * @param dPosting Posting that saves the term frequency.
