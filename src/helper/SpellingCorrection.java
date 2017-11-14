@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 /**
  * Spelling correction module
+ * Note: does not work with phrases
  *
  */
 public class SpellingCorrection {
@@ -29,14 +30,7 @@ public class SpellingCorrection {
         this.dIndex = dIndex;
         this.kIndex = kIndex;
 
-        // Trim the quotations if phrase
-        if (query.contains("\"")) {
-            query = query.substring(1, query.length() - 1);
-            isPhrase = true;
-        } else {
-            isPhrase = false;
-        }
-
+        query = query.replaceAll("\"", "");
         queryTokens = query.split(" ");
         correctionIndex = getCorrectionIndexList(queryTokens);
 
@@ -83,12 +77,13 @@ public class SpellingCorrection {
         for (String token : this.queryTokens) {
             if (!token.matches(OP_REGEX) && !token.contains("*")) {
                 try {
-                    postingSize += this.dIndex.getPostings(token).size();
+                    QueryTokenStream t = new QueryTokenStream(token);
+                    String term = t.nextToken();
+                    postingSize += this.dIndex.getPostings(term).size();
                 } catch (NullPointerException ex) {
                 }
             }
         }
-
         if (postingSize <= DF_THRESHOLD) {
             for (String token : this.queryTokens) {
                 QueryTokenStream t = new QueryTokenStream(token);
@@ -123,9 +118,6 @@ public class SpellingCorrection {
             } else {
                 modified += queryTokens[i] + " ";
             }
-        }
-        if (isPhrase) {
-            return "\"" + modified.substring(0, modified.length() - 1) + "\"";
         }
         return modified;
     }
