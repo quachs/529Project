@@ -1,5 +1,7 @@
 package retrievals.rankedRetrieval;
 
+// See README for references
+
 import formulas.DefaultForm;
 import formulas.FormEnum;
 import formulas.Formula;
@@ -12,9 +14,6 @@ import indexes.diskPart.DiskInvertedIndex;
 import indexes.diskPart.DiskPosting;
 import query.processor.DiskQueryProcessor;
 import java.util.*;
-
-//https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
-//https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
 
 /**
  * Class used to process ranked queries;

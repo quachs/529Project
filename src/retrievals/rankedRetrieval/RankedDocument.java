@@ -1,5 +1,7 @@
 package retrievals.rankedRetrieval;
 
+// See README for references
+
 import indexes.diskPart.DiskPosting;
 
 /**
@@ -7,9 +9,7 @@ import indexes.diskPart.DiskPosting;
  * A class that maintains an accumulated document score for 
  * every relevant document found through a ranked query.
  * 
- * @author Sean
  */
-//https://docs.oracle.com/javase/7/docs/api/java/lang/Comparable.html
 public class RankedDocument implements Comparable<RankedDocument>{
     
     private double accumulatedScore;

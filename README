@@ -9,6 +9,14 @@ Goal: Index a user-provided corpus on disk using the SPIMI strategy.
 Present the user with a GUI that allows them to execute boolean or 
 ranked queries from a selected on-disk corpus.
 
+Sub-goals: 
+1. Write the KGramIndex associated with this index to disk.
+2. Write the Soundex associated with this index to disk.
+3. Provide the user the ability to rank relevant documents based 
+	on one of four document-scoring strategies.
+4. Apply spelling correction to query literals for both boolean 
+	and ranked queries. 
+
 ----------------------------------------------------------------
 
 General Program Flow:
@@ -74,7 +82,7 @@ OR queries -> [AND query]+
 AUTHOR queries -> [query literal]
 	NOTE: "author query" option must be selected from drop down menu
 
-Literals/Queries:
+** Literals/Queries:
 query literal - a standard, one-word term
 wildcard query - a one-word term with leading, trailing, or embedded * characters
 near query - a literal of the form [term1] near\[k] [term2]
@@ -86,12 +94,33 @@ Types of user queries that will not work:
 ... [query literal] near\[k] [wildcard literal] ...
 ... [wildcard literal] near\[k] [wildcard literal] ...
 
-In other words, wildcard queries can not be embedded within near queries
+In other words, wildcard queries can not be embedded within near queries.
+
+** A note on spelling correction:
+Spelling correction works on all query literals except those that include phrases.
+
+----------------------------------------------------------------
 
 ******** Ranked Queries ********
 Literals/Queries:
 query literal - a standard, one-word term
 wildcard query - a one-word term with leading, trailing, or embeded * characters.
+
+** A note on discrepancies between this milestone's document scoring and the demo project:
+There is a difference between the size of the respective indeces between the two projects.
+A possible result is the way both project's appear to index hyphenated tokens: the demo project
+appears to perform some additional processing on the token on the right-hand-side of a hyphen
+(where the form of a hyphenated token is [l.h.s.]-[r.h.s]).  The processing seems to occur on 
+tokens with suffixes that end in -er, -ed, -eed, -ning, etc.  A reasonable guess is that a 
+different stemming algorithm than the one implemented in this milestone's is being run on 
+these right-hand-side tokens before indexing.
+
+The boolean result sizes of affected terms tend to be larger in this milestone than the
+result sizes of the same term in the demo.  While not a significant issue in any given boolean 
+search, this discrepancy in sizes directly affects the document frequency and term frequency values needed 
+to execute a successful ranked query.  Ranked queries that only use unaffected terms tend to generate 
+ranked results comparable across both projects.  Unfortunately, this issue was unable to be resolved
+by the milestone deadline and remains an outstanding issue.    
 
 ----------------------------------------------------------------
 
@@ -119,6 +148,7 @@ https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#endsWith(java.la
 https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replaceAll(java.lang.String,%20java.lang.String)
 https://docs.oracle.com/javase/7/docs/api/java/lang/Double.html
 https://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html
+//https://docs.oracle.com/javase/7/docs/api/java/lang/Comparable.html
 
 [NOTE: This reference list is not exhaustive; 
 additional references can be found within this project's code]
