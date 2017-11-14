@@ -10,8 +10,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Spelling correction module
- * Note: does not work with phrases
+ * Spelling correction module Note: does not work with phrases
  *
  */
 public class SpellingCorrection {
@@ -253,20 +252,19 @@ public class SpellingCorrection {
      * @return edit distance between two strings
      */
     private int editDistance(String string1, String string2, int i, int j) {
-        
-        int dp[][] = new int[i+1][j+1];
-        for (int x=0; x<=i; x++)
-        {
-            for (int y=0; y<=j; y++)
-            {
-                if (x==0)
+
+        int dp[][] = new int[i + 1][j + 1];
+        for (int x = 0; x <= i; x++) {
+            for (int y = 0; y <= j; y++) {
+                if (x == 0) {
                     dp[x][y] = y;
-                else if (y==0)
+                } else if (y == 0) {
                     dp[x][y] = x;
-                else if (string1.charAt(x-1) == string2.charAt(y-1))
-                    dp[x][y] = dp[x-1][y-1];
-                else
-                    dp[x][y] = 1 + min(dp[x][y-1], dp[x-1][y], dp[x-1][y-1]); 
+                } else if (string1.charAt(x - 1) == string2.charAt(y - 1)) {
+                    dp[x][y] = dp[x - 1][y - 1];
+                } else {
+                    dp[x][y] = 1 + min(dp[x][y - 1], dp[x - 1][y], dp[x - 1][y - 1]);
+                }
             }
         }
         return dp[i][j];
