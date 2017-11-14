@@ -42,12 +42,13 @@ import javax.swing.ScrollPaneConstants;
 import start.UserInterface;
 
 /**
- * Represents the GUI for the retrieval part of our project. It is a thread to show the progress
- * bar while it is created. The creation needs some time because of the many
- * things that have to be set at the beginning. It implements MouseListener
- * to react on buttons or label clicks. The ActionListener is for changing combo
- * box selections. The ThreadFinishedCallCack is to notify the GUI that the
- * background thread is finished.
+ * Represents the GUI for the retrieval part of our project. It is a thread to
+ * show the progress bar while it is created. The creation needs some time
+ * because of the many things that have to be set at the beginning. It
+ * implements MouseListener to react on buttons or label clicks. The
+ * ActionListener is for changing combo box selections. The
+ * ThreadFinishedCallCack is to notify the GUI that the background thread is
+ * finished.
  */
 public class RetrievalGUI extends Thread implements MouseListener, ActionListener, ThreadFinishedCallBack {
 
@@ -354,10 +355,10 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
     /**
      * Change the items of the second combo box depending on the selection of
      * the first one. For boolean retrieval, the user can choose between normal
-     * and author search if the documents are saving authors. It is possible
-     * to add different search types to the combo box, if desired.
-     * For ranked retrieval, the user is able to choose between the four different
-     * types of formulas explained in the given milestone prompt.
+     * and author search if the documents are saving authors. It is possible to
+     * add different search types to the combo box, if desired. For ranked
+     * retrieval, the user is able to choose between the four different types of
+     * formulas explained in the given milestone prompt.
      */
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -403,21 +404,21 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 break;
             case BOOLEAN:
                 ArrayList<String> results = task.getResultsBool();
-                if (results.get(0).equals("No documents found.")) {
+                if (results.get(0).equals("No document found.")) {
                     this.foundDocArea.add(new JLabel("No documents found."));
                     this.num.setVisible(false);
                 } else {
-
                     for (String s : results) {
                         JLabel l = new JLabel(s);
                         l.addMouseListener(this);
                         this.labels.add(l);
                         this.foundDocArea.add(l);
                     }
+                    this.number.setText(this.docs);
+                    this.numberRes.setText(this.labels.size() + "");
+                    this.num.setVisible(true);
                 }
-                this.number.setText(this.docs);
-                this.numberRes.setText(this.labels.size() + "");
-                String modified = spellingCorrection();    
+                String modified = spellingCorrection();
                 if (modified != null) {
                     this.tQuery.setText(modified);
                     booleanRetrieval(modified);
@@ -425,7 +426,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                 }
                 break;
             default: // Ranked retrival
-                RankedDocument[] res = task.getResultsRank();            
+                RankedDocument[] res = task.getResultsRank();
                 if (res == null) {
                     JLabel l = new JLabel("No documents found!");
                     this.foundDocArea.add(l);
@@ -438,11 +439,16 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
                         this.labels.add(l);
                         this.foundDocArea.add(l);
                     }
-                    this.number.setText("Ranking for the best 10 documents, but found number: ");
-                    this.numberRes.setText(task.getRank().getSizeOfFoundDocs() + "");
+                    if (labels.size() < 10) {
+                        this.number.setText("Ranking for the best 10 documents, but only found ");
+                        this.numberRes.setText(labels.size() + "");
+                    } else {
+                        this.number.setText("Ranking for the best 10 documents");
+                        this.numberRes.setText("");
+                    }
                     this.num.setVisible(true);
                 }
-                String modifiedQuery = spellingCorrection();    
+                String modifiedQuery = spellingCorrection();
                 if (modifiedQuery != null) {
                     this.tQuery.setText(modifiedQuery);
                     rankedRetrieval(modifiedQuery);
@@ -466,7 +472,7 @@ public class RetrievalGUI extends Thread implements MouseListener, ActionListene
         SpellingCorrection spellCorrect = new SpellingCorrection(this.tQuery.getText(), dIndex, kIndex);
         if (spellCorrect.needCorrection()) {
             String modifiedQuery = spellCorrect.getModifiedQuery();
-            modifiedQuery= modifiedQuery.trim();
+            modifiedQuery = modifiedQuery.trim();
             if (!modifiedQuery.equals(this.tQuery.getText())) {
                 Object[] options = {"Yes", "No"};
                 int pane = JOptionPane.showOptionDialog(this.frame,
