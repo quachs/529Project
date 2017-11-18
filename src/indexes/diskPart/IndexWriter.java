@@ -212,7 +212,7 @@ public class IndexWriter {
      */
     private static void buildPostingsFile(String folder, PositionalInvertedIndex index,
             String[] dictionary, long[] vocabPositions) {
-
+        
         FileOutputStream postingsFile = null;
         try {
 
@@ -230,7 +230,7 @@ public class IndexWriter {
             for (String s : dictionary) {
                 // for each String in dictionary, retrieve its postings.
                 List<PositionalPosting> postings = index.getPostingsList(s);
-
+               
                 // write the vocab table entry for this term: the byte location of the term in the vocab list file,
                 // and the byte location of the postings for the term in the postings file.
                 byte[] vPositionBytes = ByteBuffer.allocate(8).putLong(vocabPositions[vocabI]).array();
@@ -249,7 +249,7 @@ public class IndexWriter {
 
                 int lastDocId = 0;
                 for (PositionalPosting p : postings) {
-
+                    
                     // write the document ID (encode a gap, not a doc ID)
                     byte[] docIdBytes = ByteBuffer.allocate(4).putInt(p.getDocumentID() - lastDocId).array();
                     postingsFile.write(docIdBytes, 0, docIdBytes.length);
