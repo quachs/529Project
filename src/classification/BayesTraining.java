@@ -25,6 +25,9 @@ public class BayesTraining {
     private final Map<String, Double> hTermProb; // Hamilton probabilites
     private final Map<String, Double> mTermProb; // Madison probabilites
     private final Map<String, Double> jTermProb; // Jay probabilites
+    private int hCount; // Hamilton doc count
+    private int mCount; // Madison doc count
+    private int jCount; // Jay doc count
 
     
     
@@ -36,6 +39,9 @@ public class BayesTraining {
         NaiveInvertedIndex hIndex = new NaiveInvertedIndex(); // Hamilton index
         NaiveInvertedIndex mIndex = new NaiveInvertedIndex(); // Madison index
         NaiveInvertedIndex jIndex = new NaiveInvertedIndex(); // Jay index
+        hCount = 0;
+        mCount = 0;
+        jCount = 0;
         indexFile(Paths.get(path + "\\HAMILTON"), hIndex);
         indexFile(Paths.get(path + "\\MADISON"), mIndex);
         indexFile(Paths.get(path + "\\JAY"), jIndex);
@@ -123,19 +129,12 @@ public class BayesTraining {
                 */
                 
                 double n = n00 + n01 + n10 + n11; // size of training set
-
+                
                 // add 1 for Laplace smoothing
                 double f00 = (n * n00 + 1) / ((n00 + n01) * (n00 + n10) + 1);
                 double f01 = (n * n01 + 1) / ((n00 + n01) * (n01 + n11) + 1);
                 double f10 = (n * n10 + 1) / ((n10 + n11) * (n00 + n10) + 1);
                 double f11 = (n * n11 + 1) / ((n10 + n11) * (n01 + n11) + 1);
-
-                /*
-                double f00 = (n * n00) / ((n00 + n01) * (n00 + n10));
-                double f01 = (n * n01) / ((n00 + n01) * (n01 + n11));
-                double f10 = (n * n10) / ((n10 + n11) * (n00 + n10));
-                double f11 = (n * n11) / ((n10 + n11) * (n01 + n11));
-                 */
                 
                 /*
                 System.out.println("f00: " + f00);
@@ -233,9 +232,21 @@ public class BayesTraining {
         ClassTokenStream s = new ClassTokenStream(file);
         while (s.hasNextToken()) {
             String term = s.nextToken();
-            index.addTerm(term, docID);
             trainingTerms.add(term);
+            index.addTerm(term, docID);
             docTerms.add(term);
+        }
+        
+        switch (Authors.valueOf(file.getParentFile().getName())) {
+            case HAMILTON:
+                hCount++;
+                break;
+            case JAY:
+                jCount++;
+                break;
+            case MADISON:
+                mCount++;
+                break;
         }
 
         trainingDocs.add(new TrainingDocument(Authors.valueOf(file.getParentFile().getName()), docTerms));
@@ -245,22 +256,43 @@ public class BayesTraining {
     /**
      * @return the hTermProb
      */
-    public Map<String, Double> getHamiltonTermProb() {
+    public Map<String, Double> getHamiltonProb() {
         return hTermProb;
     }
 
     /**
      * @return the mTermProb
      */
-    public Map<String, Double> getMadisonTermProb() {
+    public Map<String, Double> getMadisonProb() {
         return mTermProb;
     }
 
     /**
      * @return the jTermProb
      */
-    public Map<String, Double> getJayTermProb() {
+    public Map<String, Double> getJayProb() {
         return jTermProb;
+    }
+
+    /**
+     * @return the hDocCount
+     */
+    public int getHamiltonCount() {
+        return hCount;
+    }
+
+    /**
+     * @return the mDocCount
+     */
+    public int getMadisonCount() {
+        return mCount;
+    }
+
+    /**
+     * @return the jDocCount
+     */
+    public int getJayCount() {
+        return jCount;
     }
 
 }
