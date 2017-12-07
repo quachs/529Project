@@ -11,9 +11,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -22,12 +20,13 @@ public class BayesTraining {
 
     private final List<TrainingDocument> trainingDocs;
     private final SortedSet<String> trainingTerms;
-    private final Map<String, Double> hTermProb; // Hamilton probabilites
-    private final Map<String, Double> mTermProb; // Madison probabilites
-    private final Map<String, Double> jTermProb; // Jay probabilites
-    private int hCount; // Hamilton doc count
-    private int mCount; // Madison doc count
-    private int jCount; // Jay doc count
+    private final List<String> discSet; // discriminating set
+    private final List<Double> hamiltonTermProb; 
+    private final List<Double> madisonTermProb; 
+    private final List<Double> jayTermProb; 
+    private int hamiltonCount; 
+    private int madisonCount; 
+    private int jayCount;
 
     
     
@@ -39,21 +38,21 @@ public class BayesTraining {
         NaiveInvertedIndex hIndex = new NaiveInvertedIndex(); // Hamilton index
         NaiveInvertedIndex mIndex = new NaiveInvertedIndex(); // Madison index
         NaiveInvertedIndex jIndex = new NaiveInvertedIndex(); // Jay index
-        hCount = 0;
-        mCount = 0;
-        jCount = 0;
+        hamiltonCount = 0;
+        madisonCount = 0;
+        jayCount = 0;
         indexFile(Paths.get(path + "\\HAMILTON"), hIndex);
         indexFile(Paths.get(path + "\\MADISON"), mIndex);
         indexFile(Paths.get(path + "\\JAY"), jIndex);
-        List<String> discSet = getDiscSet(k);
+        discSet = getDiscSet(k);
         
         // Save the term probabilities for each class
-        hTermProb = new HashMap<String, Double>();
-        mTermProb = new HashMap<String, Double>();
-        jTermProb = new HashMap<String, Double>();
-        calcTermProb(discSet, hIndex, hTermProb);
-        calcTermProb(discSet, mIndex, mTermProb);
-        calcTermProb(discSet, jIndex, jTermProb);
+        hamiltonTermProb = new ArrayList<Double>(k);
+        madisonTermProb = new ArrayList<Double>(k);
+        jayTermProb = new ArrayList<Double>(k);
+        calcTermProb(discSet, hIndex, hamiltonTermProb);
+        calcTermProb(discSet, mIndex, madisonTermProb);
+        calcTermProb(discSet, jIndex, jayTermProb);
         
     }
 
@@ -63,23 +62,23 @@ public class BayesTraining {
      * @param index of the class
      * @param termProb map of a term to its probability
      */
-    private void calcTermProb(List<String> discSet, NaiveInvertedIndex index, Map<String, Double> termProb) {
+    private void calcTermProb(List<String> discSet, NaiveInvertedIndex index, List<Double> termProb) {
         
         int totalTf = 0; // total number of ocurrences in the class
         
-        // Save the tf to the map
-        for (String term : discSet) {
+        // Save (tf + 1) for each term in the class
+        for(int i = 0; i < discSet.size(); i++){
             double tf = 0;
-            if (index.getPostings(term) != null) {
-                tf = index.getPostings(term).size();
+            if(index.getPostings(discSet.get(i)) != null){
+                tf = index.getPostings(discSet.get(i)).size();
                 totalTf += tf;
             }
-            termProb.put(term, tf + 1);
+            termProb.add(tf + 1);
         }
 
-        // Divide the tf to get the probability - update map
-        for (String term : discSet) {
-            termProb.put(term, termProb.get(term) / (totalTf + discSet.size()));
+        // Divide to get the probability - update list
+        for(int i = 0; i < discSet.size(); i++){
+            termProb.set(i, termProb.get(i) / (totalTf + discSet.size()));
         }
 
     }
@@ -237,15 +236,16 @@ public class BayesTraining {
             docTerms.add(term);
         }
         
+        // Increment the document count for the class
         switch (Authors.valueOf(file.getParentFile().getName())) {
             case HAMILTON:
-                hCount++;
+                hamiltonCount++;
                 break;
             case JAY:
-                jCount++;
+                jayCount++;
                 break;
             case MADISON:
-                mCount++;
+                madisonCount++;
                 break;
         }
 
@@ -256,43 +256,50 @@ public class BayesTraining {
     /**
      * @return the hTermProb
      */
-    public Map<String, Double> getHamiltonProb() {
-        return hTermProb;
+    public List<Double> getHamiltonProb() {
+        return hamiltonTermProb;
     }
 
     /**
      * @return the mTermProb
      */
-    public Map<String, Double> getMadisonProb() {
-        return mTermProb;
+    public List<Double> getMadisonProb() {
+        return madisonTermProb;
     }
 
     /**
      * @return the jTermProb
      */
-    public Map<String, Double> getJayProb() {
-        return jTermProb;
+    public List<Double> getJayProb() {
+        return jayTermProb;
     }
 
     /**
      * @return the hDocCount
      */
     public int getHamiltonCount() {
-        return hCount;
+        return hamiltonCount;
     }
 
     /**
      * @return the mDocCount
      */
     public int getMadisonCount() {
-        return mCount;
+        return madisonCount;
     }
 
     /**
      * @return the jDocCount
      */
     public int getJayCount() {
-        return jCount;
+        return jayCount;
+    }
+
+    /**
+     * @return the discSet
+     */
+    public List<String> getDiscSet() {
+        return discSet;
     }
 
 }

@@ -10,11 +10,8 @@ public class TestEngine {
     public static void main(String[] args) throws IOException {
         
         //final Path path = Paths.get("C:\\Users\\t420\\Documents\\federalist-papers");
-        BayesTraining b = new BayesTraining("C:\\Users\\t420\\Documents\\federalist-papers", 30);
+        BayesTraining b = new BayesTraining("C:\\Users\\t420\\Documents\\federalist-papers", 50);
         
-        System.out.println("H count: "+b.getHamiltonCount());
-        System.out.println("M count: "+b.getMadisonCount());
-        System.out.println("J count: "+b.getJayCount());
         
     }
 
