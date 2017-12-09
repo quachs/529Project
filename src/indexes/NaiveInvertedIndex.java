@@ -2,6 +2,9 @@ package indexes;
 
 import java.util.*;
 
+/*
+* Resuse from Homework3
+*/
 public class NaiveInvertedIndex {
 
     private HashMap<String, List<Integer>> mIndex;

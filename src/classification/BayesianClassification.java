@@ -63,7 +63,7 @@ public class BayesianClassification {
 
     public void runClassifier() {
 
-        double n = hamiltonCount + madisonCount + jayCount; // training set count
+        double n = trainingDocs.size();
 
         for (int docId = 0; docId < disputedFileNames.size(); docId++) {
 
@@ -84,16 +84,17 @@ public class BayesianClassification {
                 }
             }
 
-            
+            // Print the results
             System.out.print(disputedFileNames.get(docId)+ " -> ");
             System.out.println(maxProb(new ClassProb(Authors.HAMILTON, hamiltonProb),
                                     new ClassProb(Authors.JAY, jayProb), 
                                     new ClassProb(Authors.MADISON, madisonProb)));
-           
+            
             System.out.println("Hamilton: " + hamiltonProb);
             System.out.println("Jay: " + jayProb);
             System.out.println("Madison: " + madisonProb);
             System.out.println();
+            
         }
     }
 
@@ -158,6 +159,7 @@ public class BayesianClassification {
     private List<String> getDiscSet(int k) {
 
         PriorityQueue<MutualInfo> miQueue = new PriorityQueue<MutualInfo>();
+        double n = trainingDocs.size();
 
         for (Authors author : Authors.values()) { // iterate the classes
             for (String term : trainingTerms) { // iterate the terms
@@ -175,12 +177,13 @@ public class BayesianClassification {
                             n10++;
                         }
 
-                    } else // not in the class
-                     if (doc.getTerms().contains(term)) {
+                    } else { // not in the class
+                        if (doc.getTerms().contains(term)) {
                             n01++;
                         } else {
                             n00++;
                         }
+                    }
                 }
 
                 /*
@@ -190,8 +193,6 @@ public class BayesianClassification {
                 System.out.println("n10: " + n10);
                 System.out.println("n11: " + n11);
                  */
-                
-                double n = n00 + n01 + n10 + n11; // size of training set
 
                 // add 1 for Laplace smoothing
                 double f00 = (n * n00 + 1) / ((n00 + n01) * (n00 + n10) + 1);
