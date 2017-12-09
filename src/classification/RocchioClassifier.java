@@ -52,11 +52,18 @@ public class RocchioClassifier {
         if (sfx.getPostings(term) == null){
             return 0.0;
         }
-        //return sfx.getDocumentFrequency(term);
-        return 1.0 / sfx.getDocWeight();
+        return 1.0; 
     }
     
-    private double getDocFrequency(HashMap<String, Double> termMap, String term){
+    /**
+     * 
+     * @param termMap Can either be the normalized binary term weights for an 
+     *                  individual document, or the normalized, 
+     *                  averaged term weights for a centroid
+     * @param term
+     * @return 
+     */
+    private double getTermWeight(HashMap<String, Double> termMap, String term){
         if (termMap.get(term) == null){
             return 0.0;
         }
@@ -72,8 +79,8 @@ public class RocchioClassifier {
         double euclideanDistance = 0.0;
         
         for (String masterTerm : masterDictionary){
-            euclideanDistance += Math.pow(getDocFrequency(centroid.getCentroid(), masterTerm) - 
-                    getDocFrequency(docTerms, masterTerm), 2);
+            euclideanDistance += Math.pow(getTermWeight(centroid.getCentroid(), masterTerm) - 
+                    getTermWeight(docTerms, masterTerm), 2);
         }
         euclideanDistance = Math.sqrt(euclideanDistance);
         
@@ -93,18 +100,20 @@ public class RocchioClassifier {
             fedMap.put(term, 0.0);
             
             List<DiskPosting> dPostings = fedIndex.getPostings(term);           
+            
             for(DiskPosting dPosting : dPostings){
                 
                 double docWeight = fedIndex.getDocWeight(dPosting.getDocumentID());
-                double termVector = calcWDT(dPosting) / docWeight;               
+                double termVector = calcWDT(dPosting) / docWeight;  
                 fedMap.put(term, termVector + fedMap.get(term));
-                fedMap.put(term, fedMap.get(term) / (double) numberOfRelevantDocs);
             }   
+            
+            fedMap.put(term, fedMap.get(term) / (double) numberOfRelevantDocs);
+            
         }                
         
         centroid.setCentroid(fedMap);
         return centroid;
- 
     }
     
     // Add centroids to HashMap that associates a centroid with a class
