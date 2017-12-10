@@ -73,7 +73,7 @@ public class IndexWriter {
     }
 
     /**
-     * Walk through all .json files in a directory and subdirectory and call a
+     * Walk through all .json or .txt files in a directory and subdirectory and call a
      * helper method to do the indexing.
      *
      * @param path path of the directory
@@ -100,7 +100,16 @@ public class IndexWriter {
                         double size = file.toFile().length();
                         docByteSize.add(size);
                         // do the indexing
-                        indexFile(file.toFile(), index, vocabTree, mDocumentID, sIndex);
+                        indexJFile(file.toFile(), index, vocabTree, mDocumentID, sIndex);
+                        mDocumentID++;
+                    }
+                    
+                    if (file.toString().endsWith(".txt")){
+                        // get the number of bytes in the file and add to list
+                        double size = file.toFile().length();
+                        docByteSize.add(size);
+                        // do the indexing
+                        indexTFile(file.toFile(), index, vocabTree, mDocumentID);
                         mDocumentID++;
                     }
                     return FileVisitResult.CONTINUE;
@@ -119,6 +128,45 @@ public class IndexWriter {
         }
     }
 
+    private int indexTFile(File file, PositionalInvertedIndex index, SortedSet vocabTree, int docID) throws
+            FileNotFoundException {
+                
+        // add the document to the list for tracking terms
+            docTermFrequency.add(new HashMap<String, Integer>());
+
+            // process the body field of the document
+            SimpleTokenStream s = new SimpleTokenStream(file);
+            int positionNumber = 0;
+            while (s.hasNextToken()) {
+                TokenProcessorStream t = new TokenProcessorStream(s.nextToken());
+                while (t.hasNextToken()) {
+                    String proToken = t.nextToken(); // the processed token
+                    if (proToken != null) {
+                        String term = PorterStemmer.getStem(proToken);
+                        // add the term to the inverted index
+                        index.addTerm(term, docID, positionNumber);
+                        // add the processed token to the vocab tree
+                        vocabTree.add(proToken);
+                        // get the frequency of the term and increment it
+                        int termFrequency = docTermFrequency.get(docID).containsKey(term)
+                                ? docTermFrequency.get(docID).get(term) : 0;
+                        docTermFrequency.get(docID).put(term, termFrequency + 1);
+
+                    }
+                }
+                positionNumber++;
+            }
+            
+            // increment the corpus size
+            corpusSize++;
+
+            // add the number of tokens in the document to list
+            docLength.add(positionNumber);
+
+        return corpusSize;
+    }
+    
+    
     /**
      * Index a file by reading a series of tokens from the body of the file.
      *
@@ -126,7 +174,7 @@ public class IndexWriter {
      * @param index the positional inverted index
      * @param docID document ID
      */
-    private int indexFile(File file, PositionalInvertedIndex index, SortedSet vocabTree, int docID, SoundexIndex sIndex) {
+    private int indexJFile(File file, PositionalInvertedIndex index, SortedSet vocabTree, int docID, SoundexIndex sIndex) {
         try {
 
             // Gson object to read json file

@@ -103,6 +103,13 @@ public class DiskInvertedIndex extends DiskIndex {
         }
         return null;
     }
+    
+    public int getCorpusFrequency(String term){
+        if (getPostings(term) == null){
+            return 0;
+        }
+        return getPostings(term).size();
+    }
 
     /**
      * Reads and returns a list of document IDs that contain the given term.
