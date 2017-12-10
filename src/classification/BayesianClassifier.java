@@ -16,21 +16,24 @@ import java.util.PriorityQueue;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class BayesianClassification {
+public class BayesianClassifier {
 
     private final List<String> discSet; // discriminating set
     private final List<TrainingDocument> trainingDocs;
     private final SortedSet<String> trainingTerms;
+    
+    // the index of the list corresponds to terms in the discriminating set
     private final List<Double> hamiltonTermProb;
     private final List<Double> jayTermProb;
     private final List<Double> madisonTermProb;
     private int hamiltonCount;
     private int jayCount;
     private int madisonCount;
+    
     private final NaiveInvertedIndex disputedIndex;
     private final List<String> disputedFileNames;
 
-    public BayesianClassification(String path, int k) {
+    public BayesianClassifier(String path, int k) {
 
         // Build the discriminating set
         trainingDocs = new ArrayList<TrainingDocument>();
@@ -50,9 +53,9 @@ public class BayesianClassification {
         hamiltonTermProb = new ArrayList<Double>(k);
         madisonTermProb = new ArrayList<Double>(k);
         jayTermProb = new ArrayList<Double>(k);
-        calcTermProb(discSet, hamiltonIndex, hamiltonTermProb);
-        calcTermProb(discSet, madisonIndex, madisonTermProb);
-        calcTermProb(discSet, jayIndex, jayTermProb);
+        calcTermProb(hamiltonIndex, hamiltonTermProb);
+        calcTermProb(madisonIndex, madisonTermProb);
+        calcTermProb(jayIndex, jayTermProb);
 
         // Index the disputed documents
         disputedFileNames = new ArrayList<String>();
@@ -105,7 +108,7 @@ public class BayesianClassification {
      * @return 
      */
     private ClassProb maxProb(ClassProb a, ClassProb b) {
-        if(a.getProb() > b.getProb()){
+        if(a.getProb() > b.getProb()) {
             return a;
         }
         return b;
@@ -129,7 +132,7 @@ public class BayesianClassification {
      * @param index of the class
      * @param termProb map of a term to its probability
      */
-    private void calcTermProb(List<String> discSet, NaiveInvertedIndex index, List<Double> termProb) {
+    private void calcTermProb(NaiveInvertedIndex index, List<Double> termProb) {
 
         int totalTf = 0; // total number of ocurrences in the class
 
