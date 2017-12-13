@@ -6,12 +6,10 @@ package classification;
 public class MutualInfo implements Comparable<MutualInfo> {
 
     private String term;
-    private Authors author;
     private double score;
 
-    public MutualInfo(String term, Authors author, double score) {
+    public MutualInfo(String term, double score) {
         this.term = term;
-        this.author = author;
         this.score = score;
     }
 
@@ -23,13 +21,6 @@ public class MutualInfo implements Comparable<MutualInfo> {
     }
 
     /**
-     * @return the author
-     */
-    public Authors getAuthor() {
-        return author;
-    }
-
-    /**
      * @return the mutualInfo
      */
     public double getScore() {
@@ -37,7 +28,7 @@ public class MutualInfo implements Comparable<MutualInfo> {
     }
 
     public String toString() {
-        return author + ":" + term + " -> " + score;
+        return term + " : " + score;
     }
 
     public int compareTo(MutualInfo other) {

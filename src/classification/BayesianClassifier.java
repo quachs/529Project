@@ -1,6 +1,7 @@
 package classification;
 
-import indexes.NaiveInvertedIndex;
+import indexes.PositionalInvertedIndex;
+import indexes.PositionalPosting;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class BayesianClassifier {
     private final List<String> discSet; // discriminating set
     private final List<TrainingDocument> trainingDocs;
     private final SortedSet<String> trainingTerms;
-    
+
     // the index of the list corresponds to terms in the discriminating set
     private final List<Double> hamiltonTermProb;
     private final List<Double> jayTermProb;
@@ -29,8 +30,8 @@ public class BayesianClassifier {
     private int hamiltonCount;
     private int jayCount;
     private int madisonCount;
-    
-    private final NaiveInvertedIndex disputedIndex;
+
+    private final PositionalInvertedIndex disputedIndex;
     private final List<String> disputedFileNames;
 
     public BayesianClassifier(String path, int k) {
@@ -38,9 +39,9 @@ public class BayesianClassifier {
         // Build the discriminating set
         trainingDocs = new ArrayList<TrainingDocument>();
         trainingTerms = new TreeSet<String>();
-        NaiveInvertedIndex hamiltonIndex = new NaiveInvertedIndex();
-        NaiveInvertedIndex jayIndex = new NaiveInvertedIndex();
-        NaiveInvertedIndex madisonIndex = new NaiveInvertedIndex();
+        PositionalInvertedIndex hamiltonIndex = new PositionalInvertedIndex();
+        PositionalInvertedIndex jayIndex = new PositionalInvertedIndex();
+        PositionalInvertedIndex madisonIndex = new PositionalInvertedIndex();
         hamiltonCount = 0;
         jayCount = 0;
         madisonCount = 0;
@@ -59,15 +60,16 @@ public class BayesianClassifier {
 
         // Index the disputed documents
         disputedFileNames = new ArrayList<String>();
-        disputedIndex = new NaiveInvertedIndex();
+        disputedIndex = new PositionalInvertedIndex();
         indexFile(Paths.get(path + "\\DISPUTED"), disputedIndex);
-        
+
     }
 
     public void runClassifier() {
 
         double n = trainingDocs.size();
 
+        // Iterate the disputed docs
         for (int docId = 0; docId < disputedFileNames.size(); docId++) {
 
             // Probability of the doc being in the class
@@ -75,11 +77,16 @@ public class BayesianClassifier {
             double jayProb = Math.log(jayCount / n);
             double madisonProb = Math.log(madisonCount / n);
 
+            // Iterate the discriminating set
             for (int termIndex = 0; termIndex < discSet.size(); termIndex++) {
-                
-                // Add the log of term probability to the corresponding class
-                if (disputedIndex.getPostings(discSet.get(termIndex)) != null) {
-                    if (disputedIndex.getPostings(discSet.get(termIndex)).contains(docId)) {
+
+                if (disputedIndex.getPostingsList(discSet.get(termIndex)) != null) {
+
+                    // Check if the term exists in the disputed doc
+                    List<PositionalPosting> pList = disputedIndex.getPostingsList(discSet.get(termIndex));
+                    if (pList.contains(new PositionalPosting(docId, 0))) {
+
+                        // Add the log of term probability to the corresponding class
                         hamiltonProb += Math.log(hamiltonTermProb.get(termIndex));
                         jayProb += Math.log(jayTermProb.get(termIndex));
                         madisonProb += Math.log(madisonTermProb.get(termIndex));
@@ -88,41 +95,43 @@ public class BayesianClassifier {
             }
 
             // Print the results
-            System.out.print(disputedFileNames.get(docId)+ " -> ");
-            System.out.println(maxProb(new ClassProb(Authors.HAMILTON, hamiltonProb),
-                                    new ClassProb(Authors.JAY, jayProb), 
-                                    new ClassProb(Authors.MADISON, madisonProb)));
-            
-            System.out.println("Hamilton: " + hamiltonProb);
-            System.out.println("Jay: " + jayProb);
-            System.out.println("Madison: " + madisonProb);
             System.out.println();
-            
+            System.out.print(disputedFileNames.get(docId) + " -> ");
+            System.out.println(maxProb(new ClassProb(Authors.HAMILTON, hamiltonProb),
+                    new ClassProb(Authors.JAY, jayProb),
+                    new ClassProb(Authors.MADISON, madisonProb)));
+
+            System.out.println("Ham: " + hamiltonProb);
+            System.out.println("Jay: " + jayProb);
+            System.out.println("Mad: " + madisonProb);
+
         }
     }
 
     /**
      * Return the class object with the higher probability
+     *
      * @param a
      * @param b
-     * @return 
+     * @return
      */
     private ClassProb maxProb(ClassProb a, ClassProb b) {
-        if(a.getProb() > b.getProb()) {
+        if (a.getProb() > b.getProb()) {
             return a;
         }
         return b;
     }
-    
+
     /**
      * Return the class author with the highest probability
+     *
      * @param a
      * @param b
      * @param c
-     * @return 
+     * @return
      */
     private Authors maxProb(ClassProb a, ClassProb b, ClassProb c) {
-        return maxProb(maxProb(a,b), c).getAuthor();
+        return maxProb(maxProb(a, b), c).getAuthor();
     }
 
     /**
@@ -132,18 +141,21 @@ public class BayesianClassifier {
      * @param index of the class
      * @param termProb map of a term to its probability
      */
-    private void calcTermProb(NaiveInvertedIndex index, List<Double> termProb) {
+    private void calcTermProb(PositionalInvertedIndex index, List<Double> termProb) {
 
         int totalTf = 0; // total number of ocurrences in the class
 
         // Save tf for each term in the class
         for (int i = 0; i < discSet.size(); i++) {
-            double tf = 0;
-            if (index.getPostings(discSet.get(i)) != null) {
-                tf = index.getPostings(discSet.get(i)).size();
-                totalTf += tf;
+            double df = 0;
+            if (index.getPostingsList(discSet.get(i)) != null) {
+                List<PositionalPosting> pList = index.getPostingsList(discSet.get(i));
+                for (PositionalPosting p : pList) {
+                    df += p.getTermPositions().size();
+                }
+                totalTf += df;
             }
-            termProb.add(tf + 1); // add 1 for smoothing
+            termProb.add(df + 1); // add 1 for smoothing
         }
 
         // Divide to get the probability - update list
@@ -180,12 +192,11 @@ public class BayesianClassifier {
                             n10++;
                         }
 
-                    } else { // not in the class
-                        if (doc.getTerms().contains(term)) {
-                            n01++;
-                        } else {
-                            n00++;
-                        }
+                    } else // not in the class
+                    if (doc.getTerms().contains(term)) {
+                        n01++;
+                    } else {
+                        n00++;
                     }
                 }
 
@@ -196,7 +207,6 @@ public class BayesianClassifier {
                 System.out.println("n10: " + n10);
                 System.out.println("n11: " + n11);
                  */
-
                 // add 1 for Laplace smoothing
                 double f00 = (n * n00 + 1) / ((n00 + n01) * (n00 + n10) + 1);
                 double f01 = (n * n01 + 1) / ((n00 + n01) * (n01 + n11) + 1);
@@ -209,7 +219,6 @@ public class BayesianClassifier {
                 System.out.println("f10: " + f10);
                 System.out.println("f11: " + f11);
                  */
-                
                 // use change of base to get log base-2
                 double score = (n00 / n) * (Math.log(f00) / Math.log(2))
                         + (n01 / n) * (Math.log(f01) / Math.log(2))
@@ -217,11 +226,10 @@ public class BayesianClassifier {
                         + (n11 / n) * (Math.log(f11) / Math.log(2));
 
                 /*
-                MutualInfo mi = new MutualInfo(term, author, score);
+                MutualInfo mi = new MutualInfo(term, score);
                 System.out.println(mi.toString());
                  */
-                
-                miQueue.add(new MutualInfo(term, author, score));
+                miQueue.add(new MutualInfo(term, score));
 
             } // terms loop
         } // authors loop
@@ -229,10 +237,15 @@ public class BayesianClassifier {
         SortedSet<String> termSet = new TreeSet<String>();
 
         while (termSet.size() < k) {
-            String term = miQueue.poll().getTerm();
-            if (!termSet.contains(term)) {
-                termSet.add(term);
+            MutualInfo mi = miQueue.poll();
+            
+            // Print the top 10 terms and scores
+            if (!termSet.contains(mi.getTerm()) && k == 10) {
+                System.out.println(mi.toString());
             }
+            
+            termSet.add(mi.getTerm());
+
         }
 
         return new ArrayList<String>(termSet);
@@ -244,7 +257,7 @@ public class BayesianClassifier {
      * @param path
      * @param index
      */
-    private void indexFile(Path path, NaiveInvertedIndex index) {
+    private void indexFile(Path path, PositionalInvertedIndex index) {
         try {
             // This is our standard "walk through all .txt files" code.
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
@@ -301,17 +314,18 @@ public class BayesianClassifier {
      * @param index
      * @throws FileNotFoundException
      */
-    private void indexFile(File file, int docID, NaiveInvertedIndex index) throws FileNotFoundException {
+    private void indexFile(File file, int docID, PositionalInvertedIndex index) throws FileNotFoundException {
 
         // Store the document terms for TrainingDocument object
         SortedSet<String> docTerms = new TreeSet<String>();
-
         ClassTokenStream s = new ClassTokenStream(file);
+        int position = 0;
         while (s.hasNextToken()) {
             String term = s.nextToken();
             trainingTerms.add(term);
-            index.addTerm(term, docID);
+            index.addTerm(term, docID, position);
             docTerms.add(term);
+            position++;
         }
 
         // Increment the document count for the class
@@ -339,10 +353,11 @@ public class BayesianClassifier {
      * @param index
      * @throws FileNotFoundException
      */
-    private void indexDisputedFile(File file, int docID, NaiveInvertedIndex index) throws FileNotFoundException {
+    private void indexDisputedFile(File file, int docID, PositionalInvertedIndex index) throws FileNotFoundException {
         ClassTokenStream s = new ClassTokenStream(file);
+        int position = 0;
         while (s.hasNextToken()) {
-            index.addTerm(s.nextToken(), docID);
+            index.addTerm(s.nextToken(), docID, position);
         }
 
     }

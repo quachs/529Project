@@ -1,6 +1,5 @@
 package indexes;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,5 +49,15 @@ public class PositionalPosting implements Comparable<PositionalPosting> {
     @Override
     public String toString() {
         return "<" + documentID + ":" + termPositions.toString() + ">";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof PositionalPosting) {
+            if (documentID == ((PositionalPosting) o).documentID) {
+                return true;
+            }
+        }
+        return false;
     }
 }
