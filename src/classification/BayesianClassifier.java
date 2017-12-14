@@ -66,7 +66,7 @@ public class BayesianClassifier {
     }
 
     public void runClassifier() {
-
+        
         double n = trainingDocs.size();
 
         // Iterate the disputed docs
@@ -76,16 +76,16 @@ public class BayesianClassifier {
             double hamiltonProb = Math.log(hamiltonCount / n);
             double jayProb = Math.log(jayCount / n);
             double madisonProb = Math.log(madisonCount / n);
-
+            
             // Iterate the discriminating set
             for (int termIndex = 0; termIndex < discSet.size(); termIndex++) {
-
+                
                 if (disputedIndex.getPostingsList(discSet.get(termIndex)) != null) {
 
                     // Check if the term exists in the disputed doc
                     List<PositionalPosting> pList = disputedIndex.getPostingsList(discSet.get(termIndex));
                     if (pList.contains(new PositionalPosting(docId, 0))) {
-
+                        
                         // Add the log of term probability to the corresponding class
                         hamiltonProb += Math.log(hamiltonTermProb.get(termIndex));
                         jayProb += Math.log(jayTermProb.get(termIndex));
@@ -147,15 +147,15 @@ public class BayesianClassifier {
 
         // Save tf for each term in the class
         for (int i = 0; i < discSet.size(); i++) {
-            double df = 0;
+            double tf = 0;
             if (index.getPostingsList(discSet.get(i)) != null) {
                 List<PositionalPosting> pList = index.getPostingsList(discSet.get(i));
                 for (PositionalPosting p : pList) {
-                    df += p.getTermPositions().size();
+                    tf += p.getTermPositions().size();
                 }
-                totalTf += df;
+                totalTf += tf;
             }
-            termProb.add(df + 1); // add 1 for smoothing
+            termProb.add(tf + 1); // add 1 for smoothing
         }
 
         // Divide to get the probability - update list
@@ -240,7 +240,7 @@ public class BayesianClassifier {
             MutualInfo mi = miQueue.poll();
             
             // Print the top 10 terms and scores
-            if (!termSet.contains(mi.getTerm()) && k == 10) {
+            if (k == 10 && !termSet.contains(mi.getTerm())) {
                 System.out.println(mi.toString());
             }
             

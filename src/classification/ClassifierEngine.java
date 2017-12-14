@@ -1,9 +1,6 @@
 package classification;
 
 import java.io.*;
-import indexes.PositionalPosting;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ClassifierEngine {
     
@@ -23,7 +20,7 @@ public class ClassifierEngine {
         System.out.println("\n===== DISCSIZE: 50 =====\n");
         BayesianClassifier c50 = new BayesianClassifier(path, 50);
         c50.runClassifier();
-        
+        /*
         System.out.println("\n===== DISCSIZE: 100 =====\n");
         BayesianClassifier c100 = new BayesianClassifier(path, 100);
         c100.runClassifier();
@@ -31,7 +28,7 @@ public class ClassifierEngine {
         System.out.println("\n===== DISCSIZE: 3935 =====\n");
         BayesianClassifier c3935 = new BayesianClassifier(path, 3935);
         c3935.runClassifier();
-        
+        */
         
     }
 
