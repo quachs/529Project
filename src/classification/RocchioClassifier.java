@@ -25,7 +25,6 @@ import java.io.FileNotFoundException;
  */
 public class RocchioClassifier {
 
-    private int numberOfRelevantDocs;
     private int hamSize; // 51
     private int jaySize; // 5
     private int madSize; // 15
@@ -48,28 +47,45 @@ public class RocchioClassifier {
         return (1 + Math.log(dPosting.getTermFrequency()));
     }
     
-    private double getWDT(SingleFileIndex sfx, String term) {    
-        if (sfx.getPostings(term) == null){
-            return 0.0;
-        }
-        return 1.0; 
-    }
-    
     /**
+     * Used to calculate the WDT value for a term in a 
+     * single document vector
      * 
-     * @param termMap Can either be the normalized binary term weights for an 
-     *                  individual document, or the normalized, 
-     *                  averaged term weights for a centroid
+     * @param sfx Single File Index
      * @param term
      * @return 
      */
-    private double getTermWeight(HashMap<String, Double> termMap, String term){
+    private double calcWDT(SingleFileIndex sfx, String term) {    
+        if (sfx.getPostings(term) == null){
+            return 0.0;
+        }
+        return Math.log(1 + sfx.getPostings(term).size());
+    }
+    
+    /**
+     * Returns the weight of a term component found in a document vector
+     * 
+     * @param termMap Can either be the normalized term weights for an 
+     * individual document, or the normalized, averaged term weights for a centroid
+     * @param term
+     * @return 
+     */
+    private double getTermComponentWeight(HashMap<String, Double> termMap, String term){
         if (termMap.get(term) == null){
             return 0.0;
         }
         return termMap.get(term);
     }
     
+    /**
+     * Finds the Euclidean Distance between a centroid vector and a
+     * document vector.
+     * 
+     * @param masterDictionary
+     * @param centroid
+     * @param docTerms
+     * @return 
+     */
     private double getEuclideanDistance(String[] masterDictionary, Centroid centroid, HashMap<String, Double> docTerms){
     
         //Implementation of euclidean distance formula as presented in:
@@ -79,21 +95,28 @@ public class RocchioClassifier {
         double euclideanDistance = 0.0;
         
         for (String masterTerm : masterDictionary){
-            euclideanDistance += Math.pow(getTermWeight(centroid.getCentroid(), masterTerm) - 
-                    getTermWeight(docTerms, masterTerm), 2);
+            euclideanDistance += Math.pow(getTermComponentWeight(centroid.getCentroid(), masterTerm) - 
+                    getTermComponentWeight(docTerms, masterTerm), 2);
         }
         euclideanDistance = Math.sqrt(euclideanDistance);
         
         return euclideanDistance;
     }
     
+    /**
+     * Uses the number of relevant documents associated with a class
+     * to find an averaged score of all document vector components 
+     * 
+     * @param fedIndex
+     * @return 
+     */
     public Centroid calculateCentroid(DiskInvertedIndex fedIndex){
    
         String[] dictionary = fedIndex.getDictionary();        
         HashMap<String, Double> fedMap = new HashMap<String, Double>();
-        Centroid centroid = new Centroid();
+        Centroid fedCentroid = new Centroid();
 
-        numberOfRelevantDocs = fedIndex.getCorpusSize(); 
+        int numberOfRelevantDocs = fedIndex.getCorpusSize(); 
         
         for(String term : dictionary){
             
@@ -112,11 +135,16 @@ public class RocchioClassifier {
             
         }                
         
-        centroid.setCentroid(fedMap);
-        return centroid;
+        fedCentroid.setCentroid(fedMap);
+        return fedCentroid;
     }
     
-    // Add centroids to HashMap that associates a centroid with a class
+    /**
+     * Associate a class centroid with an author
+     * 
+     * @param author 
+     * @param centroid 
+     */
     public void addCentroid(authors author, Centroid centroid){
         centroids.put(author, centroid);
     }
@@ -128,7 +156,6 @@ public class RocchioClassifier {
         System.out.println("Input root folder of Federalist Papers: ");
         String fedPath = scan.nextLine();
                 
-        // Hardcoding these for now
         String hamPath = fedPath + "\\HAMILTON\\";
         String jayPath = fedPath + "\\JAY\\";
         String madPath = fedPath + "\\MADISON\\";
@@ -162,6 +189,43 @@ public class RocchioClassifier {
         addCentroid(authors.JAY, jayCentroid);
         addCentroid(authors.MADISON, madCentroid);
         
+        for (int i = 0; i < 30; i++){
+            System.out.println("Master Vocabulary Term " + i + " - " + masterDictionary[i]);
+        }
+        
+        System.out.println("");
+         
+        String[] hamComponents = new String[hamCentroid.getCentroid().keySet().size()];
+        hamCentroid.getCentroid().keySet().toArray(hamComponents);
+
+        for (int i = 0; i < 30; i++){
+            System.out.println("Hamilton Component " + i + " - " + 
+                    hamComponents[i] + ": " + hamCentroid.getCentroid().get(hamComponents[i]));
+        }
+        
+        System.out.println("");
+        
+        String[] madComponents = new String[madCentroid.getCentroid().keySet().size()];
+        madCentroid.getCentroid().keySet().toArray(madComponents);
+
+        for (int i = 0; i < 30; i++){
+            System.out.println("Madison Component " + i + " - " + 
+                    madComponents[i] + ": " + madCentroid.getCentroid().get(madComponents[i]));
+        }
+        
+        System.out.println("");
+               
+        String[] jayComponents = new String[jayCentroid.getCentroid().keySet().size()];
+        jayCentroid.getCentroid().keySet().toArray(jayComponents);
+
+        for (int i = 0; i < 30; i++){
+            System.out.println("Jay Component " + i + " - " + 
+                    jayComponents[i] + ": " + jayCentroid.getCentroid().get(jayComponents[i]));
+        }
+        
+        System.out.println("");
+        
+        
         // C.D. Manning et al., Introduction to Information Retrieval, Online Edition
         //Cambridge University Press, 2009, p. 295;
         //https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf
@@ -180,12 +244,14 @@ public class RocchioClassifier {
                     SingleFileIndex sfx = new SingleFileIndex(file);
                     String[] fileDictionary = sfx.getDictionary();
                     HashMap<String, Double> docTerms = new HashMap<String, Double>();
-
+                    
                     for (String term : fileDictionary){
                         double docWeight = sfx.getDocWeight();
-                        double termVector = getWDT(sfx, term) / docWeight;               
+                        double termVector = calcWDT(sfx, term) / docWeight;               
                         docTerms.put(term, termVector);
                     }
+                                        
+                    System.out.println("");
 
                     double hamEuclideanDistance = getEuclideanDistance(masterDictionary, hamCentroid, docTerms);
                     pq.add(new RankedClass(hamEuclideanDistance, authors.HAMILTON));
@@ -215,6 +281,16 @@ public class RocchioClassifier {
                     System.out.println(" ");
                     
                     pq.clear();
+                    
+                    if (file.getName().equals("paper_52.txt")){
+                        String[] paper52Components = new String[fileDictionary.length];
+                        docTerms.keySet().toArray(paper52Components);
+                    
+                        for (int i = 0; i < 30; i++){
+                            System.out.println("paper_52 component " + i + " - " + 
+                                    paper52Components[i] + ": " + docTerms.get(paper52Components[i]));
+                        }
+                    }
                 }
                 catch(FileNotFoundException e){
                     
