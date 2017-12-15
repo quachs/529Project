@@ -83,8 +83,7 @@ public class BayesianClassifier {
                 if (disputedIndex.getPostingsList(discSet.get(termIndex)) != null) {
 
                     // Check if the term exists in the disputed doc
-                    List<PositionalPosting> pList = disputedIndex.getPostingsList(discSet.get(termIndex));
-                    if (pList.contains(new PositionalPosting(docId, 0))) {
+                    if (disputedIndex.getDocumentPostingsList(discSet.get(termIndex)).contains(docId)) {
                         
                         // Add the log of term probability to the corresponding class
                         hamiltonProb += Math.log(hamiltonTermProb.get(termIndex));

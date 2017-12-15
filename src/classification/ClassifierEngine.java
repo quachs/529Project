@@ -1,13 +1,24 @@
 package classification;
 
 import java.io.*;
+import java.util.Scanner;
 
 public class ClassifierEngine {
     
     
     public static void main(String[] args) throws IOException {
         
-        String path = "C:\\Users\\t420\\Documents\\federalist-papers";
+        System.out.print("Input root folder of Federalist Papers: ");
+        Scanner in = new Scanner(System.in);
+        String path = in.nextLine();
+        
+        
+        System.out.println("==============================");
+        System.out.println("ROCCHIO CLASSIFICATION");
+        System.out.println("==============================\n");
+        
+        RocchioClassifier rc = new RocchioClassifier();
+        rc.classify(path);
         
         System.out.println("==============================");
         System.out.println("BAYESIAN CLASSIFICATION");
@@ -20,6 +31,7 @@ public class ClassifierEngine {
         System.out.println("\n===== DISCSIZE: 50 =====\n");
         BayesianClassifier c50 = new BayesianClassifier(path, 50);
         c50.runClassifier();
+        
         /*
         System.out.println("\n===== DISCSIZE: 100 =====\n");
         BayesianClassifier c100 = new BayesianClassifier(path, 100);

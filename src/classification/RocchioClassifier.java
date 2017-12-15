@@ -149,12 +149,7 @@ public class RocchioClassifier {
         centroids.put(author, centroid);
     }
        
-    public void classify(){
-   
-        //Federalist root folder: "...\federalist-papers," without quotes
-        Scanner scan = new Scanner(System.in);
-        System.out.println("Input root folder of Federalist Papers: ");
-        String fedPath = scan.nextLine();
+    public void classify(String fedPath){
                 
         String hamPath = fedPath + "\\HAMILTON\\";
         String jayPath = fedPath + "\\JAY\\";
