@@ -59,7 +59,7 @@ public class RocchioClassifier {
         if (sfx.getPostings(term) == null){
             return 0.0;
         }
-        return Math.log(1 + sfx.getPostings(term).size());
+        return 1 + Math.log(sfx.getPostings(term).size());
     }
     
     /**
